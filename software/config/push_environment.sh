@@ -77,7 +77,7 @@ set_ros()
   else
     source /opt/ros/indigo/setup.bash
   fi
-  export ROS_PACKAGE_PATH=$HOME/push/ros_ws/:$ROS_PACKAGE_PATH
+  export ROS_PACKAGE_PATH=$HOME/pn-push/ros_ws/:$ROS_PACKAGE_PATH
 }
 
 gituser()
