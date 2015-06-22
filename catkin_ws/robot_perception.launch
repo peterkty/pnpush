@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<launch>
+  <arg name="gui" default="true" />
+  <arg name="have_robot" default="true" />
+  <arg name="do_fitting" default="false" />
+
+  
+  <arg name="irb_120" default="true" />
+  
+  <param name="use_gui" value="$(arg gui)"/>
+  <param name="robot_description" textfile="$(find apc_config)/models/IRB120/irb_120.urdf" />
+    
+  <node if="$(arg irb_120)" pkg="tf" type="static_transform_publisher" name="baselink_broadcaster" args="0 0 0 0 0 1.57 map base_link 50" />
+
+  <node unless="$(arg have_robot)" name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" >
+    <rosparam unless="$(arg have_robot)" command="load" file="$(find apc_config)/source_list_param.yaml" />
+  </node>
+  
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" />
+
+  <node pkg="tf" type="static_transform_publisher" name="worldlink_broadcaster" args="0 0 0 0 0 0 map /world 100" />
+
+</launch>
