@@ -22,3 +22,6 @@
 [submodule "ros_ws/vicon-ros"]
 	path = ros_ws/vicon-ros
 	url = https://github.com/ethz-asl/ros-drivers.git
+[submodule "catkin_ws/src/vicon_bridge"]
+	path = catkin_ws/src/vicon_bridge
+	url = https://github.com/ethz-asl/vicon_bridge.git
