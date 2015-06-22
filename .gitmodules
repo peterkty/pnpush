@@ -1,0 +1,21 @@
+[submodule "software/externals/bullet-pod"]
+	path = software/externals/bullet-pod
+	url = https://github.com/RobotLocomotion/bullet-pod.git
+[submodule "software/externals/snopt"]
+	path = software/externals/snopt
+	url = git@github.mit.edu:mCube/snopt.git
+[submodule "software/externals/eigen-pod"]
+	path = software/externals/eigen-pod
+	url = https://github.com/RobotLocomotion/eigen-pod.git
+[submodule "software/externals/libbot"]
+	path = software/externals/libbot
+	url = https://github.com/RobotLocomotion/libbot.git
+[submodule "software/externals/lcm-pod"]
+	path = software/externals/lcm-pod
+	url = https://github.com/RobotLocomotion/lcm-pod.git
+[submodule "ros_ws/abb-ros"]
+	path = ros_ws/abb-ros
+	url = git@github.mit.edu:mCube/abb-ros.git
+[submodule "software/externals/drake"]
+	path = software/externals/drake
+	url = https://github.com/RobotLocomotion/drake.git
