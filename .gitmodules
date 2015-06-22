@@ -19,3 +19,6 @@
 [submodule "software/externals/drake"]
 	path = software/externals/drake
 	url = https://github.com/RobotLocomotion/drake.git
+[submodule "ros_ws/vicon-ros"]
+	path = ros_ws/vicon-ros
+	url = https://github.com/ethz-asl/ros-drivers.git
