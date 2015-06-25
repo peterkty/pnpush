@@ -25,3 +25,6 @@
 [submodule "catkin_ws/src/vicon_bridge"]
 	path = catkin_ws/src/vicon_bridge
 	url = https://github.com/ethz-asl/vicon_bridge.git
+[submodule "ros_ws/netft"]
+	path = ros_ws/netft
+	url = https://github.com/CloPeMa/netft.git
