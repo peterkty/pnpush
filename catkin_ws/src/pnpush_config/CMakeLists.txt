@@ -1,15 +1,10 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(planning)
+project(pnpush_config)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS
-  rospy
-  std_msgs
-  sensor_msgs
-  geometry_msgs
-  message_generation
+find_package(catkin
 )
 
 ## System dependencies are found with CMake's conventions
@@ -19,7 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-catkin_python_setup()
+# catkin_python_setup()
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -53,10 +48,11 @@ catkin_python_setup()
 # )
 
 ## Generate services in the 'srv' folder
-#add_service_files(
-  #FILES
-  #GetObjectPointCloud.srv
-#)
+# add_service_files(
+#   FILES
+#   Service1.srv
+#   Service2.srv
+# )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -66,13 +62,10 @@ catkin_python_setup()
 # )
 
 ## Generate added messages and services with any dependencies listed here
-
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-  geometry_msgs
-  sensor_msgs
-)
+# generate_messages(
+#   DEPENDENCIES
+#   std_msgs
+# )
 
 ###################################
 ## catkin specific configuration ##
