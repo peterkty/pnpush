@@ -21,13 +21,7 @@ import socket
 import math
 from visualization_msgs.msg import *
 
-from helper import graspGripper
-from helper import moveGripper
-from helper import setForceGripper
-#~ import gripper
-#~ import suction
-
-toviz = False
+toviz = True
 haverobot = True
 
 class IK:
@@ -238,22 +232,22 @@ class Plan:
     def _visualize(self, backward=False, hand_param=None):
         if not toviz:
             return
-        if hand_param is None:
-            joint_topic = '/joint_states'
-            hand_param = 0.11
-            for i in range(100):
-                APCrobotjoints = ROS_Wait_For_Msg(joint_topic, sensor_msgs.msg.JointState).getmsg() 
-                q0 = APCrobotjoints.position
-                if len(q0) == 8 or len(q0) == 2:
-                    hand_q = q0[-2:]
-                    hand_param = math.fabs(hand_q[0])
-                    break
+        # if hand_param is None:
+            # joint_topic = '/joint_states'
+            # hand_param = 0.11
+            # for i in range(100):
+                # APCrobotjoints = ROS_Wait_For_Msg(joint_topic, sensor_msgs.msg.JointState).getmsg() 
+                # q0 = APCrobotjoints.position
+                # if len(q0) == 8 or len(q0) == 2:
+                    # hand_q = q0[-2:]
+                    # hand_param = math.fabs(hand_q[0])
+                    # break
         
         jointTrajMsg = trajectory_msgs.msg.JointTrajectory()
         q_traj = self.q_traj  # a N-by-6 matrix
         
         jointTrajMsg.joint_names = ['joint1', 'joint2', 'joint3', 'joint4', 
-        'joint5', 'joint6', 'wsg_50_gripper_base_joint_gripper_left', 'wsg_50_gripper_base_joint_gripper_right']
+        'joint5', 'joint6']
         
         speedup = 3
         if backward:
@@ -265,15 +259,15 @@ class Plan:
             pt = trajectory_msgs.msg.JointTrajectoryPoint()
             for j in range(6):
                 pt.positions.append(q_traj[i][j])
-            pt.positions.append(-hand_param)  # open gripper, these two numbers should be planned somewhere
-            pt.positions.append(hand_param)
+            #~ pt.positions.append(-hand_param)  # open gripper, these two numbers should be planned somewhere
+            #~ pt.positions.append(hand_param)
             jointTrajMsg.points.append(pt)
 
         robotTrajMsg = moveit_msgs.msg.RobotTrajectory()
         robotTrajMsg.joint_trajectory = jointTrajMsg
 
         dispTrajMsg = moveit_msgs.msg.DisplayTrajectory()
-        dispTrajMsg.model_id = 'irb_1600id'
+        dispTrajMsg.model_id = 'irb_120'
         dispTrajMsg.trajectory.append(robotTrajMsg)
         
         #rospy.sleep(0.1)
@@ -293,9 +287,9 @@ class Plan:
         if self.speed is not None:
             setSpeed(self.speed[0], self.speed[1])
         
-        clearBuffer = rospy.ServiceProxy('/robot1_ClearJointPosBuffer', robot_ClearJointPosBuffer)   # should move service name out
-        addBuffer = rospy.ServiceProxy('/robot1_AddJointPosBuffer', robot_AddJointPosBuffer)
-        executeBuffer = rospy.ServiceProxy('/robot1_ExecuteJointPosBuffer', robot_ExecuteJointPosBuffer)
+        clearBuffer = rospy.ServiceProxy('/robot2_ClearJointPosBuffer', robot_ClearJointPosBuffer)   # should move service name out
+        addBuffer = rospy.ServiceProxy('/robot2_AddJointPosBuffer', robot_AddJointPosBuffer)
+        executeBuffer = rospy.ServiceProxy('/robot2_ExecuteJointPosBuffer', robot_ExecuteJointPosBuffer)
         
         q_traj = self.q_traj  # a N-by-6 matrix
         if backward:
@@ -307,7 +301,7 @@ class Plan:
         try:
             if not haverobot:
                 raise Exception('No robot')
-            rospy.wait_for_service('/robot1_ClearJointPosBuffer', timeout = 0.5)
+            rospy.wait_for_service('/robot2_ClearJointPosBuffer', timeout = 0.5)
             clearBuffer()
             
             for j in rng:
@@ -355,11 +349,11 @@ def setSpeed(tcp=100, ori=30):
     if not haverobot:
         return
         
-    setSpeed_ = rospy.ServiceProxy('/robot1_SetSpeed', robot_SetSpeed)
+    setSpeed_ = rospy.ServiceProxy('/robot2_SetSpeed', robot_SetSpeed)
     
     print '[Robot] setSpeed(%.1f, %.1f)' % (tcp, ori)
     try:
-        rospy.wait_for_service('/robot1_SetSpeed', timeout = 0.5)
+        rospy.wait_for_service('/robot2_SetSpeed', timeout = 0.5)
         setSpeed_(tcp, ori)
         return True
     except:

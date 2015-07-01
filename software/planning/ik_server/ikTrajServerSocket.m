@@ -10,16 +10,16 @@ set(tcpipServer,'InputBufferSize', buffersize);
 warning('off','Drake:DisablingSimulinkAutosave')
 warning('off','Drake:RigidBodyManipulator:UnsupportedContactPoints')
 warning('off','Drake:RigidBodyManipulator:UnsupportedVelocityLimits')
-addpath([getenv('PUSH_BASE'),'/software/jsonlab-1.0/jsonlab']);  % for parsing json
-addpath([getenv('PUSH_BASE'),'/software/json']);                 % for writing json
-javaaddpath([getenv('PUSH_BASE'),'/software/build/share/java/bot2-lcmgl.jar']) % for lcmgl
+addpath([getenv('PNPUSH_BASE'),'/software/externals/jsonlab-1.0/jsonlab']);  % for parsing json
+addpath([getenv('PNPUSH_BASE'),'/software/externals/json']);                 % for writing json
+javaaddpath([getenv('PNPUSH_BASE'),'/software/build/share/java/bot2-lcmgl.jar']) % for lcmgl
 
 %% initialize robot here
 tic
 r = RigidBodyManipulator();
-options.urdf_path = [getenv('PUSH_BASE'), '/catkin_ws/src/config/models/IRB120/irb_120_drake.urdf']; 
+options.urdf_path = [getenv('PNPUSH_BASE'), '/catkin_ws/src/pnpush_config/models/IRB120/irb_120_drake.urdf']; 
 options.base_offset = [0, 0, 0]';
-options.base_rpy = [0, 0, 0]'; 
+options.base_rpy = [pi/2, 0, 0]';   % pi/2 only needed for irb 120
 fprintf('Loading the robot urdf: %s\n', options.urdf_path);
 r = addRobotFromURDF(r, options.urdf_path, options.base_offset, options.base_rpy);
 toc

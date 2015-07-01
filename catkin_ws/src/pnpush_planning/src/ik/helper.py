@@ -285,36 +285,8 @@ def getObjCOM(objPose, objId):
     objPosition = objPose[0:3]
     return objPosition
 
-import gripper
-def openGripper():
-    # call gripper node, open
-    gripper.open()
-    return 1
 
-def closeGripper(forceThreshold):
-    # call gripper node, close
-    gripper.close()
-    return 1
 
-def graspGripper(move_pos, move_speed=50):
-    # move_pos in meter, move_speed in mm/s
-    #WE should make grasp gripper force controlled--Nikhil
-    # call gripper node, grasp
-    move_pos=1000*move_pos
-    gripper.move(move_pos, move_speed)
-    return 1
-
-def moveGripper(move_pos, move_speed=50):
-    # move_pos in meter, move_speed in mm/s
-    # call gripper node, grasp
-    move_pos=1000*move_pos
-    gripper.move(move_pos, move_speed)
-    return 1
-
-def setForceGripper(force=50):
-    gripper.set_force(force)
-    return 1
-    
 def matrix_from_xyzquat(translate, quaternion):
     return np.dot(tfm.compose_matrix(translate=translate) , 
                    tfm.quaternion_matrix(quaternion)).tolist()

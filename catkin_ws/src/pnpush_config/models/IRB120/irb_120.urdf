@@ -7,7 +7,7 @@
   <link name="base_link">
     <visual>
       <geometry>
-        <mesh filename="package://apc_config/models/IRB120/meshes/visual/base_link.stl" scale="0.0254 0.0254 0.0254"/>
+        <mesh filename="package://pnpush_config/models/IRB120/meshes/visual/base_link.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="abb_orange">
@@ -21,7 +21,7 @@
     </inertial>
     <collision>
       <geometry>
-        <mesh filename="package://apc_config/models/IRB120/meshes/collision/base_link.stl" scale="0.0254 0.0254 0.0254"/>
+        <mesh filename="package://pnpush_config/models/IRB120/meshes/collision/base_link.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
     </collision>
@@ -29,7 +29,7 @@
   <link name="link_1">
     <visual>
       <geometry>
-        <mesh filename="package://apc_config/models/IRB120/meshes/visual/link_1.stl" scale="0.0254 0.0254 0.0254"/>
+        <mesh filename="package://pnpush_config/models/IRB120/meshes/visual/link_1.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="abb_orange">
@@ -43,7 +43,7 @@
     </inertial>
     <collision>
       <geometry>
-        <mesh filename="package://apc_config/models/IRB120/meshes/collision/link_1.stl" scale="0.0254 0.0254 0.0254"/>
+        <mesh filename="package://pnpush_config/models/IRB120/meshes/collision/link_1.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
     </collision>
@@ -51,7 +51,7 @@
   <link name="link_2">
     <visual>
       <geometry>
-        <mesh filename="package://apc_config/models/IRB120/meshes/visual/link_2.stl" scale="0.0254 0.0254 0.0254"/>
+        <mesh filename="package://pnpush_config/models/IRB120/meshes/visual/link_2.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
       <origin rpy="0 3.14159 0" xyz="0 0.269999754796 -0.0574996276953"/>
       <material name="abb_orange">
@@ -65,7 +65,7 @@
     </inertial>
     <collision>
       <geometry>
-        <mesh filename="package://apc_config/models/IRB120/meshes/collision/link_2.stl" scale="0.0254 0.0254 0.0254"/>
+        <mesh filename="package://pnpush_config/models/IRB120/meshes/collision/link_2.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
       <origin rpy="0 3.14159 0" xyz="0 0.269999754796 -0.0574996276953"/>
     </collision>
@@ -73,7 +73,7 @@
   <link name="link_3">
     <visual>
       <geometry>
-        <mesh filename="package://apc_config/models/IRB120/meshes/visual/link_3.stl" scale="0.0254 0.0254 0.0254"/>
+        <mesh filename="package://pnpush_config/models/IRB120/meshes/visual/link_3.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0.071952848745 -0.0661526901756 0"/>
       <material name="abb_orange">
@@ -87,7 +87,7 @@
     </inertial>
     <collision>
       <geometry>
-        <mesh filename="package://apc_config/models/IRB120/meshes/collision/link_3.stl" scale="0.0254 0.0254 0.0254"/>
+        <mesh filename="package://pnpush_config/models/IRB120/meshes/collision/link_3.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0.071952848745 -0.0661526901756 0"/>
     </collision>
@@ -95,7 +95,7 @@
   <link name="link_4">
     <visual>
       <geometry>
-        <mesh filename="package://apc_config/models/IRB120/meshes/visual/link_4.stl" scale="0.0254 0.0254 0.0254"/>
+        <mesh filename="package://pnpush_config/models/IRB120/meshes/visual/link_4.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0.302187012 0.00151561224702 -0.000313229561613"/>
       <material name="abb_orange">
@@ -109,7 +109,7 @@
     </inertial>
     <collision>
       <geometry>
-        <mesh filename="package://apc_config/models/IRB120/meshes/collision/link_4.stl" scale="0.0254 0.0254 0.0254"/>
+        <mesh filename="package://pnpush_config/models/IRB120/meshes/collision/link_4.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0.302187012 0.00151561224702 0"/>
     </collision>
@@ -117,7 +117,7 @@
   <link name="link_5">
     <visual>
       <geometry>
-        <mesh filename="package://apc_config/models/IRB120/meshes/visual/link_5.stl" scale="0.0254 0.0254 0.0254"/>
+        <mesh filename="package://pnpush_config/models/IRB120/meshes/visual/link_5.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
       <origin rpy="0 0 0" xyz="-0.301998488439 -0.629998750685 0"/>
       <material name="abb_orange">
@@ -126,7 +126,7 @@
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://apc_config/models/IRB120/meshes/collision/link_5.stl" scale="0.0254 0.0254 0.0254"/>
+        <mesh filename="package://pnpush_config/models/IRB120/meshes/collision/link_5.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
       <origin rpy="0 0 0" xyz="-0.301998488439 -0.629998750685 0"/>
     </collision>
@@ -139,7 +139,7 @@
   <link name="link_6">
     <visual>
       <geometry>
-        <mesh filename="package://apc_config/models/IRB120/meshes/visual/link_6.stl" scale="0.0254 0.0254 0.0254"/>
+        <mesh filename="package://pnpush_config/models/IRB120/meshes/visual/link_6.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 -0.0130000906507"/>
       <material name="abb_black">
@@ -148,7 +148,7 @@
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://apc_config/models/IRB120/meshes/collision/link_6.stl" scale="0.0254 0.0254 0.0254"/>
+        <mesh filename="package://pnpush_config/models/IRB120/meshes/collision/link_6.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 -0.0130000906507"/>
     </collision>

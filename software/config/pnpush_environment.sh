@@ -1,5 +1,5 @@
 #!/bin/bash
-# edit PUSHDATA_BASE=$HOME/pushdata to your push data directory
+# edit PNPUSHDATA_BASE=$HOME/pushdata to your push data directory
 
 thisFile=$_
 if [ $BASH ] 
@@ -8,32 +8,32 @@ then
   thisFile=${BASH_SOURCE[0]}
 fi
 
-set_push_base()
+set_pnpush_base()
 {
   # use cd and pwd to get an absolute path
   configParentDir="$(cd "$(dirname "$thisFile")/.." && pwd)"
 
   # different cases for software/config or software/build/config
   case "$(basename $configParentDir)" in
-    "software") export PUSH_BASE=$(dirname $configParentDir);;
-    "build") export PUSH_BASE=$(dirname $(dirname $configParentDir));;
-    *) echo "Warning: PUSH environment file is stored in unrecognized location: $thisFile";;
+    "software") export PNPUSH_BASE=$(dirname $configParentDir);;
+    "build") export PNPUSH_BASE=$(dirname $(dirname $configParentDir));;
+    *) echo "Warning: PNPUSH environment file is stored in unrecognized location: $thisFile";;
   esac
-  export PUSHDATA_BASE=$PUSH_BASE/../pushdata
-  export PATH=$PATH:$PUSH_BASE/software/build/bin
+  export PNPUSHDATA_BASE=$PNPUSH_BASE/../pnpushdata
+  export PATH=$PATH:$PNPUSH_BASE/software/build/bin
 }
 
-setup_push()
+setup_pnpush()
 {
-  export PATH=$PATH:$PUSH_BASE/software/build/bin
+  export PATH=$PATH:$PNPUSH_BASE/software/build/bin
   export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-  export LD_LIBRARY_PATH=$PUSH_BASE/software/build/lib:$PUSH_BASE/software/build/lib64:$LD_LIBRARY_PATH
-  export CLASSPATH=$CLASSPATH:/usr/local/share/java/lcm.jar:$PUSH_BASE/software/build/share/java/lcmtypes_push_lcmtypes.jar
-  export CLASSPATH=$CLASSPATH:$PUSH_BASE/software/build/share/java/drake.jar:$PUSH_BASE/software/build/share/java/bot2-lcmgl.jar
-  export PKG_CONFIG_PATH=$PUSH_BASE/software/build/lib/pkgconfig:$PUSH_BASE/software/build/lib64/pkgconfig:$PKG_CONFIG_PATH
+  export LD_LIBRARY_PATH=$PNPUSH_BASE/software/build/lib:$PNPUSH_BASE/software/build/lib64:$LD_LIBRARY_PATH
+  export CLASSPATH=$CLASSPATH:/usr/local/share/java/lcm.jar:$PNPUSH_BASE/software/build/share/java/lcmtypes_pnpush_lcmtypes.jar
+  export CLASSPATH=$CLASSPATH:$PNPUSH_BASE/software/build/share/java/drake.jar:$PNPUSH_BASE/software/build/share/java/bot2-lcmgl.jar
+  export PKG_CONFIG_PATH=$PNPUSH_BASE/software/build/lib/pkgconfig:$PNPUSH_BASE/software/build/lib64/pkgconfig:$PKG_CONFIG_PATH
 
   # python path
-  export PYTHONPATH=$PYTHONPATH:$PUSH_BASE/software/build/lib/python2.7/site-packages:$PUSH_BASE/software/build/lib/python2.7/dist-packages
+  export PYTHONPATH=$PYTHONPATH:$PNPUSH_BASE/software/build/lib/python2.7/site-packages:$PNPUSH_BASE/software/build/lib/python2.7/dist-packages
   # enable some warnings by default
   export CXXFLAGS="$CXXFLAGS -Wreturn-type -Wuninitialized"
   export CFLAGS="$CFLAGS -Wreturn-type -Wuninitialized"
@@ -72,12 +72,12 @@ setup_push()
 
 set_ros()
 {
-  if [ -f $PUSH_BASE/catkin_ws/devel/setup.bash ]; then
-    source $PUSH_BASE/catkin_ws/devel/setup.bash
+  if [ -f $PNPUSH_BASE/catkin_ws/devel/setup.bash ]; then
+    source $PNPUSH_BASE/catkin_ws/devel/setup.bash
   else
     source /opt/ros/indigo/setup.bash
   fi
-  export ROS_PACKAGE_PATH=$HOME/pn-push/ros_ws/:$ROS_PACKAGE_PATH
+  export ROS_PACKAGE_PATH=$HOME/pnpush/ros_ws/:$ROS_PACKAGE_PATH
 }
 
 gituser()
@@ -105,13 +105,13 @@ gituser()
 }
 
 # some useful commands
-alias cdpush='cd $PUSH_BASE'
-alias cdpushdata='cd $PUSHDATA_BASE'
-alias matlabdrake='cd $PUSH_BASE/software; matlab -r "addpath_pods; addpath_drake"'
-alias matlabpush='cd $PUSH_BASE/software; matlab -nodesktop -nodisplay -nosplash -r "tic; addpath_pods; addpath_drake; toc; cd ../software/planning/ik_server/; ikTrajServerSocket;"'
+alias cdpnpush='cd $PNPUSH_BASE'
+alias cdpnpushdata='cd $PNPUSHDATA_BASE'
+alias matlabdrake='cd $PNPUSH_BASE/software; matlab -r "addpath_pods; addpath_drake"'
+alias matlabpnpush='cd $PNPUSH_BASE/software; matlab -nodesktop -nodisplay -nosplash -r "tic; addpath_pods; addpath_drake; toc; cd ../software/planning/ik_server/; ikTrajServerSocket;"'
 
 alias gitsub='git submodule update --init --recursive'
-alias gitpull='git -C $PUSH_BASE pull'
+alias gitpull='git -C $PNPUSH_BASE pull'
 
 alias rebash='source ~/.bashrc'
 alias open='gnome-open'
@@ -121,18 +121,19 @@ alias faster='rosservice call /robot1_SetSpeed 200 50'
 alias fast='rosservice call /robot1_SetSpeed 100 30'
 alias slow='rosservice call /robot1_SetSpeed 50 15'
 
-alias gohome='rosservice call robot1_SetJoints "{j1: -0.32913211, j2: -39.41918751, j3: 33.58432661, j4: 5.55385908, j5: 6.08041137, j6: -5.98758923}"'
-alias gohome2='rosservice call robot1_SetJoints "{j1: 0, j2: -40, j3: 33.58432661, j4: 5.55385908, j5: 6.08041137, j6: -5.98758923}"'
+alias gohome='rosservice call robot2_SetJoints "{j1: 0, j2: 0, j3: 0, j4: 0, j5: 0, j6: 0}"'
 
 alias teleop='rosrun teleop teleop'
-alias pythonpush='ipython -i -c "run $PUSH_BASE/catkin_ws/src/push_config/python/pythonpush.py"'
+alias pythonpnpush='ipython -i -c "run $PNPUSH_BASE/catkin_ws/src/pnpush_config/python/pythonpnpush.py"'
 
-alias pman='bot-procman-sheriff -l $PUSH_BASE/software/config/push.pmd'
+alias pman='bot-procman-sheriff -l $PNPUSH_BASE/software/config/pnpush.pmd'
 
 alias roslocal='export ROS_MASTER_URI=http://localhost:11311'
 
-alias getjoint='rosservice call robot1_GetJoints'
-alias getcart='rosservice call robot1_GetCartesian'
+alias getjoint='rosservice call robot2_GetJoints'
+alias getcart='rosservice call robot2_GetCartesian'
+alias setjoint='rosservice call robot2_SetJoints'
+alias setcart='rosservice call robot2_SetCartesian'
 
 alias lcmlocal='sudo ifconfig lo multicast; sudo route add -net 224.0.0.0 netmask 240.0.0.0 dev lo'
 
@@ -179,8 +180,8 @@ function set_bash {
    export HISTTIMEFORMAT="%d/%m/%y %T "
 }
 
-set_push_base
-setup_push
+set_pnpush_base
+setup_pnpush
 set_ros
 set_bash
 

@@ -33,7 +33,7 @@ if ~isfield(options,'target_link')
     options.target_link = 'link_6'; 
 end
 if ~isfield(options,'ik_only')
-    options.ik_only = false; 
+    options.ik_only = true; 
 end
 if (options.visualize)
     v = r.constructVisualizer();

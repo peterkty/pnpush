@@ -10,14 +10,17 @@
   <param name="use_gui" value="$(arg gui)"/>
   <param name="robot_description" textfile="$(find pnpush_config)/models/IRB120/irb_120.urdf" />
     
-  <node if="$(arg irb_120)" pkg="tf" type="static_transform_publisher" name="baselink_broadcaster" args="0 0 0 0 0 1.57 map base_link 50" />
+  <node if="$(arg irb_120)" pkg="tf" type="static_transform_publisher" name="baselink_broadcaster" args="0 0 0 0 0 1.57079632679 map base_link 50" />
 
   <node unless="$(arg have_robot)" name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" >
-    <rosparam unless="$(arg have_robot)" command="load" file="$(find apc_config)/source_list_param.yaml" />
+    <rosparam unless="$(arg have_robot)" command="load" file="$(find pnpush_config)/source_list_param.yaml" />
   </node>
   
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" />
 
-  <node pkg="tf" type="static_transform_publisher" name="worldlink_broadcaster" args="0 0 0 0 0 0 map /world 100" />
+  <node pkg="tf" type="static_transform_publisher" name="viconworldlink_broadcaster" args="0.4 0 0 0 0 0 map /viconworld 100" />
+
+  <node pkg="tf" type="static_transform_publisher" name="squareworldlink_broadcaster" args="-0.004240972297612569, 0.0018646457443079161, -0.059711041258274374 -0.00012400289255395063, 0.000154279909151047, 7.28198144789449e-05, 0.9999999777591332 /viconworld /world 100" />
+
 
 </launch>
