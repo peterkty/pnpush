@@ -9,7 +9,7 @@
       <geometry>
         <mesh filename="package://pnpush_config/models/IRB120/meshes/visual/base_link.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="1.57079632679 0 0" xyz="0 0 0"/>
       <material name="abb_orange">
         <color rgba="1 0.43 0 1"/>
       </material>
@@ -17,7 +17,7 @@
     <inertial>
       <mass value="6.21503193527"/>
       <inertia ixx="0.0247271241712" ixy="-0.00130888043627" ixz="-8.0795905152e-05" iyy="0.04723746454" iyz="-8.0325637493e-06" izz="0.049128484834"/>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="1.57079632679 0 0" xyz="0 0 0"/>
     </inertial>
     <collision>
       <geometry>
@@ -163,7 +163,7 @@
     <child link="link_1"/>
     <limit effort="300" lower="-2.88" upper="2.88" velocity="4.36"/>
     <axis xyz="0 1 0"/>
-    <origin rpy="-3.14159265359 3.14159265359 3.14159265359" xyz="0 0 0"/>
+    <origin rpy="-1.57079632679 3.14159265359 3.14159265359" xyz="0 0 0"/>
   </joint>
   <joint name="joint2" type="revolute">
     <parent link="link_1"/>

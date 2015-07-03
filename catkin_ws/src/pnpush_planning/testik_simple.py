@@ -14,7 +14,7 @@ import tf
 import math
 import numpy as np
 import tf.transformations as tfm
-target_pose = [0.374, 0, 0.620, 0,  0.7071, 0, 0.7071]
+target_pose = [0.374, 0, 0.600, 0,  0.7071, 0, 0.7071]
 #target_pose = [0.70, 0-0.2, 1.2965,  0, 0.7071, 0, 0.7071]
 
 l2 = 0  # 0.12: gripper base length, 0.34: gripper base to finger tip
