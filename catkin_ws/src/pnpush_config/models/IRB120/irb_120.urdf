@@ -17,7 +17,7 @@
     <inertial>
       <mass value="6.21503193527"/>
       <inertia ixx="0.0247271241712" ixy="-0.00130888043627" ixz="-8.0795905152e-05" iyy="0.04723746454" iyz="-8.0325637493e-06" izz="0.049128484834"/>
-      <origin rpy="1.57079632679 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
     </inertial>
     <collision>
       <geometry>
@@ -53,7 +53,7 @@
       <geometry>
         <mesh filename="package://pnpush_config/models/IRB120/meshes/visual/link_2.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
-      <origin rpy="0 3.14159 0" xyz="0 0.269999754796 -0.0574996276953"/>
+      <origin rpy="0 3.14159265359 0" xyz="0 0.27 -0.0575"/>
       <material name="abb_orange">
         <color rgba="1 0.43 0 1"/>
       </material>
@@ -67,7 +67,7 @@
       <geometry>
         <mesh filename="package://pnpush_config/models/IRB120/meshes/collision/link_2.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
-      <origin rpy="0 3.14159 0" xyz="0 0.269999754796 -0.0574996276953"/>
+      <origin rpy="0 3.14159265359 0" xyz="0 0.27 -0.0575"/>
     </collision>
   </link>
   <link name="link_3">
@@ -75,7 +75,7 @@
       <geometry>
         <mesh filename="package://pnpush_config/models/IRB120/meshes/visual/link_3.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0.071952848745 -0.0661526901756 0"/>
+      <origin rpy="0 0 0" xyz="0.072 -0.0661526901756 0"/>
       <material name="abb_orange">
         <color rgba="1 0.43 0 1"/>
       </material>
@@ -89,7 +89,7 @@
       <geometry>
         <mesh filename="package://pnpush_config/models/IRB120/meshes/collision/link_3.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0.071952848745 -0.0661526901756 0"/>
+      <origin rpy="0 0 0" xyz="0.072 -0.0661526901756 0"/>
     </collision>
   </link>
   <link name="link_4">
@@ -97,7 +97,7 @@
       <geometry>
         <mesh filename="package://pnpush_config/models/IRB120/meshes/visual/link_4.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0.302187012 0.00151561224702 -0.000313229561613"/>
+      <origin rpy="0 0 0" xyz="0.302 0 0"/>
       <material name="abb_orange">
         <color rgba="1 0.43 0 1"/>
       </material>
@@ -111,7 +111,7 @@
       <geometry>
         <mesh filename="package://pnpush_config/models/IRB120/meshes/collision/link_4.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0.302187012 0.00151561224702 0"/>
+      <origin rpy="0 0 0" xyz="0.302 0.00151561224702 0"/>
     </collision>
   </link>
   <link name="link_5">
@@ -119,7 +119,7 @@
       <geometry>
         <mesh filename="package://pnpush_config/models/IRB120/meshes/visual/link_5.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="-0.301998488439 -0.629998750685 0"/>
+      <origin rpy="0 0 0" xyz="-0.302 -0.63 0"/>
       <material name="abb_orange">
         <color rgba="1 0.43 0 1"/>
       </material>
@@ -128,7 +128,7 @@
       <geometry>
         <mesh filename="package://pnpush_config/models/IRB120/meshes/collision/link_5.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="-0.301998488439 -0.629998750685 0"/>
+      <origin rpy="0 0 0" xyz="-0.302 -0.63 0"/>
     </collision>
     <inertial>
       <mass value="0.546633236934"/>
@@ -141,7 +141,7 @@
       <geometry>
         <mesh filename="package://pnpush_config/models/IRB120/meshes/visual/link_6.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0 0 -0.0130000906507"/>
+      <origin rpy="0 0 0" xyz="0 0 -0.013"/>
       <material name="abb_black">
         <color rgba="0 0 0 1"/>
       </material>
@@ -150,7 +150,7 @@
       <geometry>
         <mesh filename="package://pnpush_config/models/IRB120/meshes/collision/link_6.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0 0 -0.0130000906507"/>
+      <origin rpy="0 0 0" xyz="0 0 -0.013"/>
     </collision>
     <inertial>
       <mass value="0.0136784407912"/>
@@ -158,6 +158,42 @@
       <origin rpy="0 0 0" xyz="-4.42649390919e-07 0.000169444143624 -0.0070610831163"/>
     </inertial>
   </link>
+  <link name="link_ft">
+    <visual>
+      <geometry>
+        <cylinder radius="0.037" length="0.04"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 -0.02"/>
+      <material name="abb_gray">
+        <color rgba="0.7 0.7 0.7 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.037" length="0.04"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 -0.02"/>
+    </collision>
+  </link>
+  <link name="link_probe">
+    <visual>
+      <geometry>
+        <cylinder radius="0.00789" length="0.08673"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 -0.043365"/>
+      <material name="abb_white">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.00789" length="0.8673"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 -0.043365"/>
+    </collision>
+  </link>
+  
+  
   <joint name="joint1" type="revolute">
     <parent link="base_link"/>
     <child link="link_1"/>
@@ -199,6 +235,18 @@
     <limit effort="300" lower="-6.985" upper="6.985" velocity="7.33"/>
     <axis xyz="0 0 1"/>
     <origin rpy="-1.5707961734 0 -1.57079621992" xyz="0.072 0 0"/>
+  </joint>
+  <joint name="joint7" type="fixed">
+    <parent link="link_6"/>
+    <child link="link_ft"/>
+    <axis xyz="0 0 1"/>
+    <origin rpy="0 0 0" xyz="0 0 0.04"/>
+  </joint>
+  <joint name="joint8" type="fixed">
+    <parent link="link_ft"/>
+    <child link="link_probe"/>
+    <axis xyz="0 0 1"/>
+    <origin rpy="0 0 0" xyz="0 0 0.08673 "/>
   </joint>
 </robot>
 

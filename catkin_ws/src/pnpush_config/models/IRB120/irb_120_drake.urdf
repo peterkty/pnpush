@@ -21,7 +21,7 @@
     </inertial>
     <collision>
       <geometry>
-        <mesh filename="meshes/visual/base_link.stl" scale="0.0254 0.0254 0.0254"/>
+        <mesh filename="meshes/collision/base_link.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
     </collision>
@@ -43,7 +43,7 @@
     </inertial>
     <collision>
       <geometry>
-        <mesh filename="meshes/visual/link_1.stl" scale="0.0254 0.0254 0.0254"/>
+        <mesh filename="meshes/collision/link_1.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
     </collision>
@@ -53,7 +53,7 @@
       <geometry>
         <mesh filename="meshes/visual/link_2.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
-      <origin rpy="0 3.14159 0" xyz="0 0.269999754796 -0.0574996276953"/>
+      <origin rpy="0 3.14159265359 0" xyz="0 0.27 -0.0575"/>
       <material name="abb_orange">
         <color rgba="1 0.43 0 1"/>
       </material>
@@ -65,9 +65,9 @@
     </inertial>
     <collision>
       <geometry>
-        <mesh filename="meshes/visual/link_2.stl" scale="0.0254 0.0254 0.0254"/>
+        <mesh filename="meshes/collision/link_2.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
-      <origin rpy="0 3.14159 0" xyz="0 0.269999754796 -0.0574996276953"/>
+      <origin rpy="0 3.14159265359 0" xyz="0 0.27 -0.0575"/>
     </collision>
   </link>
   <link name="link_3">
@@ -75,7 +75,7 @@
       <geometry>
         <mesh filename="meshes/visual/link_3.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0.071952848745 -0.0661526901756 0"/>
+      <origin rpy="0 0 0" xyz="0.072 -0.0661526901756 0"/>
       <material name="abb_orange">
         <color rgba="1 0.43 0 1"/>
       </material>
@@ -87,9 +87,9 @@
     </inertial>
     <collision>
       <geometry>
-        <mesh filename="meshes/visual/link_3.stl" scale="0.0254 0.0254 0.0254"/>
+        <mesh filename="meshes/collision/link_3.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0.071952848745 -0.0661526901756 0"/>
+      <origin rpy="0 0 0" xyz="0.072 -0.0661526901756 0"/>
     </collision>
   </link>
   <link name="link_4">
@@ -97,7 +97,7 @@
       <geometry>
         <mesh filename="meshes/visual/link_4.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0.302187012 0.00151561224702 -0.000313229561613"/>
+      <origin rpy="0 0 0" xyz="0.302 0 0"/>
       <material name="abb_orange">
         <color rgba="1 0.43 0 1"/>
       </material>
@@ -109,9 +109,9 @@
     </inertial>
     <collision>
       <geometry>
-        <mesh filename="meshes/visual/link_4.stl" scale="0.0254 0.0254 0.0254"/>
+        <mesh filename="meshes/collision/link_4.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0.302187012 0.00151561224702 0"/>
+      <origin rpy="0 0 0" xyz="0.302 0 0"/>
     </collision>
   </link>
   <link name="link_5">
@@ -119,16 +119,16 @@
       <geometry>
         <mesh filename="meshes/visual/link_5.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="-0.301998488439 -0.629998750685 0"/>
+      <origin rpy="0 0 0" xyz="-0.302 -0.63 0"/>
       <material name="abb_orange">
         <color rgba="1 0.43 0 1"/>
       </material>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="meshes/visual/link_5.stl" scale="0.0254 0.0254 0.0254"/>
+        <mesh filename="meshes/collision/link_5.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="-0.301998488439 -0.629998750685 0"/>
+      <origin rpy="0 0 0" xyz="-0.302 -0.63 0"/>
     </collision>
     <inertial>
       <mass value="0.546633236934"/>
@@ -141,16 +141,16 @@
       <geometry>
         <mesh filename="meshes/visual/link_6.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0 0 -0.0130000906507"/>
+      <origin rpy="0 0 0" xyz="0 0 -0.013"/>
       <material name="abb_black">
         <color rgba="0 0 0 1"/>
       </material>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="meshes/visual/link_6.stl" scale="0.0254 0.0254 0.0254"/>
+        <mesh filename="meshes/collision/link_6.stl" scale="0.0254 0.0254 0.0254"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0 0 -0.0130000906507"/>
+      <origin rpy="0 0 0" xyz="0 0 -0.013"/>
     </collision>
     <inertial>
       <mass value="0.0136784407912"/>
