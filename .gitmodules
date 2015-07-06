@@ -27,7 +27,7 @@
 	url = https://github.com/ethz-asl/vicon_bridge.git
 [submodule "ros_ws/netft"]
 	path = ros_ws/netft
-	url = https://github.com/CloPeMa/netft.git
+	url = git@github.mit.edu:mCube/netft.git
 [submodule "catkin_ws/src/abb"]
 	path = catkin_ws/src/abb
 	url = https://github.com/ros-industrial/abb.git
