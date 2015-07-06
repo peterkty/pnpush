@@ -1,5 +1,9 @@
-cmd "1-perception-virtual" {
-    exec = "roslaunch pnpush_config robot_perception.launch have_robot:=false";
+cmd "0-matlabpush" {
+    exec = "matlab -nodesktop -nodisplay -nosplash -r \"tic; cd([getenv('PNPUSH_BASE'), '/software']); addpath_pods; addpath_drake; toc; cd ../software/planning/ik_server/; ikTrajServerSocket;\"";
+    host = "localhost";
+}
+cmd "6-moveright" {
+    exec = "rosservice call -- robot2_SetCartesian 400 120 150 0 0 -1 0";
     host = "localhost";
 }
 cmd "3-ft" {
@@ -14,20 +18,24 @@ cmd "0-roscore" {
     exec = "roscore";
     host = "localhost";
 }
-cmd "2-abb" {
-    exec = "roslaunch pnpush_config abb.launch";
-    host = "localhost";
-}
 cmd "4-vicon" {
     exec = "roslaunch vicon_bridge vicon.launch";
     host = "localhost";
 }
-cmd "0-matlabpush" {
-    exec = "matlab -nodesktop -nodisplay -nosplash -r \"tic; cd([getenv('PNPUSH_BASE'), '/software']); addpath_pods; addpath_drake; toc; cd ../software/planning/ik_server/; ikTrajServerSocket;\"";
+cmd "1-perception-virtual" {
+    exec = "roslaunch pnpush_config robot_perception.launch have_robot:=false";
     host = "localhost";
 }
 cmd "1-perception-real" {
     exec = "roslaunch pnpush_config robot_perception.launch";
+    host = "localhost";
+}
+cmd "2-abb" {
+    exec = "roslaunch pnpush_config abb.launch";
+    host = "localhost";
+}
+cmd "6-moveleft" {
+    exec = "rosservice call -- robot2_SetCartesian 400 -120 150 0 0 -1 0";
     host = "localhost";
 }
 

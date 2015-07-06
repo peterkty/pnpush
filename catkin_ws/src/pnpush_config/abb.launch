@@ -13,7 +13,7 @@
         <remap from="robot1_RosJointState" to="joint_states" />
     </node>-->   <!--with robot number args="1"-->
     
-    <node pkg="robot_node" type="robot_node" name="robot_node1" output="screen" args="1"/>
+    <!--<node pkg="robot_node" type="robot_node" name="robot_node1" output="screen" args="1"/>-->
     
     <node pkg="robot_node" type="robot_node" name="robot_node2" output="screen" args="2">
         <remap from="robot2_RosJointState" to="joint_states" />

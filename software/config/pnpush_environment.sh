@@ -40,33 +40,6 @@ setup_pnpush()
   
   export PATH=$PATH:$HOME/software/ffmpeg-2.4.2-64bit-static # for ffmpeg software
   
-  if [ "$HOSTNAME" == 'mcube-002' ] || [ "$HOSTNAME" == 'mcube-004' ] || [ "$HOSTNAME" == 'mcube-005' ]; then
-    export ROS_MASTER_URI=http://mcube-002:11311
-  fi  
-  if [ "$HOSTNAME" == 'mcube-003' ] || [ "$HOSTNAME" == 'mcube-006' ] || [ "$HOSTNAME" == 'mcube-007' ]; then
-    export ROS_MASTER_URI=http://mcube-003:11311
-  fi
-  if [ "$HOSTNAME" == 'mcube-003' ]; then
-    export ROS_HOSTNAME=mcube-003
-    export ROS_IP=192.168.37.13
-  fi
-  if [ "$HOSTNAME" == 'mcube-006' ]; then
-    export ROS_HOSTNAME=mcube-006
-    export ROS_IP=192.168.37.12
-  fi
-  if [ "$HOSTNAME" == 'mcube-005' ]; then
-    export ROS_HOSTNAME=mcube-005
-    export ROS_IP=192.168.37.10
-  fi
-  if [ "$HOSTNAME" == 'mcube-004' ]; then
-    export ROS_HOSTNAME=mcube-004
-    export ROS_IP=192.168.37.9
-  fi
-  if [ "$HOSTNAME" == 'mcube-002' ]; then
-    export ROS_HOSTNAME=mcube-002
-    export ROS_IP=192.168.37.7
-  fi
-  
   export ROSLAUNCH_SSH_UNKNOWN=1
 }
 
@@ -116,10 +89,10 @@ alias gitpull='git -C $PNPUSH_BASE pull'
 alias rebash='source ~/.bashrc'
 alias open='gnome-open'
 
-alias yolo='rosservice call /robot1_SetSpeed 1600 180'
-alias faster='rosservice call /robot1_SetSpeed 200 50'
-alias fast='rosservice call /robot1_SetSpeed 100 30'
-alias slow='rosservice call /robot1_SetSpeed 50 15'
+alias yolo='rosservice call /robot2_SetSpeed 1600 180'
+alias faster='rosservice call /robot2_SetSpeed 200 50'
+alias fast='rosservice call /robot2_SetSpeed 100 30'
+alias slow='rosservice call /robot2_SetSpeed 50 15'
 
 alias gohome='rosservice call robot2_SetJoints "{j1: 0, j2: 0, j3: 0, j4: 0, j5: 0, j6: 0}"'
 
@@ -130,10 +103,10 @@ alias pman='bot-procman-sheriff -l $PNPUSH_BASE/software/config/pnpush.pmd'
 
 alias roslocal='export ROS_MASTER_URI=http://localhost:11311'
 
-alias getjoint='rosservice call robot2_GetJoints'
-alias getcart='rosservice call robot2_GetCartesian'
-alias setjoint='rosservice call robot2_SetJoints'
-alias setcart='rosservice call robot2_SetCartesian'
+alias getjoint='rosservice call -- robot2_GetJoints'
+alias getcart='rosservice call -- robot2_GetCartesian'
+alias setjoint='rosservice call -- robot2_SetJoints'
+alias setcart='rosservice call -- robot2_SetCartesian'
 
 alias lcmlocal='sudo ifconfig lo multicast; sudo route add -net 224.0.0.0 netmask 240.0.0.0 dev lo'
 
