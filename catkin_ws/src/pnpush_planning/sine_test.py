@@ -14,6 +14,7 @@ import math
 import numpy as np
 import tf.transformations as tfm
 from robot_comm.srv import *
+from sensor_msgs.msg import *
 
 def sine_test(beginPt = [374, 0, 400], endPt = [474, 0, 400]):
     
@@ -82,10 +83,16 @@ def sine_test(beginPt = [374, 0, 400], endPt = [474, 0, 400]):
     for x in range(0,9):
         setCart(beginPt[0],beginPt[1],beginPt[2],beginPt[3],beginPt[4],beginPt[5],beginPt[6])
         setCart(endPt[0],endPt[1],endPt[2],endPt[3],endPt[4],endPt[5],endPt[6])
-    
+        
+def callback(data):
+    global pub
+    data.data.position[1] = data.data.position[1] * 100
+    pub.publish(data)
 
 if __name__=='__main__':
+    global pub
     # forward backward test
     rospy.init_node('listener', anonymous=True)
-    
+    rospy.Subscriber("/joint_states", JointState, callback)
+    pub = rospy.Publisher('/scaled_joint_states', JointState, queue_size=1)
     sine_test()
