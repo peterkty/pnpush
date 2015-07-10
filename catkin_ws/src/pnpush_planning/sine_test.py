@@ -41,20 +41,28 @@ def sine_test(beginPt = [374, 0, 400], endPt = [474, 0, 400]):
     
     setJoint(0,0,0,0,90,90)
     
-    for x in range(0,2):
+    for x in range(0,10):
         setCart(beginPt[0],beginPt[1],beginPt[2],beginPt[3],beginPt[4],beginPt[5],beginPt[6])
         setCart(endPt[0],endPt[1],endPt[2],endPt[3],endPt[4],endPt[5],endPt[6])
         
 def callback(data):
     global pub
     global listener
-    # data.data.position[1] = data.data.position[1] * 100
-    # pub.publish(data)
-    t=rospy.Time.now()
-    print(data)
-    # print t
-    pose = listener.lookupTransform('link_ft','base_link',t)
-    pub.publish(pose)
+    # t=data.header.stamp
+    # t=rospy.Time.now()
+    t = listener.getLatestCommonTime('link_ft','base_link')
+    (pos,ori) = listener.lookupTransform('base_link','link_ft',t)
+    posest = PoseStamped()
+    posest.pose.position.x = pos[0]
+    posest.pose.position.y = pos[1]
+    posest.pose.position.z = pos[2]
+    posest.pose.orientation.x = ori[0]
+    posest.pose.orientation.y = ori[1]
+    posest.pose.orientation.z = ori[2]
+    posest.pose.orientation.w = ori[3]
+    posest.header = data.header
+    
+    pub.publish(posest)
 
 
 if __name__=='__main__':
