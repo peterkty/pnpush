@@ -30,21 +30,22 @@ def push_straight():
     getCart = rospy.ServiceProxy('/robot2_GetCartesian', robot_GetCartesian)
     setJoint = rospy.ServiceProxy('/robot2_SetJoints', robot_SetJoints)
     
-    beginPt = [360, 0, 140]
-    midPt   = [360, -170, 140]
-    endPt   = [360, -185, 140]
-    beginPt.extend([0,0.7071,0.7071,0])
-    midPt.extend([0,0.7071,0.7071,0])
-    endPt.extend([0,0.7071,0.7071,0])
+    PtList = []
     
+    # set of points to travel through
+    PtList.append([360, -170, 140, 0, 0.7071, 0.7071, 0])
+    PtList.append([360,  170, 140, 0, 0.7071, 0.7071, 0])
+    PtList.append([360,    0, 140, 0, 0.7071, 0.7071, 0])
+    
+    # set initial configuration of the robot
     setJoint(0,0,0,0,90,90)
-    setCart(beginPt[0],beginPt[1],beginPt[2],beginPt[3],beginPt[4],beginPt[5],beginPt[6])
-    for x in range(0,10):
-        setCart(midPt[0],midPt[1],midPt[2],midPt[3],midPt[4],midPt[5],midPt[6])
-        setCart(endPt[0],endPt[1],endPt[2],endPt[3],endPt[4],endPt[5],endPt[6])
-        rospy.sleep(1.)
-        
-    setCart(midPt[0],midPt[1],midPt[2],midPt[3],midPt[4],midPt[5],midPt[6])
+    
+    setCart(PtList[0][0],PtList[0][1],PtList[0][2],PtList[0][3],PtList[0][4],PtList[0][5],PtList[0][6])
+    raw_input('[User Input to Move] - Hit Enter after placing the block to push it: ')
+    setCart(PtList[1][0],PtList[1][1],PtList[1][2],PtList[1][3],PtList[1][4],PtList[1][5],PtList[1][6])
+    setCart(PtList[2][0],PtList[2][1],PtList[2][2],PtList[2][3],PtList[2][4],PtList[2][5],PtList[2][6])
+    
+    # set final configuration of the robot
     setJoint(0,0,0,0,90,90)
 
 def callback_tip(data):
