@@ -29,21 +29,29 @@ def push_straight():
     setCart = rospy.ServiceProxy('/robot2_SetCartesian', robot_SetCartesian)
     getCart = rospy.ServiceProxy('/robot2_GetCartesian', robot_GetCartesian)
     setJoint = rospy.ServiceProxy('/robot2_SetJoints', robot_SetJoints)
+    setSpeed = rospy.ServiceProxy('/robot2_SetSpeed', robot_SetSpeed)
+    
+    setSpeed(300,50)
+    
+    beginTravel = [360, -300, 140]
+    endTravel   = [360,  250, 140]
     
     PtList = []
     
-    # set of points to travel through
-    PtList.append([360, -170, 140, 0, 0.7071, 0.7071, 0])
-    PtList.append([360,  170, 140, 0, 0.7071, 0.7071, 0])
-    PtList.append([360,    0, 140, 0, 0.7071, 0.7071, 0])
+    delta = endTravel[1] - beginTravel[1]
+    N = 100
+    for i in range(0,N):
+        PtList.append([360,  beginTravel[1]+ (delta/N)*i, 140, 0, 0.7071, 0.7071, 0])
     
     # set initial configuration of the robot
     setJoint(0,0,0,0,90,90)
     
     setCart(PtList[0][0],PtList[0][1],PtList[0][2],PtList[0][3],PtList[0][4],PtList[0][5],PtList[0][6])
     raw_input('[User Input to Move] - Hit Enter after placing the block to push it: ')
-    setCart(PtList[1][0],PtList[1][1],PtList[1][2],PtList[1][3],PtList[1][4],PtList[1][5],PtList[1][6])
-    setCart(PtList[2][0],PtList[2][1],PtList[2][2],PtList[2][3],PtList[2][4],PtList[2][5],PtList[2][6])
+    
+    for i in range(0,N):
+        setCart(PtList[i][0],PtList[i][1],PtList[i][2],PtList[i][3],PtList[i][4],PtList[i][5],PtList[i][6])
+        setSpeed((300-50)*i/100+50,50)
     
     # set final configuration of the robot
     setJoint(0,0,0,0,90,90)
