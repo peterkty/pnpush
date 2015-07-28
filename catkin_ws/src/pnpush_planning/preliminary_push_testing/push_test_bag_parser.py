@@ -2,7 +2,7 @@
 
 import rosbag
 
-pushTestNum = 2
+pushTestNum = 5
 bagFileNameStr = 'Test_changing_vel_%s.bag' % pushTestNum
 bag = rosbag.Bag(bagFileNameStr)
 

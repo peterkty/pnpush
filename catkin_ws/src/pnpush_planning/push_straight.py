@@ -51,7 +51,7 @@ def push_straight():
     
     for i in range(0,N):
         setCart(PtList[i][0],PtList[i][1],PtList[i][2],PtList[i][3],PtList[i][4],PtList[i][5],PtList[i][6])
-        setSpeed((300-50)*i/100+50,50)
+        setSpeed((500-50)*i/N+50,50)
     
     # set final configuration of the robot
     setJoint(0,0,0,0,90,90)
