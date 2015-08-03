@@ -32,16 +32,16 @@ def push_straight():
     setSpeed = rospy.ServiceProxy('/robot2_SetSpeed', robot_SetSpeed)
     
     setSpeed(300,50)
-    
-    beginTravel = [360, -300, 140]
-    endTravel   = [360,  250, 140]
+    z = 279
+    beginTravel = [360, -300, z]
+    endTravel   = [360,  250, z]
     
     PtList = []
     
     delta = endTravel[1] - beginTravel[1]
     N = 100
     for i in range(0,N):
-        PtList.append([360,  beginTravel[1]+ (delta/N)*i, 140, 0, 0.7071, 0.7071, 0])
+        PtList.append([360,  beginTravel[1]+ (delta/N)*i, z, 0, 0.7071, 0.7071, 0])
     
     # set initial configuration of the robot
     setJoint(0,0,0,0,90,90)
