@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+# Peter KT Yu, Aug 2015
 import sys
 import numpy as np
 from ik.roshelper import ROS_Wait_For_Msg
