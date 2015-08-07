@@ -94,7 +94,7 @@ alias faster='rosservice call /robot2_SetSpeed 200 50'
 alias fast='rosservice call /robot2_SetSpeed 100 30'
 alias slow='rosservice call /robot2_SetSpeed 50 15'
 
-alias gohome='rosservice call robot2_SetJoints "{j1: 0, j2: 0, j3: 0, j4: 0, j5: 0, j6: 0}"'
+alias gohome='rosservice call robot2_SetJoints "{j1: 0, j2: 0, j3: 0, j4: 0, j5: 90, j6: 0}"'
 
 alias teleop='rosrun teleop teleop'
 alias pythonpnpush='ipython -i -c "run $PNPUSH_BASE/catkin_ws/src/pnpush_config/python/pythonpnpush.py"'
@@ -107,6 +107,7 @@ alias getjoint='rosservice call -- robot2_GetJoints'
 alias getcart='rosservice call -- robot2_GetCartesian'
 alias setjoint='rosservice call -- robot2_SetJoints'
 alias setcart='rosservice call -- robot2_SetCartesian'
+alias zeroft='rosservice call zero'
 
 alias lcmlocal='sudo ifconfig lo multicast; sudo route add -net 224.0.0.0 netmask 240.0.0.0 dev lo'
 
