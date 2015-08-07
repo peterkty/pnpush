@@ -9,10 +9,11 @@ import tf
 import tf.transformations as tfm
 
 def main():
+    # prepare the proxies, listener
     setCart = rospy.ServiceProxy('/robot2_SetCartesian', robot_SetCartesian)
-    
     listener = tf.TransformListener()
     
+    # set the parameters
     z = 0.30
     limit = 10000
     ori = [0, 0.7071, 0.7071, 0]
