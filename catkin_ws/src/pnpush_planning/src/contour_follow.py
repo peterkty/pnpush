@@ -28,13 +28,13 @@ def pause():
 
 
 def main(argv):
-    # prepare the proxies, listener
+    # prepare the proxy, listener
     rospy.init_node('contour_follow', anonymous=True)
     listener = tf.TransformListener()
     
     # set the parameters
-    z = 0.29
-    limit = 10000
+    z = 0.29   # the height above the table
+    limit = 10000  # number of data points to be collected
     ori = [0, 0.7071, 0.7071, 0]
     threshold = 0.1  # need to be tuned
     probe_radis = 0.00626/2
