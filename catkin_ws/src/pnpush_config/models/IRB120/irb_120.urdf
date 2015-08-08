@@ -161,35 +161,35 @@
   <link name="link_ft">
     <visual>
       <geometry>
-        <cylinder radius="0.037" length="0.04"/>
+        <cylinder radius="0.037" length="0.04703"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0 0 -0.02"/>
+      <origin rpy="0 0 0" xyz="0 0 -0.023515"/>
       <material name="abb_gray">
         <color rgba="0.7 0.7 0.7 1"/>
       </material>
     </visual>
     <collision>
       <geometry>
-        <cylinder radius="0.037" length="0.04"/>
+        <cylinder radius="0.037" length="0.04703"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0 0 -0.02"/>
+      <origin rpy="0 0 0" xyz="0 0 -0.023515"/>
     </collision>
   </link>
   <link name="link_probe">
     <visual>
       <geometry>
-        <cylinder radius="0.00789" length="0.08673"/>
+        <cylinder radius="0.00313" length="0.23746"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0 0 -0.043365"/>
+      <origin rpy="0 0 0" xyz="0 0 -0.11873"/>
       <material name="abb_white">
         <color rgba="1 1 1 1"/>
       </material>
     </visual>
     <collision>
       <geometry>
-        <cylinder radius="0.00789" length="0.8673"/>
+        <cylinder radius="0.00313" length="0.23746"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0 0 -0.043365"/>
+      <origin rpy="0 0 0" xyz="0 0 -0.11873"/>
     </collision>
   </link>
   
@@ -240,13 +240,13 @@
     <parent link="link_6"/>
     <child link="link_ft"/>
     <axis xyz="0 0 1"/>
-    <origin rpy="0 0 0" xyz="0 0 0.04"/>
+    <origin rpy="0 0 0" xyz="0 0 0.04703"/>
   </joint>
   <joint name="joint8" type="fixed">
     <parent link="link_ft"/>
     <child link="link_probe"/>
     <axis xyz="0 0 1"/>
-    <origin rpy="0 0 0" xyz="0 0 0.08673 "/>
+    <origin rpy="0 0 0" xyz="0 0 0.23746"/>
   </joint>
 </robot>
 
