@@ -18,9 +18,9 @@
   
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" />
 
-  <node pkg="tf" type="static_transform_publisher" name="viconworldlink_broadcaster" args="0.4 0 0 0 0 0 map /viconworld 100" />
+  <node pkg="tf" type="static_transform_publisher" name="viconworldlink_broadcaster" args="0.4 0 0.01 0 0 0 map /viconworld 100" />
 
-  <node pkg="tf" type="static_transform_publisher" name="squareworldlink_broadcaster" args="-0.004240972297612569, 0.0018646457443079161, -0.059711041258274374 -0.00012400289255395063, 0.000154279909151047, 7.28198144789449e-05, 0.9999999777591332 /viconworld /world 100" />
+  <node pkg="tf" type="static_transform_publisher" name="squareworldlink_broadcaster" args="0 0 0 0 0 0 /viconworld /objworld 100" /> <!-- for transferring vicon object center to preferred vicon object center-->
 
 
 </launch>

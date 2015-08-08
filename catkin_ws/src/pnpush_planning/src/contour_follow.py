@@ -20,6 +20,13 @@ roslib.load_manifest("netft_rdt_driver")
 from netft_rdt_driver.srv import Zero
 import sensor_msgs.msg
 import geometry_msgs.msg
+import os
+import scipy.io as sio
+from visualization_msgs.msg import Marker
+from marker_helper import createMeshMarker
+from marker_helper import createPointMarker
+from marker_helper import createArrowMarker
+from marker_helper import createSphereMarker
 
 setCartRos = rospy.ServiceProxy('/robot2_SetCartesian', robot_SetCartesian)
 setZero = rospy.ServiceProxy('/zero', Zero)
@@ -48,32 +55,57 @@ def ftmsg2list(ftmsg):
 def norm(vect):
     vect = np.array(vect)
     return np.sqrt(np.dot(vect, vect))
-     
+
+def vizBlock(pose):
+    # prepare block visualization
+    global vizpub
+    meshmarker = createMeshMarker('package://pnpush_config/models/object_meshes/SteelBlock.stl', 
+                              offset=tuple(pose[0:3]), rgba=(0.5,0.5,0.5,1),
+                              orientation=tuple(pose[3:7]), frame_id='vicon/SteelBlock/SteelBlock')
+    vizpub.publish(meshmarker)
+    rospy.sleep(0.05)
+    
+def vizPoint(pos):
+    # prepare block visualization
+    global vizpub
+    marker = createSphereMarker(point=pos, color=[0, 0, 1, 0.5])
+    vizpub.publish(marker)
+    rospy.sleep(0.1)
+
+def vizArrow(start, end):
+    # prepare block visualization
+    global vizpub
+    marker = createArrowMarker(points=start+end, color=[1,0,0,1])
+    vizpub.publish(marker)
+    rospy.sleep(0.1)
+    
 def main(argv):
     # prepare the proxy, listener
     global listener
+    global vizpub
     rospy.init_node('contour_follow', anonymous=True)
     listener = tf.TransformListener()
-    
-    
+    vizpub = rospy.Publisher("visualization_marker", Marker)
+    vizBlock([-0.01405729, -0.00671698, -0.026716,0,0,0,1])
+    vizBlock([-0.01405729, -0.00671698, -0.026716,0,0,0,1])
     setSpeed(tcp=100, ori=30)
     # set the parameters
     z = 0.29   # the height above the table
-    limit = 10000  # number of data points to be collected
+    limit = 1000  # number of data points to be collected
     ori = [0, 0.7071, 0.7071, 0]
     threshold = 0.5  # the threshold force for contact, need to be tuned
     probe_radis = 0.00626/2
     step_size = 0.0002
     
     # 0. move to startPos
-    start_pos = [0.3, 0.15, z + 0.05]
+    start_pos = [0.3, 0.06, z + 0.05]
     setCart(start_pos,ori)
     
-    start_pos = [0.3, 0.15, z]
+    start_pos = [0.3, 0.06, z]
     setCart(start_pos,ori)
     curr_pos = start_pos
     # 0.1 zero the ft reading
-    rospy.sleep(10)  
+    rospy.sleep(3)  
     setZero()
     
     # 1. move in -y direction till contact -> normal
@@ -87,6 +119,7 @@ def main(argv):
         rospy.sleep(0.1)  
         ft = ftmsg2list(ROS_Wait_For_Msg('/netft_data', geometry_msgs.msg.WrenchStamped).getmsg())
         print '[ft explore]', ft
+        vizBlock([-0.01405729, -0.00671698, -0.026716,0,0,0,1])
         
         # If in contact, break
         if norm(ft[0:2]) > threshold:
@@ -112,22 +145,35 @@ def main(argv):
         # let the ft reads the force in static, not while pushing
         rospy.sleep(0.1)
         ft = ftmsg2list(ROS_Wait_For_Msg('/netft_data', geometry_msgs.msg.WrenchStamped).getmsg())
-        print '[ft explore]', ft
+        print index, '[ft explore]', ft
         # get box pose from vicon
-        box_pos = [0,0,0]
-        box_quat = [0,0,0,1]
+        (box_pos, box_quat) = lookupTransform('base_link', 'vicon/SteelBlock/SteelBlock', listener)
+        # correct box_pose
+        obj_des_wrt_vicon = [-0.01406426, -0.00907471, -0.02657346, -8.42456325e-05,  -1.77929224e-04,  -2.94718714e-03,  9.99995638e-01]
+        box_mat =  np.dot(np.dot(tfm.translation_matrix(box_pos), tfm.quaternion_matrix(box_quat)), 
+                   np.dot(tfm.translation_matrix(obj_des_wrt_vicon[0:3]), tfm.quaternion_matrix(obj_des_wrt_vicon[3:7])))
+        box_pos = tfm.translation_from_matrix(box_mat)
+        box_quat = tfm.quaternion_from_matrix(box_mat)
+        print 'box_pose', box_pos, box_quat
         
+        vizBlock([-0.013627, -0.0092884, -0.016475,0,0,0,1])
+        #print 'box_pos', box_pos, 'box_quat', box_quat
+                
         if norm(ft[0:2]) > threshold:
             # transform ft data to global frame
             ft_global = transformFt2Global(ft)
             ft_global[2] = 0  # we don't want noise from z
             normal = ft_global[0:3] / norm(ft_global)
-            contact_nms.append(normal)
-            contact_pt = curr_pos + normal * probe_radis
-            contact_pts.append(contact_pt)
-            all_contact.append(contact_pt.tolist() + [0] + normal.tolist() + [0] + box_pos + box_quat + curr_pos.tolist())
+            contact_nms.append(normal.tolist())
+            contact_pt = curr_pos - normal * probe_radis
+            contact_pts.append(contact_pt.tolist())
+            contact_pt[2] = 0.01
+            vizPoint(contact_pt.tolist())
+            vizArrow(contact_pt.tolist(), (contact_pt + normal * 0.1).tolist())
+            all_contact.append(contact_pt.tolist()[0:2] + [0] + normal.tolist()[0:2] + [0] + list(box_pos) + list(box_quat) + curr_pos.tolist())
+            index += 1
         
-        if len(contact_pt) >= limit:
+        if len(contact_pts) > limit:
             break
     
       #all_contact(1:2,:);  % x,y of contact position
@@ -140,9 +186,14 @@ def main(argv):
     # save contact_nm and contact_pt as json file
     with open(os.environ['PNPUSHDATA_BASE']+'/all_contact_real.json', 'w') as outfile:
         json.dump({'contact_pts': contact_pts, 'contact_nms': contact_nms}, outfile)
-        
+
     # save all_contact as mat file
-    sio.savemat(os.environ['PNPUSHDATA_BASE']+'/all_contact_real.mat', all_contact)
+    sio.savemat(os.environ['PNPUSHDATA_BASE']+'/all_contact_real.mat', {'all_contact': all_contact})
+    
+    setSpeed(tcp=100, ori=30)
+    # 3. move back to startPos
+    start_pos = [0.3, 0.06, z + 0.05]
+    setCart(start_pos,ori)
     
 if __name__=='__main__':
     main(sys.argv)
@@ -150,3 +201,13 @@ if __name__=='__main__':
 
 #rosservice call /robot2_SetSpeed 10 1
 #rosservice call /robot2_SetZone "mode: 1"
+
+
+# import tf.transformations as tfm
+# import numpy as np
+# xr = [0.41402, 0.009153, 0.02657, 8.4246e-05, 0.00017793, 0.0029472, 1]
+# x = [0.4, 0, 0, 0, 0, 0 ,1]
+# y = np.dot ( np.linalg.inv( np.dot(tfm.translation_matrix(x[0:3]), tfm.quaternion_matrix(x[3:7])) ) , np.dot(tfm.translation_matrix(xr[0:3]), tfm.quaternion_matrix(xr[3:7])) )
+# y = np.linalg.inv(y)
+# q = tfm.quaternion_from_matrix(y)
+# t = tfm.translation_from_matrix(y)
