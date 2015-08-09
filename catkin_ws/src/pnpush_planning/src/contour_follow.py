@@ -78,7 +78,15 @@ def vizArrow(start, end):
     marker = createArrowMarker(points=start+end, color=[1,0,0,1])
     vizpub.publish(marker)
     rospy.sleep(0.1)
-    
+
+def poselist2mat(pose):
+    return np.dot(tfm.translation_matrix(pose[0:3]), tfm.quaternion_matrix(pose[3:7]))
+
+def mat2poselist(pose):
+    pos = tfm.translation_from_matrix(mat)
+    quat = tfm.quaternion_from_matrix(mat)
+    return pos.tolist() + quat.tolist()
+        
 def main(argv):
     # prepare the proxy, listener
     global listener
@@ -86,8 +94,6 @@ def main(argv):
     rospy.init_node('contour_follow', anonymous=True)
     listener = tf.TransformListener()
     vizpub = rospy.Publisher("visualization_marker", Marker)
-    vizBlock([-0.01405729, -0.00671698, -0.026716,0,0,0,1])
-    vizBlock([-0.01405729, -0.00671698, -0.026716,0,0,0,1])
     setSpeed(tcp=100, ori=30)
     # set the parameters
     z = 0.29   # the height above the table
@@ -96,6 +102,10 @@ def main(argv):
     threshold = 0.5  # the threshold force for contact, need to be tuned
     probe_radis = 0.00626/2
     step_size = 0.0002
+    obj_des_wrt_vicon = [-0.01406426, -0.00907471, -0.02657346, -8.42456325e-05,  -1.77929224e-04,  -2.94718714e-03,  9.99995638e-01]
+    
+    # visualize the block 
+    vizBlock(obj_des_wrt_vicon)
     
     # 0. move to startPos
     start_pos = [0.3, 0.06, z + 0.05]
@@ -119,7 +129,7 @@ def main(argv):
         rospy.sleep(0.1)  
         ft = ftmsg2list(ROS_Wait_For_Msg('/netft_data', geometry_msgs.msg.WrenchStamped).getmsg())
         print '[ft explore]', ft
-        vizBlock([-0.01405729, -0.00671698, -0.026716,0,0,0,1])
+        vizBlock(obj_des_wrt_vicon)
         
         # If in contact, break
         if norm(ft[0:2]) > threshold:
@@ -149,14 +159,11 @@ def main(argv):
         # get box pose from vicon
         (box_pos, box_quat) = lookupTransform('base_link', 'vicon/SteelBlock/SteelBlock', listener)
         # correct box_pose
-        obj_des_wrt_vicon = [-0.01406426, -0.00907471, -0.02657346, -8.42456325e-05,  -1.77929224e-04,  -2.94718714e-03,  9.99995638e-01]
-        box_mat =  np.dot(np.dot(tfm.translation_matrix(box_pos), tfm.quaternion_matrix(box_quat)), 
-                   np.dot(tfm.translation_matrix(obj_des_wrt_vicon[0:3]), tfm.quaternion_matrix(obj_des_wrt_vicon[3:7])))
-        box_pos = tfm.translation_from_matrix(box_mat)
-        box_quat = tfm.quaternion_from_matrix(box_mat)
-        print 'box_pose', box_pos, box_quat
+        box_mat =  np.dot(poselist2mat(obj_des_wrt_vicon), poselist2mat(box_pos.tolist() + box_quat.tolist()))
+        box_pose_des_global = box_mat
+        print 'box_pose', box_pose_des_global
         
-        vizBlock([-0.013627, -0.0092884, -0.016475,0,0,0,1])
+        vizBlock(obj_des_wrt_vicon)
         #print 'box_pos', box_pos, 'box_quat', box_quat
                 
         if norm(ft[0:2]) > threshold:
