@@ -27,6 +27,7 @@ from marker_helper import createMeshMarker
 from marker_helper import createPointMarker
 from marker_helper import createArrowMarker
 from marker_helper import createSphereMarker
+from tf.broadcaster import TransformBroadcaster
 
 setCartRos = rospy.ServiceProxy('/robot2_SetCartesian', robot_SetCartesian)
 setZero = rospy.ServiceProxy('/zero', Zero)
@@ -68,7 +69,7 @@ def vizBlock(pose):
 def vizPoint(pos):
     # prepare block visualization
     global vizpub
-    marker = createSphereMarker(point=pos, color=[0, 0, 1, 0.5])
+    marker = createSphereMarker(offset=pos, color=[0, 0, 1, 0.5], scale=[0.01,0.01,0.01])
     vizpub.publish(marker)
     rospy.sleep(0.1)
 
@@ -82,7 +83,7 @@ def vizArrow(start, end):
 def poselist2mat(pose):
     return np.dot(tfm.translation_matrix(pose[0:3]), tfm.quaternion_matrix(pose[3:7]))
 
-def mat2poselist(pose):
+def mat2poselist(mat):
     pos = tfm.translation_from_matrix(mat)
     quat = tfm.quaternion_from_matrix(mat)
     return pos.tolist() + quat.tolist()
@@ -93,7 +94,9 @@ def main(argv):
     global vizpub
     rospy.init_node('contour_follow', anonymous=True)
     listener = tf.TransformListener()
-    vizpub = rospy.Publisher("visualization_marker", Marker)
+    vizpub = rospy.Publisher("visualization_marker", Marker, queue_size=10)
+    br = TransformBroadcaster()
+    
     setSpeed(tcp=100, ori=30)
     # set the parameters
     z = 0.29   # the height above the table
@@ -102,7 +105,7 @@ def main(argv):
     threshold = 0.5  # the threshold force for contact, need to be tuned
     probe_radis = 0.00626/2
     step_size = 0.0002
-    obj_des_wrt_vicon = [-0.01406426, -0.00907471, -0.02657346, -8.42456325e-05,  -1.77929224e-04,  -2.94718714e-03,  9.99995638e-01]
+    obj_des_wrt_vicon = [-0.007661312541734901, -0.004517758720668477, -0.016463606373139497, 0.000954374099208091, -0.0012349053041399783, 0.005382723119762137, 0.9999842951120707]
     
     # visualize the block 
     vizBlock(obj_des_wrt_vicon)
@@ -129,7 +132,11 @@ def main(argv):
         rospy.sleep(0.1)  
         ft = ftmsg2list(ROS_Wait_For_Msg('/netft_data', geometry_msgs.msg.WrenchStamped).getmsg())
         print '[ft explore]', ft
-        vizBlock(obj_des_wrt_vicon)
+        # get box pose from vicon
+        (box_pos, box_quat) = lookupTransform('base_link', 'vicon/SteelBlock/SteelBlock', listener)
+        # correct box_pose
+        box_pose_des_global =  mat2poselist( np.dot(poselist2mat(list(box_pos) + list(box_quat)), poselist2mat(obj_des_wrt_vicon)))
+        print 'box_pose', box_pose_des_global
         
         # If in contact, break
         if norm(ft[0:2]) > threshold:
@@ -159,11 +166,11 @@ def main(argv):
         # get box pose from vicon
         (box_pos, box_quat) = lookupTransform('base_link', 'vicon/SteelBlock/SteelBlock', listener)
         # correct box_pose
-        box_mat =  np.dot(poselist2mat(obj_des_wrt_vicon), poselist2mat(box_pos.tolist() + box_quat.tolist()))
-        box_pose_des_global = box_mat
+        box_pose_des_global = mat2poselist( np.dot(poselist2mat(list(box_pos) + list(box_quat)), poselist2mat(obj_des_wrt_vicon)))
         print 'box_pose', box_pose_des_global
         
         vizBlock(obj_des_wrt_vicon)
+        br.sendTransform(box_pose_des_global[0:3], box_pose_des_global[3:7], rospy.Time.now(), "SteelBlockDesired", "map")
         #print 'box_pos', box_pos, 'box_quat', box_quat
                 
         if norm(ft[0:2]) > threshold:
@@ -177,7 +184,7 @@ def main(argv):
             contact_pt[2] = 0.01
             vizPoint(contact_pt.tolist())
             vizArrow(contact_pt.tolist(), (contact_pt + normal * 0.1).tolist())
-            all_contact.append(contact_pt.tolist()[0:2] + [0] + normal.tolist()[0:2] + [0] + list(box_pos) + list(box_quat) + curr_pos.tolist())
+            all_contact.append(contact_pt.tolist()[0:2] + [0] + normal.tolist()[0:2] + [0] + box_pose_des_global + curr_pos.tolist())
             index += 1
         
         if len(contact_pts) > limit:
@@ -210,11 +217,4 @@ if __name__=='__main__':
 #rosservice call /robot2_SetZone "mode: 1"
 
 
-# import tf.transformations as tfm
-# import numpy as np
-# xr = [0.41402, 0.009153, 0.02657, 8.4246e-05, 0.00017793, 0.0029472, 1]
-# x = [0.4, 0, 0, 0, 0, 0 ,1]
-# y = np.dot ( np.linalg.inv( np.dot(tfm.translation_matrix(x[0:3]), tfm.quaternion_matrix(x[3:7])) ) , np.dot(tfm.translation_matrix(xr[0:3]), tfm.quaternion_matrix(xr[3:7])) )
-# y = np.linalg.inv(y)
-# q = tfm.quaternion_from_matrix(y)
-# t = tfm.translation_from_matrix(y)
+

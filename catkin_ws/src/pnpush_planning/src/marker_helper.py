@@ -53,21 +53,15 @@ def createCubeMarker(offset=(0,0,0), marker_id = 0, rgba=(1,0,0,1), orientation=
     
     return marker
 
-def createSphereMarker(point, color, offset=(0,0,0), orientation=(0,0,0,1)):
+def createSphereMarker(color, scale, offset=(0,0,0), orientation=(0,0,0,1)):
     marker = Marker()
     marker.header.frame_id = "/map"
-    marker.type = marker.POINTS
-    marker.scale.x = 0.01
-    marker.scale.y = 0.01
-    marker.scale.z = 0.01
+    marker.type = marker.SPHERE
+    marker.scale.x = scale[0]
+    marker.scale.y = scale[1]
+    marker.scale.z = scale[2]
     marker.id = 1
-    
-    p = Point()
-    p.x = point[0]
-    p.y = point[1]
-    p.z = point[2]
-    marker.pose.position = p
-    
+        
     p = ColorRGBA()
     p.r = color[0]
     p.g = color[1]
