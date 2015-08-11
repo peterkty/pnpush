@@ -29,13 +29,13 @@ def vizBlock(pose):
     vizpub.publish(meshmarker)
     rospy.sleep(0.05)
     
-xr = [0.0077503, 0.0044662, 0.016436, -0.00095437, 0.0012349, -0.0053827, 0.99998]
+xr = [0, 0, 0, 0, 0, 0 ,1]
 xk = [0, 0, 0, 0, 0, 0 ,1]
 #y = np.dot ( np.linalg.inv( np.dot(tfm.translation_matrix(x[0:3]), tfm.quaternion_matrix(x[3:7])) ) , np.dot(tfm.translation_matrix(xr[0:3]), tfm.quaternion_matrix(xr[3:7])) )
 xmat = np.dot( np.linalg.inv(poselist2mat(xr)), poselist2mat(xk) )
 xmat2 = np.linalg.solve( poselist2mat(xr), poselist2mat(xk))
 x = mat2poselist(xmat)
-obj_des_wrt_vicon = x
+obj_des_wrt_vicon = [0,0,-0.026823+4.735/1000,0,0,0,1]
 
 print x
 print mat2poselist(np.dot(xmat, poselist2mat(xr)))

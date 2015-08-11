@@ -31,6 +31,7 @@ from tf.broadcaster import TransformBroadcaster
 
 setCartRos = rospy.ServiceProxy('/robot2_SetCartesian', robot_SetCartesian)
 setZero = rospy.ServiceProxy('/zero', Zero)
+setZone = rospy.ServiceProxy('/robot2_SetZone', robot_SetZone)
 
 def setCart(pos, ori):
     param = (np.array(pos) * 1000).tolist() + ori
@@ -98,17 +99,21 @@ def main(argv):
     br = TransformBroadcaster()
     
     setSpeed(tcp=100, ori=30)
+    setZone(0)
     # set the parameters
     z = 0.29   # the height above the table
-    limit = 1000  # number of data points to be collected
+    limit = 10000  # number of data points to be collected
     ori = [0, 0.7071, 0.7071, 0]
     threshold = 0.5  # the threshold force for contact, need to be tuned
     probe_radis = 0.00626/2
     step_size = 0.0002
-    obj_des_wrt_vicon = [-0.007661312541734901, -0.004517758720668477, -0.016463606373139497, 0.000954374099208091, -0.0012349053041399783, 0.005382723119762137, 0.9999842951120707]
+    obj_des_wrt_vicon = [0,0,-0.026823+4.735/1000,0,0,0,1]
     
     # visualize the block 
     vizBlock(obj_des_wrt_vicon)
+    rospy.sleep(0.1)
+    vizBlock(obj_des_wrt_vicon)
+    rospy.sleep(0.1)
     
     # 0. move to startPos
     start_pos = [0.3, 0.06, z + 0.05]
@@ -167,6 +172,7 @@ def main(argv):
         (box_pos, box_quat) = lookupTransform('base_link', 'vicon/SteelBlock/SteelBlock', listener)
         # correct box_pose
         box_pose_des_global = mat2poselist( np.dot(poselist2mat(list(box_pos) + list(box_quat)), poselist2mat(obj_des_wrt_vicon)))
+        #box_pose_des_global = list(box_pos) + list(box_quat)
         print 'box_pose', box_pose_des_global
         
         vizBlock(obj_des_wrt_vicon)
