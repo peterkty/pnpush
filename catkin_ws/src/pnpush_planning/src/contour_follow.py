@@ -114,6 +114,14 @@ def main(argv):
     rospy.sleep(0.1)
     vizBlock(obj_des_wrt_vicon)
     rospy.sleep(0.1)
+    vizBlock(obj_des_wrt_vicon)
+    rospy.sleep(0.1)
+    vizBlock(obj_des_wrt_vicon)
+    rospy.sleep(0.1)
+    vizBlock(obj_des_wrt_vicon)
+    rospy.sleep(0.1)
+    vizBlock(obj_des_wrt_vicon)
+    rospy.sleep(0.1)
     
     # 0. move to startPos
     start_pos = [0.3, 0.06, z + 0.05]
@@ -167,13 +175,13 @@ def main(argv):
         # let the ft reads the force in static, not while pushing
         rospy.sleep(0.1)
         ft = ftmsg2list(ROS_Wait_For_Msg('/netft_data', geometry_msgs.msg.WrenchStamped).getmsg())
-        print index, '[ft explore]', ft
+        print index #, '[ft explore]', ft
         # get box pose from vicon
         (box_pos, box_quat) = lookupTransform('base_link', 'vicon/SteelBlock/SteelBlock', listener)
         # correct box_pose
         box_pose_des_global = mat2poselist( np.dot(poselist2mat(list(box_pos) + list(box_quat)), poselist2mat(obj_des_wrt_vicon)))
         #box_pose_des_global = list(box_pos) + list(box_quat)
-        print 'box_pose', box_pose_des_global
+        #print 'box_pose', box_pose_des_global
         
         vizBlock(obj_des_wrt_vicon)
         br.sendTransform(box_pose_des_global[0:3], box_pose_des_global[3:7], rospy.Time.now(), "SteelBlockDesired", "map")
@@ -195,6 +203,14 @@ def main(argv):
         
         if len(contact_pts) > limit:
             break
+        
+        if len(contact_pts) % 1000 == 0:  # zero the ft offset, move away from block, zero it, then come back
+            move_away_size = 0.01
+            setCart(curr_pos + normal * move_away_size, ori)
+            rospy.sleep(0.5)
+            setZero()
+            setCart(curr_pos, ori)
+            
     
       #all_contact(1:2,:);  % x,y of contact position
       #all_contact(4:5,:);  % x,y contact normal
