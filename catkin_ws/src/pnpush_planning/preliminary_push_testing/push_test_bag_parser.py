@@ -4,11 +4,11 @@ import rosbag
 import os
 
 savedPath = os.getcwd()
-os.chdir(savedPath+'/Metal_block')
+os.chdir(savedPath+'/St_block')
 
 for numBags in range(1,7):
     pushTestNum = numBags
-    bagFileNameStr = 'Test_metal_%s.bag' % pushTestNum
+    bagFileNameStr = 'Test_st_%s.bag' % pushTestNum
     bag = rosbag.Bag(bagFileNameStr)
 
     # robot tcp x,y
@@ -27,7 +27,7 @@ for numBags in range(1,7):
     txtFileNameStr = 'metal_%s_obj.txt' % pushTestNum
     text_file = open(txtFileNameStr, "w")
 
-    for topic, msg, t in bag.read_messages(topics=['/vicon/MetalSquare/MetalSquare']):
+    for topic, msg, t in bag.read_messages(topics=['/vicon/SteelBlock/SteelBlock']):
         # print msg
         text_file.write('%s \n' % msg.header.stamp)
         text_file.write('%s \n' % msg.transform.translation.x)

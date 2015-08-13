@@ -30,9 +30,12 @@ def push_straight():
     getCart = rospy.ServiceProxy('/robot2_GetCartesian', robot_GetCartesian)
     setJoint = rospy.ServiceProxy('/robot2_SetJoints', robot_SetJoints)
     setSpeed = rospy.ServiceProxy('/robot2_SetSpeed', robot_SetSpeed)
+    addBuffer = rospy.ServiceProxy('/robot2_AddBuffer', robot_AddBuffer)
+    clearBuffer = rospy.ServiceProxy('/robot2_ClearBuffer', robot_ClearBuffer)
+    executeBuffer = rospy.ServiceProxy('/robot2_ExecuteBuffer', robot_ExecuteBuffer)
     
     setSpeed(300,50)
-    z = 279
+    z = 217 # long 279 || short 217
     beginTravel = [360, -300, z]
     endTravel   = [360,  250, z]
     
@@ -46,15 +49,23 @@ def push_straight():
     # set initial configuration of the robot
     setJoint(0,0,0,0,90,90)
     
-    setCart(PtList[0][0],PtList[0][1],PtList[0][2],PtList[0][3],PtList[0][4],PtList[0][5],PtList[0][6])
-    raw_input('[User Input to Move] - Hit Enter after placing the block to push it: ')
+    numOfRuns = 10
     
-    for i in range(0,N):
-        setCart(PtList[i][0],PtList[i][1],PtList[i][2],PtList[i][3],PtList[i][4],PtList[i][5],PtList[i][6])
-        setSpeed((500-50)*i/N+50,50)
+    for counter in range(0, numOfRuns):
+        print 'Run number %s' % counter
+        setCart(PtList[0][0],PtList[0][1],PtList[0][2],PtList[0][3],PtList[0][4],PtList[0][5],PtList[0][6])
+        raw_input('[User Input to Move] - Hit Enter after placing the block to push it: ')
+        
+        clearBuffer()
+        for i in range(0,N):
+            setSpeed((500-50)*i/N+50,50)
+            addBuffer(PtList[i][0],PtList[i][1],PtList[i][2],PtList[i][3],PtList[i][4],PtList[i][5],PtList[i][6])
+        executeBuffer()
     
-    # set final configuration of the robot
-    setJoint(0,0,0,0,90,90)
+        # set final configuration of the robot
+        setJoint(0,0,0,0,90,90)
+    
+    print('[Execution] - End of program!')
 
 def callback_tip(data):
     global pub
