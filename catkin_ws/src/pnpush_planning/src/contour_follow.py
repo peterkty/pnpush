@@ -88,7 +88,15 @@ def mat2poselist(mat):
     pos = tfm.translation_from_matrix(mat)
     quat = tfm.quaternion_from_matrix(mat)
     return pos.tolist() + quat.tolist()
-        
+
+def getAveragedFT():
+    tmpft = np.array([0,0,0])
+    nsample = 10
+    for i in xrange(0,nsample):
+        tmpft =  tmpft + np.array(ftmsg2list(ROS_Wait_For_Msg('/netft_data', geometry_msgs.msg.WrenchStamped).getmsg()))
+    print tmpft / nsample
+    return (tmpft / nsample).tolist()
+
 def main(argv):
     # prepare the proxy, listener
     global listener
@@ -101,11 +109,11 @@ def main(argv):
     setSpeed(tcp=100, ori=30)
     setZone(0)
     # set the parameters
-    z = 0.29   # the height above the table
     limit = 10000  # number of data points to be collected
     ori = [0, 0.7071, 0.7071, 0]
     threshold = 0.5  # the threshold force for contact, need to be tuned
-    probe_radis = 0.00626/2
+    z = 0.218   # the height above the table probe1: 0.29 probe2: 0.218
+    probe_radis = 0.004745   # probe1: 0.00626/2 probe2: 0.004745
     step_size = 0.0002
     obj_des_wrt_vicon = [0,0,-0.026823+4.735/1000,0,0,0,1]
     
@@ -174,7 +182,7 @@ def main(argv):
         
         # let the ft reads the force in static, not while pushing
         rospy.sleep(0.1)
-        ft = ftmsg2list(ROS_Wait_For_Msg('/netft_data', geometry_msgs.msg.WrenchStamped).getmsg())
+        ft = getAveragedFT()
         print index #, '[ft explore]', ft
         # get box pose from vicon
         (box_pos, box_quat) = lookupTransform('base_link', 'vicon/SteelBlock/SteelBlock', listener)
@@ -205,12 +213,14 @@ def main(argv):
         if len(contact_pts) > limit:
             break
         
-        if len(contact_pts) % 1000 == 0:  # zero the ft offset, move away from block, zero it, then come back
+        if len(contact_pts) % 500 == 0:  # zero the ft offset, move away from block, zero it, then come back
             move_away_size = 0.01
+            setSpeed(tcp=10, ori=30)
             setCart(curr_pos + normal * move_away_size, ori)
             rospy.sleep(0.5)
             setZero()
             setCart(curr_pos, ori)
+            setSpeed(tcp=20, ori=30)
             
     
       #all_contact(1:2,:);  % x,y of contact position
