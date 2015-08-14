@@ -21,6 +21,8 @@
   <node pkg="tf" type="static_transform_publisher" name="viconworldlink_broadcaster" args="0.4 0 0.01 0 0 0 map /viconworld 100" />
 
   <node pkg="tf" type="static_transform_publisher" name="squareworldlink_broadcaster" args="0 0 0 0 0 0 /viconworld /objworld 100" /> <!-- for transferring vicon object center to preferred vicon object center-->
+  
+  <node pkg="tf" type="static_transform_publisher" name="vicontip_broadcaster" args="0 0 0.12 0 0 0 /link_6 /vicon_tip 100" /> <!-- for transferring vicon object center to preferred vicon object center-->
 
 
 </launch>
