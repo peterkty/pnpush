@@ -19,6 +19,9 @@ from vicon_bridge.msg import Markers
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 
+from rigid_transform_3D import rigid_transform_3D
+import tf.transformations as tfm
+
 limits = [0.2, 0.4, -0.3, +0.3, 0.3, 0.6]  #[xmin, xmax, ymin, ymax, zmin, zmax]
 ori = [0, 0.7071, 0.7071, 0]
 
@@ -35,6 +38,8 @@ def setCart(pos, ori):
     #print 'setCart', param
     #pause()
     setCartRos(*param)
+
+
 
 setZone(0)
 
@@ -73,4 +78,12 @@ plt.scatter(xt, yt, c='b', marker='o')
 
 plt.show()
 
+viconpts = np.hstack([xs, ys, zs])
+robotpts = np.hstack([xt, yt, zt])
+
+(R,t) = rigid_transform_3D(robotpts, viconpts)  # then you'll get vicon frame wrt robot frame
+
+quat = tfm.quaternion_from_matrix(R)
+
+print 'vicon_T_robot:', t, quat
 
