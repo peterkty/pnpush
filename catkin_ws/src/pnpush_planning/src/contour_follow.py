@@ -35,7 +35,7 @@ setZone = rospy.ServiceProxy('/robot2_SetZone', robot_SetZone)
 
 def setCart(pos, ori):
     param = (np.array(pos) * 1000).tolist() + ori
-    print 'setCart', param
+    #print 'setCart', param
     #pause()
     setCartRos(*param)
 
@@ -94,7 +94,7 @@ def getAveragedFT():
     nsample = 10
     for i in xrange(0,nsample):
         tmpft =  tmpft + np.array(ftmsg2list(ROS_Wait_For_Msg('/netft_data', geometry_msgs.msg.WrenchStamped).getmsg()))
-    print tmpft / nsample
+    #print tmpft / nsample
     return (tmpft / nsample).tolist()
 
 def main(argv):
@@ -111,11 +111,11 @@ def main(argv):
     # set the parameters
     limit = 10000  # number of data points to be collected
     ori = [0, 0.7071, 0.7071, 0]
-    threshold = 0.5  # the threshold force for contact, need to be tuned
+    threshold = 0.3  # the threshold force for contact, need to be tuned
     z = 0.218   # the height above the table probe1: 0.29 probe2: 0.218
     probe_radis = 0.004745   # probe1: 0.00626/2 probe2: 0.004745
     step_size = 0.0002
-    obj_des_wrt_vicon = [0,0,-0.026823+4.735/1000,0,0,0,1]
+    obj_des_wrt_vicon = [0,0,-(9.40/2/1000+14.15/2/1000),0,0,0,1]
     
     # visualize the block 
     vizBlock(obj_des_wrt_vicon)
@@ -139,7 +139,7 @@ def main(argv):
     setCart(start_pos,ori)
     curr_pos = start_pos
     # 0.1 zero the ft reading
-    rospy.sleep(3)  
+    rospy.sleep(1)  
     setZero()
     
     # 1. move in -y direction till contact -> normal
@@ -176,7 +176,7 @@ def main(argv):
     all_contact = []
     while True:
         # 2.1 move 
-        direc = np.dot(tfm.euler_matrix(0,0,2) , normal.tolist() + [1])[0:3]
+        direc = np.dot(tfm.euler_matrix(0,0,2.2) , normal.tolist() + [1])[0:3]
         curr_pos = np.array(curr_pos) + direc * step_size
         setCart(curr_pos, ori)
         
@@ -217,7 +217,8 @@ def main(argv):
             move_away_size = 0.01
             setSpeed(tcp=10, ori=30)
             setCart(curr_pos + normal * move_away_size, ori)
-            rospy.sleep(0.5)
+            rospy.sleep(1)
+            print 'bad ft:', getAveragedFT()
             setZero()
             setCart(curr_pos, ori)
             setSpeed(tcp=20, ori=30)

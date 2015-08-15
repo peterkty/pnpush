@@ -21,8 +21,9 @@ import matplotlib.pyplot as plt
 
 from rigid_transform_3D import rigid_transform_3D
 import tf.transformations as tfm
+from ik.ik import setSpeed
 
-limits = [0.2, 0.4, -0.3, +0.3, 0.3, 0.6]  #[xmin, xmax, ymin, ymax, zmin, zmax]
+limits = [0.2, 0.4, -0.3, +0.3, 0.3, 0.5]  #[xmin, xmax, ymin, ymax, zmin, zmax]
 ori = [0, 0.7071, 0.7071, 0]
 
 rospy.init_node('vicon_vs_robot')
@@ -49,11 +50,11 @@ zs = []
 xt = []
 yt = []
 zt = []
-
+setSpeed(300, 60)
 
 for x in np.linspace(limits[0],limits[1], 5):
     for y in np.linspace(limits[2],limits[3], 5):
-        for z in np.linspace(limits[4],limits[5], 1):
+        for z in np.linspace(limits[4],limits[5], 5):
             setCart([x,y,z], ori)
             
             # get the marker pos from vicon
@@ -62,7 +63,8 @@ for x in np.linspace(limits[0],limits[1], 5):
             vmpos = (np.array(xyztolist(vmarkers.markers[-1].translation)) / 1000.0).tolist()
             
             # get the marker pos from robot
-            (vicontrans,rot) = lookupTransform('/viconworld','/vicon_tip', listener)
+            #(vicontrans,rot) = lookupTransform('/viconworld','/vicon_tip', listener)
+            (vicontrans,rot) = lookupTransform('/map','/vicon_tip', listener)
             vmpos_robot = list(vicontrans)
             print 'vicon pos %.4f %.4f %.4f' % tuple(vmpos)
             print 'robot pos %.4f %.4f %.4f' % tuple(vmpos_robot)
@@ -78,12 +80,15 @@ plt.scatter(xt, yt, c='b', marker='o')
 
 plt.show()
 
-viconpts = np.hstack([xs, ys, zs])
-robotpts = np.hstack([xt, yt, zt])
+viconpts = np.vstack([xs, ys, zs]).T
+robotpts = np.vstack([xt, yt, zt]).T
 
-(R,t) = rigid_transform_3D(robotpts, viconpts)  # then you'll get vicon frame wrt robot frame
+(R,t,rmse) = rigid_transform_3D(viconpts, robotpts)  # then you'll get vicon frame wrt robot frame
 
-quat = tfm.quaternion_from_matrix(R)
+Rh = tfm.identity_matrix()
+Rh[np.ix_([0,1,2],[0,1,2])] = R
+quat = tfm.quaternion_from_matrix(Rh)
 
-print 'vicon_T_robot:', t, quat
+print 'vicon_T_robot:', (t.tolist() + quat.tolist())
+print 'rmse:', rmse
 

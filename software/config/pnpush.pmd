@@ -2,10 +2,6 @@ cmd "0-matlabpush" {
     exec = "matlab -nodesktop -nodisplay -nosplash -r \"tic; cd([getenv('PNPUSH_BASE'), '/software']); addpath_pods; addpath_drake; toc; cd ../software/planning/ik_server/; ikTrajServerSocket;\"";
     host = "localhost";
 }
-cmd "6-moveright" {
-    exec = "rosservice call -- robot2_SetCartesian 400 120 150 0 0 -1 0";
-    host = "localhost";
-}
 cmd "3-ft" {
     exec = "rosrun netft_rdt_driver netft_node --address 192.168.125.2";
     host = "localhost";
@@ -34,13 +30,22 @@ cmd "2-abb" {
     exec = "roslaunch pnpush_config abb.launch";
     host = "localhost";
 }
-cmd "6-moveleft" {
-    exec = "rosservice call -- robot2_SetCartesian 400 -120 150 0 0 -1 0";
+cmd "6-gohome" {
+    exec = "rosservice call robot2_SetJoints "{j1: 0, j2: 0, j3: 0, j4: 0, j5: 90, j6: 0}"";
     host = "localhost";
+}
+cmd "7-contour-following" {
+    exec = "rosrun pnpush_planning contour_follow.py";
+    host = "localhost";
+}
+group "calibration" {
+    cmd "6-moveleft" {
+        exec = "rosrun pnpush_planning check_vicon_vs_robot.py";
+        host = "localhost";
+    }
 }
 
 script "run_real" {
-    start cmd "0-matlabpush";
     start cmd "0-roscore";
     wait ms 1000;
     start cmd "1-perception-real";
@@ -51,7 +56,6 @@ script "run_real" {
 }
 
 script "run_virtual" {
-    start cmd "0-matlabpush";
     start cmd "0-roscore";
     wait ms 1000;
     start cmd "1-perception-virtual";

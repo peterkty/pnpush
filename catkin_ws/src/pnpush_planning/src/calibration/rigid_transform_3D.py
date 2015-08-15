@@ -1,5 +1,6 @@
 from numpy import *
 from math import sqrt
+import pdb
 
 # Input: expects Nx3 matrix of points
 # Returns R,t
@@ -20,23 +21,33 @@ def rigid_transform_3D(A, B):
     BB = B - tile(centroid_B, (N, 1))
 
     # dot is matrix multiplication for array
-    H = transpose(AA) * BB
+    H = dot(transpose(AA), BB)
 
     U, S, Vt = linalg.svd(H)
 
-    R = Vt.T * U.T
+    R = dot(Vt.T, U.T)
 
     # special reflection case
     if linalg.det(R) < 0:
        print "Reflection detected"
        Vt[2,:] *= -1
-       R = Vt.T * U.T
+       R = dot(Vt.T, U.T)
 
-    t = -R*centroid_A.T + centroid_B.T
+    t = -dot(R,centroid_A.T) + centroid_B.T
+    
+    ret_R = R
+    ret_t = t
+    A2 = dot(ret_R,A.T) + tile(ret_t, (N, 1)).T
+    A2 = A2.T
 
-    print t
+    # Find the error
+    err = A2 - B
 
-    return R, t
+    err = multiply(err, err)
+    err = sum(err)
+    rmse = sqrt(err/N);
+
+    return R, t, rmse
 
 
 
