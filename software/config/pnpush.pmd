@@ -31,15 +31,20 @@ cmd "2-abb" {
     host = "localhost";
 }
 cmd "6-gohome" {
-    exec = "rosservice call robot2_SetJoints "{j1: 0, j2: 0, j3: 0, j4: 0, j5: 90, j6: 0}"";
+    exec = "rosservice call robot2_SetJoints \"{j1: 0, j2: 0, j3: 0, j4: 0, j5: 90, j6: 0}\"";
     host = "localhost";
 }
 cmd "7-contour-following" {
     exec = "rosrun pnpush_planning contour_follow.py";
     host = "localhost";
 }
+cmd "8-show-ft-value" {
+    exec = "rosrun pnpush_planning get_averaged_ft.py";
+    host = "localhost";
+}
+
 group "calibration" {
-    cmd "6-moveleft" {
+    cmd "vicon-robot" {
         exec = "rosrun pnpush_planning check_vicon_vs_robot.py";
         host = "localhost";
     }

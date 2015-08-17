@@ -97,11 +97,15 @@ def getAveragedFT():
     #print tmpft / nsample
     return (tmpft / nsample).tolist()
 
+def norm(vect):
+    vect = np.array(vect)
+    return np.sqrt(np.dot(vect, vect))
+    
 def main(argv):
     rospy.init_node('get_averaged_ft', anonymous=True)
     while True:
         ft = getAveragedFT()
-        print '[ft]', ft
+        print '[ft] [%.3f %.3f %.3f]' % tuple(ft), norm(ft[0:2])
     
 if __name__=='__main__':
     main(sys.argv)

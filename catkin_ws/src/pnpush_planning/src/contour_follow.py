@@ -141,6 +141,7 @@ def main(argv):
     # 0.1 zero the ft reading
     rospy.sleep(1)  
     setZero()
+    rospy.sleep(3)
     
     # 1. move in -y direction till contact -> normal
     setSpeed(tcp=30, ori=30)
@@ -176,7 +177,7 @@ def main(argv):
     all_contact = []
     while True:
         # 2.1 move 
-        direc = np.dot(tfm.euler_matrix(0,0,2.2) , normal.tolist() + [1])[0:3]
+        direc = np.dot(tfm.euler_matrix(0,0,2) , normal.tolist() + [1])[0:3]
         curr_pos = np.array(curr_pos) + direc * step_size
         setCart(curr_pos, ori)
         
@@ -215,12 +216,14 @@ def main(argv):
         
         if len(contact_pts) % 500 == 0:  # zero the ft offset, move away from block, zero it, then come back
             move_away_size = 0.01
-            setSpeed(tcp=10, ori=30)
+            overshoot_size = 0 #0.0005
+            setSpeed(tcp=5, ori=30)
             setCart(curr_pos + normal * move_away_size, ori)
             rospy.sleep(1)
             print 'bad ft:', getAveragedFT()
             setZero()
-            setCart(curr_pos, ori)
+            rospy.sleep(3)
+            setCart(curr_pos - normal * overshoot_size, ori)
             setSpeed(tcp=20, ori=30)
             
     
