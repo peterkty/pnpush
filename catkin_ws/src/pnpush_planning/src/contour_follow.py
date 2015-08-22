@@ -208,7 +208,7 @@ def main(argv):
             vizPoint(contact_pt.tolist())
             vizArrow(contact_pt.tolist(), (contact_pt + normal * 0.1).tolist())
             # caution: matlab uses the other quaternion order: w x y z. Also the normal is in toward the object.
-            all_contact.append(contact_pt.tolist()[0:2] + [0] + (-normal).tolist()[0:2] + [0] + box_pose_des_global[0:3] + box_pose_des_global[6:7] + box_pose_des_global[3:5] + curr_pos.tolist())
+            all_contact.append(contact_pt.tolist()[0:2] + [0] + (-normal).tolist()[0:2] + [0] + box_pose_des_global[0:3] + box_pose_des_global[6:7] + box_pose_des_global[3:6] + curr_pos.tolist())
             index += 1
         
         if len(contact_pts) > limit:

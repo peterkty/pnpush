@@ -95,7 +95,7 @@ def coordinateFrameTransform(pt, homeFrame, targetFrame, listener):
             pose.pose.position.y = pt[1]
             pose.pose.position.z = pt[2]
             pose_target = listener.transformPose(targetFrame, pose)
-            return pose_target
+            return [pose_target.pose.position.x, pose_target.pose.position.y, pose_target.pose.position.z]
         except: #(tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
             print '[coordinateFrameTransform] failed to transform'
             print '[coordinateFrameTransform] targetFrame %s homeFrame %s' % (targetFrame, homeFrame)
