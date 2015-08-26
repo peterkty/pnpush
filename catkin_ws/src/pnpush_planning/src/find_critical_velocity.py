@@ -33,6 +33,7 @@ from math import pi
 import pdb
 import copy
 import subprocess, os, signal
+from shape_db import ShapeDB
 
 setCartRos = rospy.ServiceProxy('/robot2_SetCartesian', robot_SetCartesian)
 setZero = rospy.ServiceProxy('/zero', Zero)
@@ -92,26 +93,26 @@ def main(argv):
     vizpub = rospy.Publisher("visualization_marker", Marker, queue_size=10)
     br = TransformBroadcaster()
     
-    globalvel = 200  # speed for moving around
-    setZone(0)
+
     # set the parameters
+    globalvel = 200  # speed for moving around
     ori = [0, 0.7071, 0.7071, 0]
     z = 0.218   # the height above the table probe1: 0.29 probe2: 0.218
     zup = z + 0.05
     probe_radius = 0.004745   # probe1: 0.00626/2 probe2: 0.004745
-    step_size = 0.0002
     dist_before_contact = 0.02 
     dist_after_contact = 0.05
     obj_frame_id = '/vicon/SteelBlock/SteelBlock'
     global_frame_id = '/map'
     dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/push_dataset_critical_velocity/'
     speeds = np.linspace(40,200,10)
-    setSpeed(tcp=globalvel, ori=1000)
     
-    shape_id = 'rectangle-big'
-    shape_polygon = [[-0.0985/2, -0.0985/2, 0], [0.0985/2, -0.0985/2, 0]] # shape of the objects presented as polygon.
+    shape_db = ShapeDB()
+    shape_polygon = [[-0.0985/2, -0.0985/2], [0.0985/2, -0.0985/2]] # shape of the objects presented as polygon.
     topics = ['/joint_states', '/netft_data', '/tf', '/visualization_marker']
     
+    setSpeed(tcp=globalvel, ori=1000)
+    setZone(0)
     make_sure_path_exists(dir_save_bagfile)
     
     # enumerate the speed
@@ -125,6 +126,7 @@ def main(argv):
                 tangent = np.array(shape_polygon[i+1]) - np.array(shape_polygon[i])
                 normal = np.array([tangent[1], -tangent[0], 0]) 
                 normal = normal / norm(normal)  # normalize it
+                normal = np.append(normal, [0])
                 
                 # enumerate the direction in which we want to push
                 for t in [0]:
@@ -144,7 +146,6 @@ def main(argv):
                     
                     # zero force torque sensor
                     rospy.sleep(0.1)
-                    #with Timer('FT setzero'):
                     setZero()
                     wait_for_ft_calib()
                     

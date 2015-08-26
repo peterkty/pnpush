@@ -53,6 +53,10 @@ class ShapeDB:
         # all have same thickness
         for key in self.shape_db:
             self.shape_db[key]["thickness"] = 0.013
+            
+        for key in self.shape_db:
+            self.shape_db[key]["frameid"] = '/vicon/StainlessBlock/StainlessBlock'
+
         
     shape_db = {
         "rect1" : {
