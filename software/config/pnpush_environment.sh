@@ -107,6 +107,7 @@ alias getjoint='rosservice call -- robot2_GetJoints'
 alias getcart='rosservice call -- robot2_GetCartesian'
 alias setjoint='rosservice call -- robot2_SetJoints'
 alias setcart='rosservice call -- robot2_SetCartesian'
+alias setspeed='rosservice call /robot2_SetSpeed'
 alias zeroft='rosservice call zero'
 
 alias lcmlocal='sudo ifconfig lo multicast; sudo route add -net 224.0.0.0 netmask 240.0.0.0 dev lo'

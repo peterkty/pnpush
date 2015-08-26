@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 
 # Peter KT Yu, Aug 2015
-# automate the process of pushing against an object and record the data
+# enumerate all velocity to find the critical velocity between dynamic vs quasistatic
 
 import sys
 import numpy as np
 from ik.roshelper import ROS_Wait_For_Msg
 from ik.roshelper import lookupTransform
 from ik.roshelper import coordinateFrameTransform
+from ik.helper import Timer
 from ik.ik import setSpeed
 from geometry_msgs.msg import WrenchStamped
 import tf
@@ -69,6 +70,19 @@ def mat2poselist(mat):
     quat = tfm.quaternion_from_matrix(mat)
     return pos.tolist() + quat.tolist()
 
+def wait_for_ft_calib():
+    ROS_Wait_For_Msg('/netft_data', geometry_msgs.msg.WrenchStamped).getmsg()
+
+import os
+import errno
+
+def make_sure_path_exists(path):
+    try:
+        os.makedirs(path)
+    except OSError as exception:
+        if exception.errno != errno.EEXIST:
+            raise
+
 def main(argv):
     # prepare the proxy, listener
     global listener
@@ -78,8 +92,7 @@ def main(argv):
     vizpub = rospy.Publisher("visualization_marker", Marker, queue_size=10)
     br = TransformBroadcaster()
     
-    
-    setSpeed(tcp=200, ori=1000)
+    globalvel = 200  # speed for moving around
     setZone(0)
     # set the parameters
     ori = [0, 0.7071, 0.7071, 0]
@@ -91,29 +104,30 @@ def main(argv):
     dist_after_contact = 0.05
     obj_frame_id = '/vicon/SteelBlock/SteelBlock'
     global_frame_id = '/map'
-    dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/push_dataset/'
-    speeds = [20, 100, 200]
+    dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/push_dataset_critical_velocity/'
+    speeds = np.linspace(40,200,10)
+    setSpeed(tcp=globalvel, ori=1000)
     
-    shape_id = 'square'
-    shape_polygon = [[-0.0985/2, -0.0985/2], [0.0985/2, -0.0985/2]] # shape of the objects presented as polygon.
+    shape_id = 'rectangle-big'
+    shape_polygon = [[-0.0985/2, -0.0985/2, 0], [0.0985/2, -0.0985/2, 0]] # shape of the objects presented as polygon.
     topics = ['/joint_states', '/netft_data', '/tf', '/visualization_marker']
+    
+    make_sure_path_exists(dir_save_bagfile)
     
     # enumerate the speed
     for v in speeds:
-        setSpeed(tcp=v, ori=1000)
         # enumerate the side we want to push
         for i in range(len(shape_polygon) - 1):
             
             # enumerate the contact point that we want to push
-            for s in np.linspace(0.1,0.9,3):
+            for s in [0]:
                 pos = np.array(shape_polygon[i]) *s + np.array(shape_polygon[i+1]) *(1-s)
                 tangent = np.array(shape_polygon[i+1]) - np.array(shape_polygon[i])
                 normal = np.array([tangent[1], -tangent[0], 0]) 
                 normal = normal / norm(normal)  # normalize it
-                normal = np.append(normal, [0])
                 
                 # enumerate the direction in which we want to push
-                for t in np.linspace(-pi/4, pi/4, 3):
+                for t in [0]:
                     bagfilename = 'push_shape=%s_v=%.0f_i=%.3f_s=%.3f_t=%.3f.bag' % (shape_id, v, i, s, t)
                     bagfilepath = dir_save_bagfile+bagfilename
                     # if exists then skip it
@@ -130,12 +144,17 @@ def main(argv):
                     
                     # zero force torque sensor
                     rospy.sleep(0.1)
+                    #with Timer('FT setzero'):
                     setZero()
-                    rospy.sleep(3)
+                    wait_for_ft_calib()
                     
                     # transform start and end to world frame
-                    pos_start_probe_world = coordinateFrameTransform(pos_start_probe_object, obj_frame_id, global_frame_id, listener)
-                    pos_end_probe_world = coordinateFrameTransform(pos_end_probe_object, obj_frame_id, global_frame_id, listener)
+                    #pos_start_probe_world = coordinateFrameTransform(pos_start_probe_object, obj_frame_id, global_frame_id, listener)
+                    #pos_end_probe_world = coordinateFrameTransform(pos_end_probe_object, obj_frame_id, global_frame_id, listener)
+                    pos_start_probe_world = pos_start_probe_object
+                    pos_start_probe_world[0] += 0.3
+                    pos_end_probe_world = pos_end_probe_object
+                    pos_end_probe_world[0] += 0.3
 
                     # start bag recording
                     # move to startPos
@@ -153,16 +172,18 @@ def main(argv):
                     
                     end_pos = copy.deepcopy(pos_end_probe_world)
                     end_pos[2] = z
+                    setSpeed(tcp=v, ori=1000)
                     setCart(end_pos,ori)
+                    setSpeed(tcp=globalvel, ori=1000)
                     
                     # end bag recording
                     terminate_ros_node("/record")
                     
+                    # move up vertically
                     end_pos = copy.deepcopy(pos_end_probe_world)
                     end_pos[2] = zup
                     setCart(end_pos,ori)
                     
-                    #os.killpg(rosbag_proc.pid, signal.SIGINT) 
 
     setSpeed(tcp=100, ori=30)
     # move back to startPos
@@ -181,10 +202,4 @@ def terminate_ros_node(s):
 
 if __name__=='__main__':
     main(sys.argv)
-
-
-#rosservice call /robot2_SetSpeed 10 1
-#rosservice call /robot2_SetZone "mode: 1"
-
-
 

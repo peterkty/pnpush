@@ -23,7 +23,8 @@ from rigid_transform_3D import rigid_transform_3D
 import tf.transformations as tfm
 from ik.ik import setSpeed
 
-limits = [0.2, 0.4, -0.3, +0.3, 0.3, 0.5]  #[xmin, xmax, ymin, ymax, zmin, zmax]
+limits = [0.2, 0.4, -0.3, +0.3, 0.25, 0.5]  #[xmin, xmax, ymin, ymax, zmin, zmax]
+nseg = [5, 5, 5]
 ori = [0, 0.7071, 0.7071, 0]
 
 rospy.init_node('vicon_vs_robot')
@@ -52,9 +53,9 @@ yt = []
 zt = []
 setSpeed(300, 60)
 
-for x in np.linspace(limits[0],limits[1], 5):
-    for y in np.linspace(limits[2],limits[3], 5):
-        for z in np.linspace(limits[4],limits[5], 5):
+for x in np.linspace(limits[0],limits[1], nseg[0]):
+    for y in np.linspace(limits[2],limits[3], nseg[1]):
+        for z in np.linspace(limits[4],limits[5], nseg[2]):
             setCart([x,y,z], ori)
             
             # get the marker pos from vicon
@@ -89,6 +90,6 @@ Rh = tfm.identity_matrix()
 Rh[np.ix_([0,1,2],[0,1,2])] = R
 quat = tfm.quaternion_from_matrix(Rh)
 
-print 'vicon_T_robot:', (t.tolist() + quat.tolist())
+print 'vicon_T_robot:', " ".join('%.8e' % x for x in (t.tolist() + quat.tolist()))
 print 'rmse:', rmse
 
