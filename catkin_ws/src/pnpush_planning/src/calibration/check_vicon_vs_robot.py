@@ -41,7 +41,9 @@ def setCart(pos, ori):
     #pause()
     setCartRos(*param)
 
-
+def norm(vect):
+    vect = np.array(vect)
+    return np.sqrt(np.dot(vect, vect))
 
 setZone(0)
 
@@ -67,8 +69,13 @@ for x in np.linspace(limits[0],limits[1], nseg[0]):
             #(vicontrans,rot) = lookupTransform('/viconworld','/vicon_tip', listener)
             (vicontrans,rot) = lookupTransform('/map','/vicon_tip', listener)
             vmpos_robot = list(vicontrans)
+            
+            # test if the marker is tracked or not, skip
             print 'vicon pos %.4f %.4f %.4f' % tuple(vmpos)
             print 'robot pos %.4f %.4f %.4f' % tuple(vmpos_robot)
+            if norm(vmpos) < 1e-9:
+                print 'vicon pos is bad, not using this data'
+                continue
             xs = xs + [vmpos[0]]
             ys = ys + [vmpos[1]]
             zs = zs + [vmpos[2]]
@@ -76,6 +83,7 @@ for x in np.linspace(limits[0],limits[1], nseg[0]):
             yt = yt + [vmpos_robot[1]]
             zt = zt + [vmpos_robot[2]]
             
+print 'data length', len(xs)
 plt.scatter(xs, ys, c='r', marker='o')
 plt.scatter(xt, yt, c='b', marker='o')
 

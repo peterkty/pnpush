@@ -33,7 +33,7 @@ from math import pi
 import pdb
 import copy
 import subprocess, os, signal
-from shape_db import ShapeDB
+from config.shape_db import ShapeDB
 
 setCartRos = rospy.ServiceProxy('/robot2_SetCartesian', robot_SetCartesian)
 setZero = rospy.ServiceProxy('/zero', Zero)
@@ -41,7 +41,7 @@ setZone = rospy.ServiceProxy('/robot2_SetZone', robot_SetZone)
 
 def setCart(pos, ori):
     param = (np.array(pos) * 1000).tolist() + ori
-    #print 'setCart', param
+    print 'setCart', param
     #pause()
     setCartRos(*param)
 
@@ -52,16 +52,6 @@ def pause():
 def norm(vect):
     vect = np.array(vect)
     return np.sqrt(np.dot(vect, vect))
-
-# need to be removed
-def vizBlock(pose):
-    # prepare block visualization
-    global vizpub
-    meshmarker = createMeshMarker('package://pnpush_config/models/object_meshes/SteelBlock.stl', 
-                              offset=tuple(pose[0:3]), rgba=(0.5,0.5,0.5,1),
-                              orientation=tuple(pose[3:7]), frame_id='vicon/SteelBlock/SteelBlock')
-    vizpub.publish(meshmarker)
-    rospy.sleep(0.05)
     
 def poselist2mat(pose):
     return np.dot(tfm.translation_matrix(pose[0:3]), tfm.quaternion_matrix(pose[3:7]))
@@ -84,6 +74,34 @@ def make_sure_path_exists(path):
         if exception.errno != errno.EEXIST:
             raise
 
+def recover(obj_frame_id, global_frame_id, z, slot_pos_obj):
+    zup = z + 0.10
+    ori = [0, 0, 1, 0]
+    center_world = [0.35, 0, 0]
+    slot_pos_obj = slot_pos_obj + [0]
+    # move above the slot
+    
+    pos_recover_probe_world = coordinateFrameTransform(slot_pos_obj, obj_frame_id, global_frame_id, listener)
+    pos_recover_probe_world[2] = zup
+    setCart(pos_recover_probe_world, ori)
+    
+    # move down to the slot
+    pos_recover_probe_world = coordinateFrameTransform(slot_pos_obj, obj_frame_id, global_frame_id, listener)
+    pos_recover_probe_world[2] = z
+    setCart(pos_recover_probe_world, ori)
+    
+    # move to the world center
+    pos_recover_probe_target_world = center_world
+    pos_recover_probe_target_world[2] = z
+    setCart(pos_recover_probe_target_world, ori)
+    
+    # move to the world center
+    pos_recover_probe_target_world = [0.3, 0, 0]
+    pos_recover_probe_target_world[2] = zup
+    setCart(pos_recover_probe_target_world, ori)
+    
+
+import optparse
 def main(argv):
     # prepare the proxy, listener
     global listener
@@ -96,12 +114,16 @@ def main(argv):
     parser = optparse.OptionParser()
     parser.add_option('-s', action="store", dest='shape_id', 
                       help='The shape id e.g. rect1-rect3', default='rect1')
+    (opt, args) = parser.parse_args()
     
     # set the parameters
-    globalvel = 200  # speed for moving around
-    ori = [0, 0.7071, 0.7071, 0]
-    z = 0.218   # the height above the table probe1: 0.29 probe2: 0.218
-    zup = z + 0.05
+    globalvel = 30           # speed for moving around
+    ori = [0, 0, 1, 0]
+    z = 0.218                 # the height above the table probe1: 0.29 probe2: 0.218
+    surface_thick = 0.01158   # 0.01158 for plywood
+    z = z + surface_thick
+    z_recover = 0.2284 + surface_thick 
+    zup = z + 0.10            # the prepare and end height
     probe_radius = 0.004745   # probe1: 0.00626/2 probe2: 0.004745
     dist_before_contact = 0.02 
     dist_after_contact = 0.05
@@ -113,14 +135,20 @@ def main(argv):
 
     global_frame_id = '/map'
     
+    # parameters about the surface
+    surface_id = 'plywood'
+    
     # parameters about object
+    shape_id = opt.shape_id
     shape_db = ShapeDB()
     shape_polygon = shape_db.shape_db[shape_id]['shape_poly'] # shape of the objects presented as polygon.
     obj_frame_id = shape_db.shape_db[shape_id]['frame_id']
+    obj_slot = shape_db.shape_db[shape_id]['slot_pos']
 
     # parameters about rosbag
     dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/push_dataset_motion/'
     topics = ['/joint_states', '/netft_data', '/tf', '/visualization_marker']
+    #topics = ['-a']
     
     setSpeed(tcp=globalvel, ori=1000)
     setZone(0)
@@ -134,14 +162,15 @@ def main(argv):
             # enumerate the contact point that we want to push
             for s in side_params:
                 pos = np.array(shape_polygon[i]) *s + np.array(shape_polygon[(i+1) % len(shape_polygon)]) *(1-s)
+                pos = np.append(pos, [0])
                 tangent = np.array(shape_polygon[(i+1) % len(shape_polygon)]) - np.array(shape_polygon[i])
-                normal = np.array([tangent[1], -tangent[0], 0]) 
+                normal = np.array([tangent[1], -tangent[0]]) 
                 normal = normal / norm(normal)  # normalize it
                 normal = np.append(normal, [0])
                 
                 # enumerate the direction in which we want to push
                 for t in angles:
-                    bagfilename = 'push_shape=%s_v=%.0f_i=%.3f_s=%.3f_t=%.3f.bag' % (shape_id, v, i, s, t)
+                    bagfilename = 'motion_surface=%s_shape=%s_v=%.0f_i=%.3f_s=%.3f_t=%.3f.bag' % (surface_id, shape_id, v, i, s, t)
                     bagfilepath = dir_save_bagfile+bagfilename
                     # if exists then skip it
                     if os.path.isfile(bagfilepath):
@@ -192,6 +221,9 @@ def main(argv):
                     end_pos[2] = zup
                     setCart(end_pos,ori)
                     
+                    # recover
+                    #recover(obj_frame_id, global_frame_id, z_recover, obj_slot)
+                    #pause()
 
     # move back to startPos
     start_pos = [0.2, 0, z + 0.05]
@@ -209,10 +241,4 @@ def terminate_ros_node(s):
 
 if __name__=='__main__':
     main(sys.argv)
-
-
-#rosservice call /robot2_SetSpeed 10 1
-#rosservice call /robot2_SetZone "mode: 1"
-
-
 

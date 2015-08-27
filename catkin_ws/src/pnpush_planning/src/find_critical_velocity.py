@@ -123,6 +123,7 @@ def main(argv):
             # enumerate the contact point that we want to push
             for s in [0]:
                 pos = np.array(shape_polygon[i]) *s + np.array(shape_polygon[i+1]) *(1-s)
+                pos = np.append(pos, [0])
                 tangent = np.array(shape_polygon[i+1]) - np.array(shape_polygon[i])
                 normal = np.array([tangent[1], -tangent[0], 0]) 
                 normal = normal / norm(normal)  # normalize it

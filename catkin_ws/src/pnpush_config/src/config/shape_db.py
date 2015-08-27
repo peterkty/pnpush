@@ -14,7 +14,7 @@ import math
 def makeShapePolyRect(longSide, shortSide):
     a = longSide / 2.0
     b = shortSide / 2.0
-    return [[a,b], [a,-b], [-a,-b], [-a,b]]
+    return [[a,b], [-a,b], [-a,-b], [a,-b]]
     
 def makeShapePolyTri(shortSide1, shortSide2, longSide):
     a = shortSide1
@@ -55,7 +55,13 @@ class ShapeDB:
             self.shape_db[key]["thickness"] = 0.013
             
         for key in self.shape_db:
-            self.shape_db[key]["frameid"] = '/vicon/StainlessBlock/StainlessBlock'
+            self.shape_db[key]["frame_id"] = '/vicon/StainlessSteel/StainlessSteel'
+            
+        for key in self.shape_db:
+            self.shape_db[key]["mesh"] = 'package://pnpush_config/models/object_meshes/StainlessSteel_%s.stl' % key
+            
+        for key in self.shape_db:
+            self.shape_db[key]["slot_pos"] = [-0.03, -0.03]
 
         
     shape_db = {
