@@ -75,28 +75,36 @@ def make_sure_path_exists(path):
             raise
 
 def recover(obj_frame_id, global_frame_id, z, slot_pos_obj):
-    zup = z + 0.10
+    global globalvel
+    global global_slow_vel
+    zup = z + 0.03
     ori = [0, 0, 1, 0]
     center_world = [0.35, 0, 0]
     slot_pos_obj = slot_pos_obj + [0]
     # move above the slot
-    
     pos_recover_probe_world = coordinateFrameTransform(slot_pos_obj, obj_frame_id, global_frame_id, listener)
     pos_recover_probe_world[2] = zup
     setCart(pos_recover_probe_world, ori)
     
-    # move down to the slot
+    # speed down
+    setSpeed(tcp=global_slow_vel, ori=1000)
+    
+    # move down to the slot    
     pos_recover_probe_world = coordinateFrameTransform(slot_pos_obj, obj_frame_id, global_frame_id, listener)
     pos_recover_probe_world[2] = z
     setCart(pos_recover_probe_world, ori)
+    #pause()
     
     # move to the world center
     pos_recover_probe_target_world = center_world
     pos_recover_probe_target_world[2] = z
     setCart(pos_recover_probe_target_world, ori)
     
+    # speed up
+    setSpeed(tcp=globalvel, ori=1000)
+    
     # move to the world center
-    pos_recover_probe_target_world = [0.3, 0, 0]
+    pos_recover_probe_target_world = center_world
     pos_recover_probe_target_world[2] = zup
     setCart(pos_recover_probe_target_world, ori)
     
@@ -114,24 +122,38 @@ def main(argv):
     parser = optparse.OptionParser()
     parser.add_option('-s', action="store", dest='shape_id', 
                       help='The shape id e.g. rect1-rect3', default='rect1')
+    parser.add_option('-r', '--real', action="store_true", dest='real_exp', 
+                      help='Do the real experiment space', 
+                      default=False)
+                      
     (opt, args) = parser.parse_args()
     
     # set the parameters
-    globalvel = 30           # speed for moving around
+    global globalvel
+    global global_slow_vel
+    globalvel = 300           # speed for moving around
+    global_slow_vel = 30
     ori = [0, 0, 1, 0]
     z = 0.218                 # the height above the table probe1: 0.29 probe2: 0.218
     surface_thick = 0.01158   # 0.01158 for plywood
     z = z + surface_thick
     z_recover = 0.2284 + surface_thick 
-    zup = z + 0.10            # the prepare and end height
+    zup = z + 0.04            # the prepare and end height
     probe_radius = 0.004745   # probe1: 0.00626/2 probe2: 0.004745
-    dist_before_contact = 0.02 
+    dist_before_contact = 0.03 
     dist_after_contact = 0.05
+    skip_when_exists = False
 
     # space for the experiment
-    speeds = [20, 50, 100, 200, 400]
-    side_params = np.linspace(0.1,0.9,3)
-    angles = np.linspace(-pi/4, pi/4, 3)
+    real_exp = opt.real_exp
+    if real_exp:
+        speeds = [20, 50, 100, 200, 400]
+        side_params = np.linspace(0.1, 0.9, 8)
+        angles = np.linspace(-pi/3, pi/3, 10)
+    else:
+        speeds = [20, 50, 100, 200, 400]
+        side_params = np.linspace(0.1,0.9,3)
+        angles = np.linspace(-pi/4, pi/4, 3)
 
     global_frame_id = '/map'
     
@@ -147,8 +169,8 @@ def main(argv):
 
     # parameters about rosbag
     dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/push_dataset_motion/'
-    topics = ['/joint_states', '/netft_data', '/tf', '/visualization_marker']
-    #topics = ['-a']
+    #topics = ['/joint_states', '/netft_data', '/tf', '/visualization_marker']
+    topics = ['-a']
     
     setSpeed(tcp=globalvel, ori=1000)
     setZone(0)
@@ -173,7 +195,7 @@ def main(argv):
                     bagfilename = 'motion_surface=%s_shape=%s_v=%.0f_i=%.3f_s=%.3f_t=%.3f.bag' % (surface_id, shape_id, v, i, s, t)
                     bagfilepath = dir_save_bagfile+bagfilename
                     # if exists then skip it
-                    if os.path.isfile(bagfilepath):
+                    if skip_when_exists and os.path.isfile(bagfilepath):
                         print bagfilepath, 'exits', 'skip'
                         continue  
                     # find the probe pos in contact in object frame
@@ -222,7 +244,7 @@ def main(argv):
                     setCart(end_pos,ori)
                     
                     # recover
-                    #recover(obj_frame_id, global_frame_id, z_recover, obj_slot)
+                    recover(obj_frame_id, global_frame_id, z_recover, obj_slot)
                     #pause()
 
     # move back to startPos
