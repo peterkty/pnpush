@@ -44,7 +44,7 @@ cmd "8-show-ft-value" {
 }
 
 cmd "9-collect-push-dataset" {
-    exec = "rosrun pnpush_planning collect_push_dataset.py";
+    exec = "rosrun pnpush_planning collect_push_dataset.py --real";
     host = "localhost";
 }
 
