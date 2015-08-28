@@ -20,10 +20,10 @@ def callback_tip(data):
     try:
         t = listener.getLatestCommonTime('link_probe','base_link')
         (pos,ori) = listener.lookupTransform('base_link','link_probe',t)
+        tip_array.append([t.to_sec()] + list(pos) + list(ori))
     except:
         pass
-    #print t
-    tip_array.append([t.to_sec()] + list(pos) + list(ori))
+        #print t
 
 def callback_vicon(data):
     global listener
@@ -31,9 +31,9 @@ def callback_vicon(data):
     try:
         t = listener.getLatestCommonTime('/vicon/StainlessSteel/StainlessSteel','map')
         (pos,ori) = listener.lookupTransform('map','/vicon/StainlessSteel/StainlessSteel',t)
+        object_pose_array.append([t.to_sec()] + list(pos) + list(ori))
     except:
         pass
-    object_pose_array.append([t.to_sec()] + list(pos) + list(ori))
 
 def ftmsg2list(ftmsg):
     return [ftmsg.wrench.force.x,ftmsg.wrench.force.y,ftmsg.wrench.force.z,
@@ -54,6 +54,7 @@ def main(argv):
     global listener
     global tip_array
     global object_pose_array
+    global ft_array
     tip_array = []
     ft_array = []
     object_pose_array = []
@@ -105,6 +106,7 @@ def ros_node_alive(s):
         if (str.startswith(s)):
             return True
 
+    
 if __name__=='__main__':
     main(sys.argv)
 

@@ -42,11 +42,6 @@ def getObjCOM(objPose, objId):
 
 
 
-def matrix_from_xyzquat(translate, quaternion):
-    return np.dot(tfm.compose_matrix(translate=translate) , 
-                   tfm.quaternion_matrix(quaternion)).tolist()
-
-
 def quat_from_matrix(rot_matrix):
     return (tfm.quaternion_from_matrix(rot_matrix))
 
