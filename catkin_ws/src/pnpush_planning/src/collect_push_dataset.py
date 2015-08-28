@@ -142,7 +142,7 @@ def main(argv):
     probe_radius = 0.004745   # probe1: 0.00626/2 probe2: 0.004745
     dist_before_contact = 0.03 
     dist_after_contact = 0.05
-    skip_when_exists = False
+    skip_when_exists = True
 
     # space for the experiment
     real_exp = opt.real_exp
