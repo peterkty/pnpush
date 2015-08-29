@@ -19,11 +19,13 @@ from matplotlib.pyplot import savefig
 
 def plot(data, shape_id, figfname):
 
+
+
     fig, ax = plt.subplots()
     probe_radius = 0.004745   # probe1: 0.00626/2 probe2: 0.004745
     
+
     v = int(figfname.split('_')[-4].split('=')[1])
-    
     sub = int(30 / (v / 20.0))                 # subsample rate
     #data['tip_poses']
     #data['ft_wrench']
@@ -41,12 +43,17 @@ def plot(data, shape_id, figfname):
     object_pose = data['object_pose']
     
     invT0 = np.linalg.inv(matrix_from_xyzquat(object_pose[0][1:4], object_pose[0][4:8]))
+
+
+    print 'object_pose', len(object_pose), 'tip_pose', len(tip_pose)
+
+        
     for i in (range(0, len(object_pose), sub)):
         
         T = matrix_from_xyzquat(object_pose[i][1:4], object_pose[i][4:8])
         shape_polygon_3d_world = np.dot(np.dot(invT0, T), shape_polygon_3d.T)
         
-        obj = mpatches.Polygon(shape_polygon_3d_world.T[:,0:2], closed=True, color='blue', alpha=0.1)
+        obj = mpatches.Polygon(shape_polygon_3d_world.T[:,0:2], closed=True, color='blue', alpha=0.05)
         ax.add_patch(obj)
         #print 'append', obj
     
@@ -61,6 +68,8 @@ def plot(data, shape_id, figfname):
     #collection = PatchCollection(patches, alpha=0.1)
     #ax.add_collection(collection)
     #plt.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    plt.axis([-0.1, 0.1, -0.1, 0.1])
+    
     plt.axis('equal')
     #plt.axis('off')
     
