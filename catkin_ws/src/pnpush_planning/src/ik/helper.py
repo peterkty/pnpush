@@ -40,7 +40,18 @@ def getObjCOM(objPose, objId):
     objPosition = objPose[0:3]
     return objPosition
 
+    
+def poselist2mat(pose):
+    return np.dot(tfm.translation_matrix(pose[0:3]), tfm.quaternion_matrix(pose[3:7]))
 
+def mat2poselist(mat):
+    pos = tfm.translation_from_matrix(mat)
+    quat = tfm.quaternion_from_matrix(mat)
+    return pos.tolist() + quat.tolist()
+
+def norm(vect):
+    vect = np.array(vect)
+    return np.sqrt(np.dot(vect, vect))
 
 def quat_from_matrix(rot_matrix):
     return (tfm.quaternion_from_matrix(rot_matrix))

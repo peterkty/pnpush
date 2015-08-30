@@ -5,10 +5,8 @@
 
 import sys
 import numpy as np
-from ik.roshelper import ROS_Wait_For_Msg
-from ik.roshelper import lookupTransform
-from ik.roshelper import coordinateFrameTransform
-from ik.helper import Timer
+from ik.roshelper import *
+from ik.helper import *
 from ik.ik import setSpeed
 from geometry_msgs.msg import WrenchStamped
 import tf
@@ -24,10 +22,7 @@ import geometry_msgs.msg
 import os
 import scipy.io as sio
 from visualization_msgs.msg import Marker
-from marker_helper import createMeshMarker
-from marker_helper import createPointMarker
-from marker_helper import createArrowMarker
-from marker_helper import createSphereMarker
+from marker_helper import *
 from tf.broadcaster import TransformBroadcaster
 from math import pi
 import pdb
@@ -49,17 +44,6 @@ def pause():
     print 'Press any key to continue'
     raw_input()
 
-def norm(vect):
-    vect = np.array(vect)
-    return np.sqrt(np.dot(vect, vect))
-    
-def poselist2mat(pose):
-    return np.dot(tfm.translation_matrix(pose[0:3]), tfm.quaternion_matrix(pose[3:7]))
-
-def mat2poselist(mat):
-    pos = tfm.translation_from_matrix(mat)
-    quat = tfm.quaternion_from_matrix(mat)
-    return pos.tolist() + quat.tolist()
 
 def wait_for_ft_calib():
     ROS_Wait_For_Msg('/netft_data', geometry_msgs.msg.WrenchStamped).getmsg()
