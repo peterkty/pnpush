@@ -162,6 +162,8 @@ def animate_2dsynced(data, shape_id, figfname):
         #time.sleep(0.1)
     plt.show()
 
+
+
 # data: synced 2d data
 def extract_training_data(data):
     
@@ -186,27 +188,43 @@ def extract_training_data(data):
             break
     print 'start_index', start_index, 'end_index', end_index, 'len', len(force)
     
-    data_training = []  # tip_x, tip_y, tip_vx, tip_vy, object_pose_vx, object_pose_vy, object_pose_vtheta
+    data_training = []  # tip_x, tip_y, tip_vx, tip_vy, forcex, forcey, object_pose_vx, object_pose_vy, object_pose_vtheta
     for i in (range(start_index, end_index+1-sub, sub)):
-        data_training.append(tip_pose[i] + (np.array(tip_pose[i+sub]) - np.array(tip_pose[i])).tolist() + 
-        force[i] + (np.array(object_pose[i+sub]) - np.array(object_pose[i])).tolist())
+        tip_pose_i_obji = transform_to_frame2d(tip_pose[i], object_pose[i])
+        tip_pose_isub_obji = transform_to_frame2d(tip_pose[i+sub], object_pose[i])
+        force_i_obji = rotate_to_frame2d(force[i], object_pose[i])
+        
+        object_pose_i_obji = transform_to_frame2d(object_pose[i][0:2], object_pose[i])
+        object_pose_isub_obji = transform_to_frame2d(object_pose[i+sub][0:2], object_pose[i])
+        
+        newdata = tip_pose_i_obji + (np.array(tip_pose_isub_obji) - np.array(tip_pose_i_obji)).tolist() + force_i_obji + (np.array(object_pose_isub_obji) - np.array(object_pose_i_obji)).tolist() + [object_pose[i+sub][2] - object_pose[i][2]]
+        #print newdata
+        data_training.append(newdata)
         
     return data_training
         
-def plot_training_data(data):
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    
+def plot_training_data(data, indexes, labels, title):
     data = np.array(data)
     print '[plot_training_data]', data.shape
-    #for i in range(len(data)):
-    ax.scatter(data[:,2], data[:,3], data[:,6])
     
-    ax.set_xlabel('v_{px} Label')
-    ax.set_ylabel('v_{py} Label')
-    ax.set_zlabel('pose_vtheta Label')
-    plt.axis('equal')
+    fig = plt.figure()
+    plt.title(title)
+    
+    if len(indexes) == 3:
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(data[:,indexes[0]], data[:,indexes[1]], data[:,indexes[2]])
+    else:
+        ax = fig.add_subplot(111)
+        ax.scatter(data[:,indexes[0]], data[:,indexes[1]])
+    
+    
+    ax.set_xlabel(labels[indexes[0]])
+    ax.set_ylabel(labels[indexes[1]])
+    if len(indexes) == 3:
+        ax.set_zlabel(labels[indexes[2]])
+    #plt.axis('equal')
     plt.show()
+
 
 def json2trainingdata(filepath):
         
@@ -238,7 +256,11 @@ def main(argv):
             print json_filepath
             pass
     
-    plot_training_data(all_training_data)
+    labels = ['tip_x', 'tip_y', 'tip_vx', 'tip_vy', 'forcex', 'forcey', 'object_pose_vx', 'object_pose_vy', 'object_pose_vtheta']
+    #plot_training_data(all_training_data, [0,1], labels, '')
+    #plot_training_data(all_training_data, [2,3], labels, '')
+    #plot_training_data(all_training_data, [4,5], labels, '')
+    plot_training_data(all_training_data, [6,7,8], labels, '')
     
     outputfile= "%s/data_training.json" % argv[1]
     with open(outputfile, 'w') as outfile:
