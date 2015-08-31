@@ -2,6 +2,7 @@
 
 # Peter KT Yu, Aug 2015
 # parse the bagfiles into simple format: probe pose, object pose and ft wrench
+# make sure the time stamp are synced
 
 import rosbag
 import time # for sleep
@@ -75,16 +76,18 @@ def main(argv):
     rospy.init_node('listener', anonymous=True)
     
     listener = tf.TransformListener()
-    rospy.Subscriber("/joint_states", JointState, callback_tip)
-    rospy.Subscriber("/netft_data", WrenchStamped, callback_ft)
-    rospy.Subscriber("/vicon/StainlessSteel/StainlessSteel", TransformStamped, callback_vicon)
+    #rospy.Subscriber("/joint_states", JointState, callback_tip)
+    #rospy.Subscriber("/netft_data", WrenchStamped, callback_ft)
+    #rospy.Subscriber("/vicon/StainlessSteel/StainlessSteel", TransformStamped, callback_vicon)
     
     
     rosbag_proc = subprocess.Popen('rosbag play -q %s' % (bag_filepath) , shell=True)
     
+    
     # while ros_node_alive('/play'):
     # #while rosbag_proc.poll():
         # sleep(0.1)
+        
     rosbag_proc.wait()
     
     print 'end bag file'

@@ -10,6 +10,7 @@ import time
 from numpy import linalg as la
 import traceback
 from roshelper import lookupTransform
+from math import *
 
 listener = None
 
@@ -40,12 +41,87 @@ def getObjCOM(objPose, objId):
     objPosition = objPose[0:3]
     return objPosition
 
+# if it is 1*n then return 1-d
+def __reduce(nparray):
+    if nparray.shape[0] == 1:
+        return nparray.reshape(-1)
+        
+def transform_to_frame2d(pts, f):
+#transform_to_frame2d (pts, f)
+## pts: row vectors [x,y]
+## x: row vector [x,y,theta] which defines a 2d frame
+## return: row point vectors in frame f, [x,y]
+    #if np.array(pts).ndim == 1: pts = [pts]
+    pts_array = np.array(pts).reshape(-1, 2)
+    theta = f[2]
+    c = cos(theta)
+    s = sin(theta)
+    T = np.array([[c, -s, f[0]],
+                  [s,  c, f[1]],
+                  [0,  0,   1]])
+    pts_ret = np.linalg.solve(T, np.vstack((pts_array.T, np.ones((1, pts_array.shape[0])))))
+    return __reduce(pts_ret[0:2,:].T).tolist()
 
 
-def matrix_from_xyzquat(translate, quaternion):
-    return np.dot(tfm.compose_matrix(translate=translate) , 
-                   tfm.quaternion_matrix(quaternion)).tolist()
+def transform_back_frame2d(pts, f):
+#transform_back_frame2d (pts, f)
+## pts: row vectors [x,y]
+## x: row vector [x,y,theta] which defines a 2d frame
+## return: row point vectors in frame f, [x,y]
+    pts_array = np.array(pts).reshape(-1, 2)
+    theta = f[2]
+    c = cos(theta)
+    s = sin(theta)
+    T = np.array([[c, -s, f[0]],
+                  [s,  c, f[1]],
+                  [0,  0,   1]])
+    pts_ret = np.dot(T, np.vstack((pts_array.T, np.ones((1, pts_array.shape[0])))))
+    return __reduce(pts_ret[0:2,:].T).tolist()
 
+
+def rotate_to_frame2d(pts, f):
+#rotate_to_frame2d (pts, f)
+## pts: row vectors [x,y]
+## x: row vector [x,y,theta] which defines a 2d frame
+## return: row point vectors in frame f, [x,y]
+    pts_array = np.array(pts).reshape(-1, 2)
+    theta = f[2]
+    c = cos(theta)
+    s = sin(theta)
+    T = np.array([[c,   s,   0],
+                  [-s,  c,   0],
+                  [0,  0,   1]])
+    pts_ret = np.dot(T, np.vstack((pts_array.T, np.ones((1, pts_array.shape[0])))))
+    return __reduce(pts_ret[0:2,:].T).tolist()
+
+
+def rotate_back_frame2d(pts, f):
+#rotate_back_frame2d (pts, f)
+## pts: row vectors [x,y]
+## x: row vector [x,y,theta] which defines a 2d frame
+## return: row point vectors in frame f, [x,y]
+    pts_array = np.array(pts).reshape(-1, 2)
+    theta = f[2]
+    c = cos(theta)
+    s = sin(theta)
+    T = np.array([[c, -s,   0],
+                  [s,  c,   0],
+                  [0,  0,   1]])
+    pts_ret = np.dot(T, np.vstack((pts_array.T, np.ones((1, pts_array.shape[0])))))
+    return __reduce(pts_ret[0:2,:].T).tolist()
+    
+    
+def poselist2mat(pose):
+    return np.dot(tfm.translation_matrix(pose[0:3]), tfm.quaternion_matrix(pose[3:7]))
+
+def mat2poselist(mat):
+    pos = tfm.translation_from_matrix(mat)
+    quat = tfm.quaternion_from_matrix(mat)
+    return pos.tolist() + quat.tolist()
+
+def norm(vect):
+    vect = np.array(vect)
+    return np.sqrt(np.dot(vect, vect))
 
 def quat_from_matrix(rot_matrix):
     return (tfm.quaternion_from_matrix(rot_matrix))
