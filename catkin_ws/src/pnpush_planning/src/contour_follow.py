@@ -35,7 +35,7 @@ setZone = rospy.ServiceProxy('/robot2_SetZone', robot_SetZone)
 
 def setCart(pos, ori):
     param = (np.array(pos) * 1000).tolist() + ori
-    print 'setCart', param
+    #print 'setCart', param
     #pause()
     setCartRos(*param)
 
@@ -88,7 +88,15 @@ def mat2poselist(mat):
     pos = tfm.translation_from_matrix(mat)
     quat = tfm.quaternion_from_matrix(mat)
     return pos.tolist() + quat.tolist()
-        
+
+def getAveragedFT():
+    tmpft = np.array([0,0,0])
+    nsample = 10
+    for i in xrange(0,nsample):
+        tmpft =  tmpft + np.array(ftmsg2list(ROS_Wait_For_Msg('/netft_data', geometry_msgs.msg.WrenchStamped).getmsg()))
+    #print tmpft / nsample
+    return (tmpft / nsample).tolist()
+
 def main(argv):
     # prepare the proxy, listener
     global listener
@@ -101,13 +109,13 @@ def main(argv):
     setSpeed(tcp=100, ori=30)
     setZone(0)
     # set the parameters
-    z = 0.29   # the height above the table
     limit = 10000  # number of data points to be collected
     ori = [0, 0.7071, 0.7071, 0]
-    threshold = 0.5  # the threshold force for contact, need to be tuned
-    probe_radis = 0.00626/2
+    threshold = 0.3  # the threshold force for contact, need to be tuned
+    z = 0.218   # the height above the table probe1: 0.29 probe2: 0.218
+    probe_radis = 0.004745   # probe1: 0.00626/2 probe2: 0.004745
     step_size = 0.0002
-    obj_des_wrt_vicon = [0,0,-0.026823+4.735/1000,0,0,0,1]
+    obj_des_wrt_vicon = [0,0,-(9.40/2/1000+14.15/2/1000),0,0,0,1]
     
     # visualize the block 
     vizBlock(obj_des_wrt_vicon)
@@ -131,8 +139,9 @@ def main(argv):
     setCart(start_pos,ori)
     curr_pos = start_pos
     # 0.1 zero the ft reading
-    rospy.sleep(3)  
+    rospy.sleep(1)  
     setZero()
+    rospy.sleep(3)
     
     # 1. move in -y direction till contact -> normal
     setSpeed(tcp=30, ori=30)
@@ -174,7 +183,7 @@ def main(argv):
         
         # let the ft reads the force in static, not while pushing
         rospy.sleep(0.1)
-        ft = ftmsg2list(ROS_Wait_For_Msg('/netft_data', geometry_msgs.msg.WrenchStamped).getmsg())
+        ft = getAveragedFT()
         print index #, '[ft explore]', ft
         # get box pose from vicon
         (box_pos, box_quat) = lookupTransform('base_link', 'vicon/SteelBlock/SteelBlock', listener)
@@ -198,18 +207,24 @@ def main(argv):
             contact_pt[2] = 0.01
             vizPoint(contact_pt.tolist())
             vizArrow(contact_pt.tolist(), (contact_pt + normal * 0.1).tolist())
-            all_contact.append(contact_pt.tolist()[0:2] + [0] + normal.tolist()[0:2] + [0] + box_pose_des_global + curr_pos.tolist())
+            # caution: matlab uses the other quaternion order: w x y z. Also the normal is in toward the object.
+            all_contact.append(contact_pt.tolist()[0:2] + [0] + (-normal).tolist()[0:2] + [0] + box_pose_des_global[0:3] + box_pose_des_global[6:7] + box_pose_des_global[3:6] + curr_pos.tolist())
             index += 1
         
         if len(contact_pts) > limit:
             break
         
-        if len(contact_pts) % 1000 == 0:  # zero the ft offset, move away from block, zero it, then come back
+        if len(contact_pts) % 500 == 0:  # zero the ft offset, move away from block, zero it, then come back
             move_away_size = 0.01
+            overshoot_size = 0 #0.0005
+            setSpeed(tcp=5, ori=30)
             setCart(curr_pos + normal * move_away_size, ori)
-            rospy.sleep(0.5)
+            rospy.sleep(1)
+            print 'bad ft:', getAveragedFT()
             setZero()
-            setCart(curr_pos, ori)
+            rospy.sleep(3)
+            setCart(curr_pos - normal * overshoot_size, ori)
+            setSpeed(tcp=20, ori=30)
             
     
       #all_contact(1:2,:);  % x,y of contact position

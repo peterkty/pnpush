@@ -10,7 +10,7 @@
   <param name="use_gui" value="$(arg gui)"/>
   <param name="robot_description" textfile="$(find pnpush_config)/models/IRB120/irb_120.urdf" />
     
-  <node if="$(arg irb_120)" pkg="tf" type="static_transform_publisher" name="baselink_broadcaster" args="0 0 0 0 0 0 map base_link 50" />
+  <node if="$(arg irb_120)" pkg="tf" type="static_transform_publisher" name="baselink_broadcaster" args="0 0 0 0 0 0 map base_link 100" />
 
   <node unless="$(arg have_robot)" name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" >
     <rosparam unless="$(arg have_robot)" command="load" file="$(find pnpush_config)/source_list_param.yaml" />
@@ -18,9 +18,10 @@
   
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" />
 
-  <node pkg="tf" type="static_transform_publisher" name="viconworldlink_broadcaster" args="0.4 0 0.01 0 0 0 map /viconworld 100" />
+  <node pkg="tf" type="static_transform_publisher" name="viconworldlink_broadcaster" 
+  args="4.00182860e-01 -7.47891732e-04 1.06818907e-03 4.14786560e-03 -2.84942606e-03 -5.80501651e-03 9.99970488e-01 map /viconworld 100" />
 
-  <node pkg="tf" type="static_transform_publisher" name="squareworldlink_broadcaster" args="0 0 0 0 0 0 /viconworld /objworld 100" /> <!-- for transferring vicon object center to preferred vicon object center-->
+  <node pkg="tf" type="static_transform_publisher" name="vicontip_broadcaster" args="0 0 0.205925 0 0 0 /link_6 /vicon_tip 100" /> <!-- for transferring calib tip to link6-->
 
 
 </launch>
