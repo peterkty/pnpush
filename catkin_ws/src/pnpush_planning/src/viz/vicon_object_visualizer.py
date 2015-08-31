@@ -48,7 +48,7 @@ def main(argv):
     obj_slot = shape_db.shape_db[shape_id]['slot_pos']
     thickness = shape_db.shape_db[shape_id]['thickness']
     
-    obj_des_wrt_vicon = [0,0,-(thickness/2 + vicon_ball_size/2) + surface_thick ,0,0,0,1]  # from vicon to the block (a slight difference in z)
+    obj_des_wrt_vicon = [0,0,-(thickness/2 + vicon_ball_size/2 + 0.002) ,0,0,0,1]  # from vicon to the block (a slight difference in z)
         
     r = rospy.Rate(100)
     while not rospy.is_shutdown():

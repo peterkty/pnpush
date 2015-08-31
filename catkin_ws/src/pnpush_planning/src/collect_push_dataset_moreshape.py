@@ -108,6 +108,28 @@ def recover(obj_frame_id, global_frame_id, z, slot_pos_obj):
     pos_recover_probe_target_world[2] = zup+0.03  # up more to let vicon see the marker
     setCart(pos_recover_probe_target_world, ori)
     
+def polyapprox(shape, s):
+    ss = shape[0]
+    accu = []
+    for i in range(len(ss)):
+        accu.append(norm(np.array(ss[(i+1) % len(ss)])-np.array(ss[i])))
+    length = accu[-1]
+    targetlength = s*length
+    ind = 0
+    
+    for i in range(len(ss)):
+        if accu[i] > targetlength:
+            ind = i
+    
+    seglength = norm(np.array(ss[(ind+1) % len(ss)])-np.array(ss[ind]))
+    t = (targetlength-accu[ind]) / seglength
+    pos = ss[ind] * (1-t) +  ss[(ind+1) % len(ss)] * t
+    pos = np.append(pos, [0])
+    tangent = np.array(ss[(ind+1) % len(ss)])-np.array(ss[ind])
+    normal = np.array([tangent[1], -tangent[0]]) 
+    normal = normal / norm(normal)  # normalize it
+    normal = np.append(normal, [0])
+    return (pos, normal)
 
 import optparse
 def main(argv):
@@ -153,6 +175,7 @@ def main(argv):
     # parameters about object
     shape_id = opt.shape_id
     shape_db = ShapeDB()
+        
     shape_type = shape_db.shape_db[shape_id]['shape_type']
     shape = shape_db.shape_db[shape_id]['shape']
         
@@ -163,7 +186,11 @@ def main(argv):
     real_exp = opt.real_exp
     if real_exp:
         speeds = [400, 200, 100, 50, 20]
-        side_params = np.linspace(0.1, 0.9, 9)  
+        if shape_type == 'poly':
+            side_params = np.linspace(0.1, 0.9, 9)  
+        else:
+            side_params = np.linspace(0,1,40,endpoint=False)
+        
         angles = np.linspace(-pi/180.0*80.0, pi/180*80, 9)  
     else:
         speeds = [20, 50, 100, 200, 400]
@@ -189,13 +216,21 @@ def main(argv):
         for i in range(len(shape)):
             # enumerate the contact point that we want to push
             for s in side_params:
-                pos = np.array(shape[i]) *s + np.array(shape[(i+1) % len(shape)]) *(1-s)
-                pos = np.append(pos, [0])
-                tangent = np.array(shape[(i+1) % len(shape)]) - np.array(shape[i])
-                normal = np.array([tangent[1], -tangent[0]]) 
-                normal = normal / norm(normal)  # normalize it
-                normal = np.append(normal, [0])
-                
+                if shape_type == 'poly':
+                    pos = np.array(shape[i]) *s + np.array(shape[(i+1) % len(shape)]) *(1-s)
+                    pos = np.append(pos, [0])
+                    tangent = np.array(shape[(i+1) % len(shape)]) - np.array(shape[i])
+                    normal = np.array([tangent[1], -tangent[0]]) 
+                    normal = normal / norm(normal)  # normalize it
+                    normal = np.append(normal, [0])
+                elif shape_type == 'ellip':
+                    (a,b) = shape[i][0], shape[i][1]
+                    pos = [shape[i][0] * cos(s*2*np.pi), shape[i][1] * sin(s*2*np.pi), 0]
+                    normal = [cos(s*2*np.pi)/a, sin(s*2*np.pi)/b]
+                    normal = normal / norm(normal)  # normalize it
+                elif shape_type == 'butt':
+                    pos, normal = polyapprox(shape, s)
+                    
                 # enumerate the direction in which we want to push
                 for t in angles:
                     bagfilename = 'motion_surface=%s_shape=%s_v=%.0f_i=%.3f_s=%.3f_t=%.3f.bag' % (surface_id, shape_id, v, i, s, t)
