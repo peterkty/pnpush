@@ -27,7 +27,7 @@ def makeShapePolyTri(shortSide1, shortSide2, longSide):
     return [[d, d], [d,d-b], [d,d-a]]
 
 def makeShapeEllip(a, b):
-    return [a, b]
+    return [[a, b]]
 
 def makeShapePolyNGon(side, n):
     poly = []
@@ -84,9 +84,9 @@ class ShapeDB:
         self.shape_db["tri2"]["shape"] = makeShapePolyTri(0.12587, 0.15100, 0.1962)
         self.shape_db["tri3"]["shape"] = makeShapePolyTri(0.12561, 0.1765, 0.2152)
         
-        self.shape_db["ellip1"]["shape"] = makeShapeEllip(0.105, 0.105)
-        self.shape_db["ellip2"]["shape"] = makeShapeEllip(0.105, 0.13089)
-        self.shape_db["ellip3"]["shape"] = makeShapeEllip(0.105, 0.157)
+        self.shape_db["ellip1"]["shape"] = makeShapeEllip(0.105/2, 0.105/2)
+        self.shape_db["ellip2"]["shape"] = makeShapeEllip(0.105/2, 0.13089/2)
+        self.shape_db["ellip3"]["shape"] = makeShapeEllip(0.105/2, 0.157/2)
         
         self.shape_db["hexagon"]["shape"] = makeShapePolyNGon(0.06050, 6)
         

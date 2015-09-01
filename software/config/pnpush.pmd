@@ -1,53 +1,3 @@
-cmd "0-matlabpush" {
-    exec = "matlab -nodesktop -nodisplay -nosplash -r \"tic; cd([getenv('PNPUSH_BASE'), '/software']); addpath_pods; addpath_drake; toc; cd ../software/planning/ik_server/; ikTrajServerSocket;\"";
-    host = "localhost";
-}
-cmd "0-roscore" {
-    exec = "roscore";
-    host = "localhost";
-}
-cmd "1-perception-virtual" {
-    exec = "roslaunch pnpush_config robot_perception.launch have_robot:=false";
-    host = "localhost";
-}
-cmd "1-perception-real" {
-    exec = "roslaunch pnpush_config robot_perception.launch";
-    host = "localhost";
-}
-cmd "2-abb" {
-    exec = "roslaunch pnpush_config abb.launch";
-    host = "localhost";
-}
-cmd "3-ft" {
-    exec = "rosrun netft_rdt_driver netft_node --address 192.168.125.2";
-    host = "localhost";
-}
-cmd "4-vicon" {
-    exec = "roslaunch vicon_bridge vicon.launch";
-    host = "localhost";
-}
-cmd "5-rviz" {
-    exec = "rosrun rviz rviz -d $PNPUSH_BASE/catkin_ws/src/pnpush_config/rviz/rvizconfig.rviz";
-    host = "localhost";
-}
-cmd "6-gohome" {
-    exec = "rosservice call robot2_SetJoints \"{j1: 0, j2: 0, j3: 0, j4: 0, j5: 90, j6: 0}\"";
-    host = "localhost";
-}
-cmd "7-contour-following" {
-    exec = "rosrun pnpush_planning contour_follow.py";
-    host = "localhost";
-}
-cmd "8-show-ft-value" {
-    exec = "rosrun pnpush_planning get_averaged_ft.py";
-    host = "localhost";
-}
-
-cmd "9-collect-push-dataset" {
-    exec = "rosrun pnpush_planning collect_push_dataset.py --real";
-    host = "localhost";
-}
-
 group "visualization" {
     cmd "1-show-block" {
         exec = "rosrun pnpush_planning vicon_object_visualizer.py";
@@ -60,6 +10,55 @@ group "calibration" {
         exec = "rosrun pnpush_planning check_vicon_vs_robot.py";
         host = "localhost";
     }
+}
+cmd "9-collect-push-dataset" {
+    auto_respawn = "true";
+    exec = "rosrun pnpush_planning collect_push_dataset_moreshape.py --real -s ellip2 ";
+    host = "localhost";
+}
+cmd "5-rviz" {
+    exec = "rosrun rviz rviz -d $PNPUSH_BASE/catkin_ws/src/pnpush_config/rviz/rvizconfig.rviz";
+    host = "localhost";
+}
+cmd "0-roscore" {
+    exec = "roscore";
+    host = "localhost";
+}
+cmd "6-gohome" {
+    exec = "rosservice call robot2_SetJoints \"{j1: 0, j2: 0, j3: 0, j4: 0, j5: 90, j6: 0}\"";
+    host = "localhost";
+}
+cmd "1-perception-virtual" {
+    exec = "roslaunch pnpush_config robot_perception.launch have_robot:=false";
+    host = "localhost";
+}
+cmd "1-perception-real" {
+    exec = "roslaunch pnpush_config robot_perception.launch";
+    host = "localhost";
+}
+cmd "4-vicon" {
+    exec = "roslaunch vicon_bridge vicon.launch";
+    host = "localhost";
+}
+cmd "3-ft" {
+    exec = "rosrun netft_rdt_driver netft_node --address 192.168.125.2 --rate 100";
+    host = "localhost";
+}
+cmd "2-abb" {
+    exec = "roslaunch pnpush_config abb.launch";
+    host = "localhost";
+}
+cmd "0-matlabpush" {
+    exec = "matlab -nodesktop -nodisplay -nosplash -r \"tic; cd([getenv('PNPUSH_BASE'), '/software']); addpath_pods; addpath_drake; toc; cd ../software/planning/ik_server/; ikTrajServerSocket;\"";
+    host = "localhost";
+}
+cmd "8-show-ft-value" {
+    exec = "rosrun pnpush_planning get_averaged_ft.py";
+    host = "localhost";
+}
+cmd "7-contour-following" {
+    exec = "rosrun pnpush_planning contour_follow.py";
+    host = "localhost";
 }
 
 script "run_real" {
@@ -80,5 +79,4 @@ script "run_virtual" {
     start cmd "3-ft";
     start cmd "4-vicon";
     start cmd "5-rviz";
-    
 }

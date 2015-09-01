@@ -63,7 +63,12 @@ for x in np.linspace(limits[0],limits[1], nseg[0]):
             # get the marker pos from vicon
             vmarkers = ROS_Wait_For_Msg('/vicon/markers', Markers).getmsg()
             rospy.sleep(0.2)
-            vmpos = (np.array(xyztolist(vmarkers.markers[-1].translation)) / 1000.0).tolist()
+            try:
+                vmpos = (np.array(xyztolist(vmarkers.markers[-1].translation)) / 1000.0).tolist()
+            except:
+                print 'vicon pos is bad, not using this data'
+                continue
+                  
             
             # get the marker pos from robot
             #(vicontrans,rot) = lookupTransform('/viconworld','/vicon_tip', listener)

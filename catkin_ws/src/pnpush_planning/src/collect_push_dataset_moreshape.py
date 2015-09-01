@@ -33,7 +33,7 @@ from math import pi
 import pdb
 import copy
 import subprocess, os, signal
-from config.shape_db import ShapeDB
+from config.shape_db_moreshape import ShapeDB
 
 setCartRos = rospy.ServiceProxy('/robot2_SetCartesian', robot_SetCartesian)
 setZero = rospy.ServiceProxy('/zero', Zero)
@@ -147,6 +147,9 @@ def main(argv):
     parser.add_option('-r', '--real', action="store_true", dest='real_exp', 
                       help='Do the real experiment space', 
                       default=False)
+    parser.add_option('', '--slow', action="store_true", dest='slow', 
+                      help='Set slower global speed', 
+                      default=False)
                       
     (opt, args) = parser.parse_args()
     
@@ -155,6 +158,7 @@ def main(argv):
     global global_slow_vel
     globalvel = 300           # speed for moving around
     global_slow_vel = 30
+    if opt.slow: globalvel = global_slow_vel
     ori = [0, 0, 1, 0]
     z = 0.218                 # the height above the table probe1: 0.29 probe2: 0.218
     surface_thick = 0.01158   # 0.01158 for plywood
@@ -185,7 +189,7 @@ def main(argv):
     # space for the experiment
     real_exp = opt.real_exp
     if real_exp:
-        speeds = [400, 200, 100, 50, 20]
+        speeds = reversed([20, 50, 100, 200, 400])
         if shape_type == 'poly':
             side_params = np.linspace(0.1, 0.9, 9)  
         else:
@@ -224,9 +228,9 @@ def main(argv):
                     normal = normal / norm(normal)  # normalize it
                     normal = np.append(normal, [0])
                 elif shape_type == 'ellip':
-                    (a,b) = shape[i][0], shape[i][1]
-                    pos = [shape[i][0] * cos(s*2*np.pi), shape[i][1] * sin(s*2*np.pi), 0]
-                    normal = [cos(s*2*np.pi)/a, sin(s*2*np.pi)/b]
+                    (a,b) = shape[0][0], shape[0][1]
+                    pos = [shape[0][0] * np.cos(s*2*np.pi), shape[0][1] * np.sin(s*2*np.pi), 0]
+                    normal = [np.cos(s*2*np.pi)/a, np.sin(s*2*np.pi)/b, 0]
                     normal = normal / norm(normal)  # normalize it
                 elif shape_type == 'butt':
                     pos, normal = polyapprox(shape, s)
