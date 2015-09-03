@@ -74,34 +74,35 @@ def make_sure_path_exists(path):
         if exception.errno != errno.EEXIST:
             raise
 
-def recover(obj_frame_id, global_frame_id, z, slot_pos_obj):
+def recover(obj_frame_id, global_frame_id, z, slot_pos_obj, reset):
     global globalvel
     global global_slow_vel
     zup = z + 0.03
     ori = [0, 0, 1, 0]
     center_world = [0.35, 0, 0]
     slot_pos_obj = slot_pos_obj + [0]
-    # move above the slot
-    pos_recover_probe_world = coordinateFrameTransform(slot_pos_obj, obj_frame_id, global_frame_id, listener)
-    pos_recover_probe_world[2] = zup
-    setCart(pos_recover_probe_world, ori)
-    
-    # speed down
-    setSpeed(tcp=global_slow_vel, ori=1000)
-    
-    # move down to the slot    
-    pos_recover_probe_world = coordinateFrameTransform(slot_pos_obj, obj_frame_id, global_frame_id, listener)
-    pos_recover_probe_world[2] = z
-    setCart(pos_recover_probe_world, ori)
-    #pause()
-    
-    # move to the world center
-    pos_recover_probe_target_world = center_world
-    pos_recover_probe_target_world[2] = z
-    setCart(pos_recover_probe_target_world, ori)
-    
-    # speed up
-    setSpeed(tcp=globalvel, ori=1000)
+    if reset:
+        # move above the slot
+        pos_recover_probe_world = coordinateFrameTransform(slot_pos_obj, obj_frame_id, global_frame_id, listener)
+        pos_recover_probe_world[2] = zup
+        setCart(pos_recover_probe_world, ori)
+        
+        # speed down
+        setSpeed(tcp=global_slow_vel, ori=1000)
+        
+        # move down to the slot    
+        pos_recover_probe_world = coordinateFrameTransform(slot_pos_obj, obj_frame_id, global_frame_id, listener)
+        pos_recover_probe_world[2] = z
+        setCart(pos_recover_probe_world, ori)
+        #pause()
+        
+        # move to the world center
+        pos_recover_probe_target_world = center_world
+        pos_recover_probe_target_world[2] = z
+        setCart(pos_recover_probe_target_world, ori)
+        
+        # speed up
+        setSpeed(tcp=globalvel, ori=1000)
     
     # move to the world center
     pos_recover_probe_target_world = center_world
@@ -136,7 +137,7 @@ def main(argv):
     # prepare the proxy, listener
     global listener
     global vizpub
-    rospy.init_node('contour_follow', anonymous=True)
+    rospy.init_node('collect_motion_data')
     listener = tf.TransformListener()
     vizpub = rospy.Publisher("visualization_marker", Marker, queue_size=10)
     br = TransformBroadcaster()
@@ -169,6 +170,7 @@ def main(argv):
     dist_before_contact = 0.03 
     dist_after_contact = 0.05
     skip_when_exists = True
+    reset_freq = 2
 
 
     global_frame_id = '/map'
@@ -191,7 +193,7 @@ def main(argv):
     if real_exp:
         speeds = reversed([20, 50, 100, 200, 400])
         if shape_type == 'poly':
-            side_params = np.linspace(0.1, 0.9, 9)  
+            side_params = np.linspace(0, 1, 11)  
         else:
             side_params = np.linspace(0,1,40,endpoint=False)
         
@@ -202,7 +204,7 @@ def main(argv):
         angles = np.linspace(-pi/4, pi/4, 3)
 
     # parameters about rosbag
-    dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/push_dataset_motion/'
+    dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/push_dataset_motion_full_%s/' % shape_id
     #topics = ['/joint_states', '/netft_data', '/tf', '/visualization_marker']
     topics = ['-a']
     
@@ -222,6 +224,7 @@ def main(argv):
             for s in side_params:
                 if shape_type == 'poly':
                     pos = np.array(shape[i]) *s + np.array(shape[(i+1) % len(shape)]) *(1-s)
+                    #pos = np.array(shape[i]) *(1-s) + np.array(shape[(i+1) % len(shape)]) *(s)   -> do it in next iteration
                     pos = np.append(pos, [0])
                     tangent = np.array(shape[(i+1) % len(shape)]) - np.array(shape[i])
                     normal = np.array([tangent[1], -tangent[0]]) 
@@ -289,7 +292,7 @@ def main(argv):
                     setCart(end_pos,ori)
                     
                     # recover
-                    recover(obj_frame_id, global_frame_id, z_recover, obj_slot)
+                    recover(obj_frame_id, global_frame_id, z_recover, obj_slot, not(cnt % reset_freq))
                     #pause()
                     cnt += 1
                     if cnt > limit:
