@@ -147,7 +147,7 @@ def main(argv):
     real_exp = opt.real_exp
     if real_exp:
         speeds = [400, 200, 100, 50, 20]
-        side_params = np.linspace(0.1, 0.9, 9)  
+        side_params = np.linspace(0, 1, 11)  
         angles = np.linspace(-pi/180.0*80.0, pi/180*80, 9)  
     else:
         speeds = [20, 50, 100, 200, 400]

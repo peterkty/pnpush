@@ -24,16 +24,16 @@ def makeShapePolyTri(shortSide1, shortSide2, longSide):
     c = longSide
     d = 0.090 / 2.0  # from the rectangle coordinate system
     
-    return [[d, d], [d,d-b], [d,d-a]]
+    return [[d, d], [d-b,d], [d,d-a]]
 
 def makeShapeEllip(a, b):
-    return [a, b]
+    return [[a, b]]
 
 def makeShapePolyNGon(side, n):
     poly = []
     for i in range(n):
         theta = (2*math.pi/n)*i
-        poly.append([math.cos(theta), math.sin(theta)])
+        poly.append([side*math.cos(theta), side*math.sin(theta)])
     return poly
 
 import copy
@@ -77,18 +77,18 @@ def processButtShape(shape):
 class ShapeDB:
     def __init__(self):
         self.shape_db["rect1"]["shape"] = makeShapePolyRect(0.090, 0.090)
-        self.shape_db["rect2"]["shape"] = makeShapePolyRect(0.11258, 0.08991)
+        self.shape_db["rect2"]["shape"] = makeShapePolyRect(0.08991, 0.11258)
         self.shape_db["rect3"]["shape"] = makeShapePolyRect(0.13501, 0.08994)
         
         self.shape_db["tri1"]["shape"] = makeShapePolyTri(0.12587, 0.12590, 0.178)
         self.shape_db["tri2"]["shape"] = makeShapePolyTri(0.12587, 0.15100, 0.1962)
         self.shape_db["tri3"]["shape"] = makeShapePolyTri(0.12561, 0.1765, 0.2152)
         
-        self.shape_db["ellip1"]["shape"] = makeShapeEllip(0.105, 0.105)
-        self.shape_db["ellip2"]["shape"] = makeShapeEllip(0.105, 0.13089)
-        self.shape_db["ellip3"]["shape"] = makeShapeEllip(0.105, 0.157)
+        self.shape_db["ellip1"]["shape"] = makeShapeEllip(0.105/2, 0.105/2)
+        self.shape_db["ellip2"]["shape"] = makeShapeEllip(0.105/2, 0.13089/2)
+        self.shape_db["ellip3"]["shape"] = makeShapeEllip(0.105/2, 0.157/2)
         
-        self.shape_db["hexagon"]["shape"] = makeShapePolyNGon(0.06050, 6)
+        self.shape_db["hex"]["shape"] = makeShapePolyNGon(0.06050, 6)
         
         self.shape_db["butt"]["shape"] = processButtShape(self.shape_db["butt"]["shape"])
         
@@ -147,7 +147,7 @@ class ShapeDB:
             "slot_pos" : [],
             "shape_type" : 'ellip'
         },
-        "hexagon" : {
+        "hex" : {
             "slot_pos" : [],
             "shape_type" : 'poly'
         },
