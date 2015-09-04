@@ -42,7 +42,6 @@ def main(argv):
     # parameters about object
     shape_id = 'rect1'  # should be a rosparam
     shape_db = ShapeDB()
-    shape_polygon = shape_db.shape_db[shape_id]['shape_poly'] # shape of the objects presented as polygon.
     mesh = shape_db.shape_db[shape_id]['mesh']
     frame_id = shape_db.shape_db[shape_id]['frame_id']
     obj_slot = shape_db.shape_db[shape_id]['slot_pos']
