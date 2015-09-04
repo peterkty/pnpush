@@ -17,8 +17,6 @@ import rospy
 import json
 import roslib; roslib.load_manifest("robot_comm")
 from robot_comm.srv import *
-roslib.load_manifest("netft_rdt_driver")
-from netft_rdt_driver.srv import Zero
 import sensor_msgs.msg
 import geometry_msgs.msg
 import os
@@ -35,13 +33,10 @@ import copy
 import subprocess, os, signal
 from config.shape_db_moreshape import ShapeDB
 
-setCartRos = rospy.ServiceProxy('/robot2_SetCartesian', robot_SetCartesian)
-setZero = rospy.ServiceProxy('/zero', Zero)
-setZone = rospy.ServiceProxy('/robot2_SetZone', robot_SetZone)
-addBufferRos = rospy.ServiceProxy('/robot2_AddBuffer', robot_AddBuffer)
+import matplotlib.pyplot as plt
 
-clearBuffer = rospy.ServiceProxy('/robot2_ClearBuffer', robot_ClearBuffer)
-executeBuffer = rospy.ServiceProxy('/robot2_ExecuteBuffer', robot_ExecuteBuffer)
+setCartRos = rospy.ServiceProxy('/robot2_SetCartesian', robot_SetCartesian)
+setZone = rospy.ServiceProxy('/robot2_SetZone', robot_SetZone)
 
 def setCart(pos, ori):
     param = (np.array(pos) * 1000).tolist() + ori
@@ -126,11 +121,14 @@ def polyapprox(shape, s):
         length = accu[-1]
     targetlength = s*length
     ind = 0
+    print 'len(accu)', len(accu)
     
     for i in range(len(ss)):
         if accu[i] > targetlength:
             ind = i
             break
+    
+    print 'ind', ind
     
     seglength = norm(np.array(ss[(ind+1) % len(ss)])-np.array(ss[ind]))
     t = (targetlength-accu[ind]) / seglength
@@ -140,6 +138,7 @@ def polyapprox(shape, s):
     normal = np.array([tangent[1], -tangent[0]]) 
     normal = normal / norm(normal)  # normalize it
     normal = np.append(normal, [0])
+    print 'len(pos)' , len(pos)
     return (pos, normal)
 
 # check whether the probe will hit the object
@@ -167,12 +166,6 @@ def polyapprox_check_collision(shape, pos_start_probe_object, probe_radius):
 import optparse
 def main(argv):
     # prepare the proxy, listener
-    global listener
-    global vizpub
-    rospy.init_node('collect_motion_data')
-    listener = tf.TransformListener()
-    vizpub = rospy.Publisher("visualization_marker", Marker, queue_size=10)
-    br = TransformBroadcaster()
     
     parser = optparse.OptionParser()
     parser.add_option('-s', action="store", dest='shape_id', 
@@ -232,19 +225,7 @@ def main(argv):
             side_params = np.linspace(0,1,40,endpoint=False)
         
         angles = np.linspace(-pi/180.0*80.0, pi/180*80, 9)  
-    else:
-        speeds = [20, 50, 100, 200, 400]
-        side_params = np.linspace(0.1,0.9,3)
-        angles = np.linspace(-pi/4, pi/4, 3)
-
-    # parameters about rosbag
-    dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/push_dataset_motion_full_%s/' % shape_id
-    #topics = ['/joint_states', '/netft_data', '/tf', '/visualization_marker']
-    topics = ['-a']
     
-    setSpeed(tcp=globalvel, ori=1000)
-    setZone(0)
-    make_sure_path_exists(dir_save_bagfile)
     
     # hack
     limit = 100
@@ -275,91 +256,26 @@ def main(argv):
                 # enumerate the direction in which we want to push
                 for t in angles:
                     bagfilename = 'motion_surface=%s_shape=%s_v=%.0f_i=%.3f_s=%.3f_t=%.3f.bag' % (surface_id, shape_id, v, i, s, t)
-                    bagfilepath = dir_save_bagfile+bagfilename
-                    # if exists then skip it
-                    if skip_when_exists and os.path.isfile(bagfilepath):
-                        print bagfilepath, 'exits', 'skip'
-                        continue  
+                    bagfilepath = bagfilename
                     # find the probe pos in contact in object frame
                     pos_probe_contact_object = pos + normal * probe_radius
                     # find the start point
                     direc = np.dot(tfm.euler_matrix(0,0,t) , normal.tolist() + [1])[0:3] # in the direction of moving out
                     pos_start_probe_object = pos_probe_contact_object + direc * dist_before_contact
                     
+                    pos_end_probe_object = pos_probe_contact_object - direc * dist_after_contact
+                    
+                    
                     if shape_type == 'polyapprox' and polyapprox_check_collision(shape, pos_start_probe_object, probe_radius):
                         print bagfilename, 'will be in collision', 'skip'
                         continue
                     
-                    # find the end point
-                    pos_end_probe_object = pos_probe_contact_object - direc * dist_after_contact
-                    
-                    # zero force torque sensor
-                    rospy.sleep(0.1)
-                    setZero()
-                    wait_for_ft_calib()
-                    
-                    # transform start and end to world frame
-                    pos_start_probe_world = coordinateFrameTransform(pos_start_probe_object, obj_frame_id, global_frame_id, listener)
-                    pos_end_probe_world = coordinateFrameTransform(pos_end_probe_object, obj_frame_id, global_frame_id, listener)
-
-
-
-                    # start bag recording
-                    # move to startPos
-                    start_pos = copy.deepcopy(pos_start_probe_world)
-                    start_pos[2] = zup
-                    setCart(start_pos,ori)
-        
-                    start_pos = copy.deepcopy(pos_start_probe_world)
-                    start_pos[2] = z
-                    setCart(start_pos,ori)
-                    
-                    rosbag_proc = subprocess.Popen('rosbag record -q -O %s %s' % (bagfilename, " ".join(topics)) , shell=True, cwd=dir_save_bagfile)
-                    print 'rosbag_proc.pid=', rosbag_proc.pid
-                    rospy.sleep(0.5)
-                    
-                    end_pos = copy.deepcopy(pos_end_probe_world)
-                    end_pos[2] = z
-                    
-                    if v > 0:  # constant speed
-                        setSpeed(tcp=v, ori=1000)
-                        setCart(end_pos,ori)
-                        setSpeed(tcp=globalvel, ori=1000)
-                    else:  # v < 0 acceleration
-                        N = 100
-                        PtList = np.array([np.linspace(ii,jj,N) for ii,jj in zip(pos_start_probe_world, pos_end_probe_world)]).T
-                        clearBuffer()
-                        setZone(5)
-                        for i in range(0,N):
-                            setSpeed(acc_speed[i],2000)
-                            addBuffer([PtList[i,0],PtList[i,1],z],ori)
-                        setZone(0)
-                        
-                    
-                    # end bag recording
-                    terminate_ros_node("/record")
-                    
-                    # move up vertically
-                    end_pos = copy.deepcopy(pos_end_probe_world)
-                    end_pos[2] = zup
-                    setCart(end_pos,ori)
-                    
-                    # recover
-                    recover(obj_frame_id, global_frame_id, z_recover, obj_slot, not(cnt % reset_freq))
-                    #pause()
-                    cnt += 1
-                    if cnt > limit:
-                        break;
-                if cnt > limit:
-                    break;
-            if cnt > limit:
-                break;
-        if cnt > limit:
-            break;
-
-    # move back to startPos
-    start_pos = [0.2, 0, z + 0.05]
-    setCart(start_pos,ori)
+                    plt.scatter(pos_start_probe_object[0], pos_start_probe_object[1])
+                    print pos_start_probe_object
+    
+    plt.scatter(np.array(shape[0])[:,0], np.array(shape[0])[:,1], c=[0.1]*len(shape[0]))
+    #plt.scatter(pos_start_probe_object[0], pos_start_probe_object[1])
+    plt.show()
 
 def terminate_ros_node(s):
     list_cmd = subprocess.Popen("rosnode list", shell=True, stdout=subprocess.PIPE)
