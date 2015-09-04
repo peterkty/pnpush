@@ -120,9 +120,10 @@ def recover(obj_frame_id, global_frame_id, z, slot_pos_obj, reset):
 def polyapprox(shape, s):
     ss = shape[0]
     accu = []
+    length = 0
     for i in range(len(ss)):
-        accu.append(norm(np.array(ss[(i+1) % len(ss)])-np.array(ss[i])))
-    length = accu[-1]
+        accu.append(norm(np.array(ss[(i+1) % len(ss)])-np.array(ss[i])) + length)
+        length = accu[-1]
     targetlength = s*length
     ind = 0
     

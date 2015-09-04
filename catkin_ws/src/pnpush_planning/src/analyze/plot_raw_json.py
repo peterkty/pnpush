@@ -18,23 +18,20 @@ from ik.helper import matrix_from_xyzquat
 from matplotlib.pyplot import savefig
 
 def plot(data, shape_id, figfname):
-
-
-
-    fig, ax = plt.subplots()
-    probe_radius = 0.004745   # probe1: 0.00626/2 probe2: 0.004745
-    fig.set_size_inches(7,7)
-    #f = plt.figure(figsize=(7, 7))
-
-    v = int(figfname.split('_')[-4].split('=')[1])
-    sub = int(30 / (v / 20.0))                 # subsample rate
     #data['tip_poses']
     #data['ft_wrench']
     #data['object_pose']
+    
+    probe_radius = 0.004745   # probe1: 0.00626/2 probe2: 0.004745
+    
+    fig, ax = plt.subplots()
+    fig.set_size_inches(7,7)
+
+    v = int(figfname.split('_')[-4].split('=')[1])
+    sub = int(30 / (v / 20.0))                 # subsample rate
     tip_pose = data['tip_poses']
     
     patches = []
-    
     
     # add the object as polygon
     shape_db = ShapeDB()
@@ -62,33 +59,32 @@ def plot(data, shape_id, figfname):
     for i in (range(0, len(tip_pose), sub)):
         tip_pose_0 = np.dot(invT0, tip_pose[i][1:4]+[1])
         circle = mpatches.Circle(tip_pose_0[0:2], probe_radius, color='black', alpha=0.8, fill=False, linewidth=1, linestyle='solid')
-        #patches.append(circle)
         ax.add_patch(circle)
 
     # render it
-    #collection = PatchCollection(patches, alpha=0.1)
-    #ax.add_collection(collection)
-    #plt.subplots_adjust(left=0, right=1, bottom=0, top=1)
     
     plt.axis([-0.1, 0.1, -0.1, 0.1])
     plt.axis('off')
-    #plt.axis('equal')
-    #plt.axis('off')
     
     if figfname is not None:
         plt.savefig(figfname)
 
+def getfield_from_filename(figname, field):
+    return figname[figname.find(field):].split('_')[0].split('=')[1]
+
 def main(argv):
     if len(argv) < 2:
-        print 'Usage: analyze_json.py *.json'
+        print 'Usage: plot_raw_json.py *.json'
         return
         
     bag_filepath = argv[1]
     with open(bag_filepath) as data_file:    
         data = json.load(data_file)
     
-    shape_id = 'rect1'
-    plot(data, shape_id, bag_filepath.replace('.json', '.png'))
+    #shape_id = 'rect1'
+    figname = bag_filepath.replace('.json', '.png')
+    shape_id = getfield_from_filename(figname, 'shape')
+    plot(data, shape_id, figname)
 
 
 if __name__=='__main__':

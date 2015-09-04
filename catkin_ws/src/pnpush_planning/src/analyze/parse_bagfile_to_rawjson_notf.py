@@ -21,13 +21,9 @@ import sys
 import subprocess
 
 
-def ftmsg2list(ftmsg):
-    return [ftmsg.wrench.force.x,ftmsg.wrench.force.y,ftmsg.wrench.force.z,
-            ftmsg.wrench.torque.x,ftmsg.wrench.torque.y,ftmsg.wrench.torque.z]
-
-def ftmsg2list(ftmsg):
-    return [ftmsg.wrench.force.x,ftmsg.wrench.force.y,ftmsg.wrench.force.z,
-            ftmsg.wrench.torque.x,ftmsg.wrench.torque.y,ftmsg.wrench.torque.z]
+def ftmsg2listandflip(ftmsg):
+    return [-ftmsg.wrench.force.x,ftmsg.wrench.force.y,-ftmsg.wrench.force.z,
+            -ftmsg.wrench.torque.x,ftmsg.wrench.torque.y,-ftmsg.wrench.torque.z]
             
 def main(argv):
     global pub
@@ -92,7 +88,7 @@ def main(argv):
             msg.qx,msg.qy,msg.qz,msg.q0])
         
     for topic, msg, t in bag.read_messages(topics=['/netft_data']):
-        ft_array.append([msg.header.stamp.to_sec()] + ftmsg2list(msg))
+        ft_array.append([msg.header.stamp.to_sec()] + ftmsg2listandflip(msg))
         
         
     bag.close()

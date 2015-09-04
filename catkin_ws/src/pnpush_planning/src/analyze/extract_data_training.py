@@ -22,7 +22,6 @@ from mpl_toolkits.mplot3d import Axes3D
 
 import pdb
 def extract2d_and_cleanup(data):
-
     probe_radius = 0.004745   # probe1: 0.00626/2 probe2: 0.004745
     
     tip_pose = data['tip_poses']
@@ -257,10 +256,10 @@ def main(argv):
             pass
     
     labels = ['tip_x', 'tip_y', 'tip_vx', 'tip_vy', 'forcex', 'forcey', 'object_pose_vx', 'object_pose_vy', 'object_pose_vtheta']
-    #plot_training_data(all_training_data, [0,1], labels, '')
+    plot_training_data(all_training_data, [0,1], labels, '')
     #plot_training_data(all_training_data, [2,3], labels, '')
     #plot_training_data(all_training_data, [4,5], labels, '')
-    plot_training_data(all_training_data, [6,7,8], labels, '')
+    #plot_training_data(all_training_data, [6,7,8], labels, '')
     
     outputfile= "%s/data_training.json" % argv[1]
     with open(outputfile, 'w') as outfile:
