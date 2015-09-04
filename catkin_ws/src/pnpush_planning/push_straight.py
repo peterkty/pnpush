@@ -69,7 +69,8 @@ def push_straight():
     z = 0.217+surface_thick # long 279 || short 217
     zup = 0.217+surface_thick+0.040 
     ori = [0,0,1,0]
-    top_speed = 1000.0
+    numOfRuns = 10
+    top_speeds = np.linspace(500, 1000.0, numOfRuns) 
     
     # set initial configuration of the robot
     setJoint(0,0,0,0,90,0)
@@ -86,10 +87,10 @@ def push_straight():
     
     global_frame_id = '/map'
     
-    numOfRuns = 10
     probe_radius = 0.004745    # probe1: 0.00626/2 probe2: 0.004745
     
-    for counter in range(9, numOfRuns):
+    for counter in range(0, numOfRuns):
+        top_speed = top_speeds[counter]
         bagfilename = dir_save_bagfile+('%d.bag' % counter)
         print 'Run number %s' % counter
         

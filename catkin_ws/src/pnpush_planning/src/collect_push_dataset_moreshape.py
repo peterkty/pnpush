@@ -38,12 +38,20 @@ from config.shape_db_moreshape import ShapeDB
 setCartRos = rospy.ServiceProxy('/robot2_SetCartesian', robot_SetCartesian)
 setZero = rospy.ServiceProxy('/zero', Zero)
 setZone = rospy.ServiceProxy('/robot2_SetZone', robot_SetZone)
+addBufferRos = rospy.ServiceProxy('/robot2_AddBuffer', robot_AddBuffer)
+
+clearBuffer = rospy.ServiceProxy('/robot2_ClearBuffer', robot_ClearBuffer)
+executeBuffer = rospy.ServiceProxy('/robot2_ExecuteBuffer', robot_ExecuteBuffer)
 
 def setCart(pos, ori):
     param = (np.array(pos) * 1000).tolist() + ori
     print 'setCart', param
     #pause()
     setCartRos(*param)
+
+def addBuffer(pos, ori):
+    param = (np.array(pos) * 1000).tolist() + ori
+    addBufferRos(*param)
 
 def pause():
     print 'Press any key to continue'
@@ -124,13 +132,36 @@ def polyapprox(shape, s):
     
     seglength = norm(np.array(ss[(ind+1) % len(ss)])-np.array(ss[ind]))
     t = (targetlength-accu[ind]) / seglength
-    pos = ss[ind] * (1-t) +  ss[(ind+1) % len(ss)] * t
+    pos = np.array(ss[ind]) * (1-t) +  np.array(ss[(ind+1) % len(ss)]) * t
     pos = np.append(pos, [0])
     tangent = np.array(ss[(ind+1) % len(ss)])-np.array(ss[ind])
     normal = np.array([tangent[1], -tangent[0]]) 
     normal = normal / norm(normal)  # normalize it
     normal = np.append(normal, [0])
+    print 'len(pos)' , len(pos)
     return (pos, normal)
+
+# check whether the probe will hit the object
+def polyapprox_check_collision(shape, pos_start_probe_object, probe_radius):
+    ss = shape[0]
+    # find the closest point on the shape to pos_start_probe_object
+    min_dist = 10000
+    min_ind = 0
+    safety_margin = 0.005
+    for i in range(len(ss)):
+        dist = norm(np.array(ss[i]) - np.array(pos_start_probe_object[0:2]))
+        if dist < min_dist:
+            min_dist = dist
+            min_ind = i
+            
+    tangent = np.array(ss[(min_ind+1) % len(ss)])-np.array(ss[min_ind])
+    normal = np.array([tangent[1], -tangent[0]]) # pointing out of shape
+    normal = normal / norm(normal)  # normalize it
+    d = np.dot(normal, np.array(pos_start_probe_object[0:2]) - np.array(ss[min_ind]) )
+    if d < probe_radius + safety_margin:
+        return True
+    else:
+        return False
 
 import optparse
 def main(argv):
@@ -165,12 +196,12 @@ def main(argv):
     surface_thick = 0.01158   # 0.01158 for plywood
     z = z + surface_thick
     z_recover = 0.2285 + surface_thick 
-    zup = z + 0.04            # the prepare and end height
+    zup = z + 0.08            # the prepare and end height
     probe_radius = 0.004745   # probe1: 0.00626/2 probe2: 0.004745
     dist_before_contact = 0.03 
     dist_after_contact = 0.05
     skip_when_exists = True
-    reset_freq = 2
+    reset_freq = 1
 
 
     global_frame_id = '/map'
@@ -191,7 +222,9 @@ def main(argv):
     # space for the experiment
     real_exp = opt.real_exp
     if real_exp:
+        acc_speed = np.linspace(20,1000,100)  # for acc
         speeds = reversed([20, 50, 100, 200, 400])
+        #speeds = reversed([20, 50, 100, 200, 400, -1000])
         if shape_type == 'poly':
             side_params = np.linspace(0, 1, 11)  
         else:
@@ -235,7 +268,7 @@ def main(argv):
                     pos = [shape[0][0] * np.cos(s*2*np.pi), shape[0][1] * np.sin(s*2*np.pi), 0]
                     normal = [np.cos(s*2*np.pi)/a, np.sin(s*2*np.pi)/b, 0]
                     normal = normal / norm(normal)  # normalize it
-                elif shape_type == 'butt':
+                elif shape_type == 'polyapprox':
                     pos, normal = polyapprox(shape, s)
                     
                 # enumerate the direction in which we want to push
@@ -251,6 +284,11 @@ def main(argv):
                     # find the start point
                     direc = np.dot(tfm.euler_matrix(0,0,t) , normal.tolist() + [1])[0:3] # in the direction of moving out
                     pos_start_probe_object = pos_probe_contact_object + direc * dist_before_contact
+                    
+                    if shape_type == 'polyapprox' and polyapprox_check_collision(shape, pos_start_probe_object, probe_radius):
+                        print bagfilename, 'will be in collision', 'skip'
+                        continue
+                    
                     # find the end point
                     pos_end_probe_object = pos_probe_contact_object - direc * dist_after_contact
                     
@@ -262,6 +300,8 @@ def main(argv):
                     # transform start and end to world frame
                     pos_start_probe_world = coordinateFrameTransform(pos_start_probe_object, obj_frame_id, global_frame_id, listener)
                     pos_end_probe_world = coordinateFrameTransform(pos_end_probe_object, obj_frame_id, global_frame_id, listener)
+
+
 
                     # start bag recording
                     # move to startPos
@@ -279,9 +319,21 @@ def main(argv):
                     
                     end_pos = copy.deepcopy(pos_end_probe_world)
                     end_pos[2] = z
-                    setSpeed(tcp=v, ori=1000)
-                    setCart(end_pos,ori)
-                    setSpeed(tcp=globalvel, ori=1000)
+                    
+                    if v > 0:  # constant speed
+                        setSpeed(tcp=v, ori=1000)
+                        setCart(end_pos,ori)
+                        setSpeed(tcp=globalvel, ori=1000)
+                    else:  # v < 0 acceleration
+                        N = 100
+                        PtList = np.array([np.linspace(ii,jj,N) for ii,jj in zip(pos_start_probe_world, pos_end_probe_world)]).T
+                        clearBuffer()
+                        setZone(5)
+                        for i in range(0,N):
+                            setSpeed(acc_speed[i],2000)
+                            addBuffer([PtList[i,0],PtList[i,1],z],ori)
+                        setZone(0)
+                        
                     
                     # end bag recording
                     terminate_ros_node("/record")

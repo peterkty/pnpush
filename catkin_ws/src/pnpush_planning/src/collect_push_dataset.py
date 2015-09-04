@@ -5,8 +5,10 @@
 
 import sys
 import numpy as np
-from ik.roshelper import *
-from ik.helper import *
+from ik.roshelper import ROS_Wait_For_Msg
+from ik.roshelper import lookupTransform
+from ik.roshelper import coordinateFrameTransform
+from ik.helper import Timer
 from ik.ik import setSpeed
 from geometry_msgs.msg import WrenchStamped
 import tf
@@ -22,7 +24,10 @@ import geometry_msgs.msg
 import os
 import scipy.io as sio
 from visualization_msgs.msg import Marker
-from marker_helper import *
+from marker_helper import createMeshMarker
+from marker_helper import createPointMarker
+from marker_helper import createArrowMarker
+from marker_helper import createSphereMarker
 from tf.broadcaster import TransformBroadcaster
 from math import pi
 import pdb
@@ -44,6 +49,17 @@ def pause():
     print 'Press any key to continue'
     raw_input()
 
+def norm(vect):
+    vect = np.array(vect)
+    return np.sqrt(np.dot(vect, vect))
+    
+def poselist2mat(pose):
+    return np.dot(tfm.translation_matrix(pose[0:3]), tfm.quaternion_matrix(pose[3:7]))
+
+def mat2poselist(mat):
+    pos = tfm.translation_from_matrix(mat)
+    quat = tfm.quaternion_from_matrix(mat)
+    return pos.tolist() + quat.tolist()
 
 def wait_for_ft_calib():
     ROS_Wait_For_Msg('/netft_data', geometry_msgs.msg.WrenchStamped).getmsg()
@@ -58,47 +74,70 @@ def make_sure_path_exists(path):
         if exception.errno != errno.EEXIST:
             raise
 
-def recover(obj_frame_id, global_frame_id, z, slot_pos_obj):
+def recover(obj_frame_id, global_frame_id, z, slot_pos_obj, reset):
     global globalvel
     global global_slow_vel
     zup = z + 0.03
     ori = [0, 0, 1, 0]
     center_world = [0.35, 0, 0]
     slot_pos_obj = slot_pos_obj + [0]
-    # move above the slot
-    pos_recover_probe_world = coordinateFrameTransform(slot_pos_obj, obj_frame_id, global_frame_id, listener)
-    pos_recover_probe_world[2] = zup
-    setCart(pos_recover_probe_world, ori)
-    
-    # speed down
-    setSpeed(tcp=global_slow_vel, ori=1000)
-    
-    # move down to the slot    
-    pos_recover_probe_world = coordinateFrameTransform(slot_pos_obj, obj_frame_id, global_frame_id, listener)
-    pos_recover_probe_world[2] = z
-    setCart(pos_recover_probe_world, ori)
-    #pause()
-    
-    # move to the world center
-    pos_recover_probe_target_world = center_world
-    pos_recover_probe_target_world[2] = z
-    setCart(pos_recover_probe_target_world, ori)
-    
-    # speed up
-    setSpeed(tcp=globalvel, ori=1000)
+    if reset:
+        # move above the slot
+        pos_recover_probe_world = coordinateFrameTransform(slot_pos_obj, obj_frame_id, global_frame_id, listener)
+        pos_recover_probe_world[2] = zup
+        setCart(pos_recover_probe_world, ori)
+        
+        # speed down
+        setSpeed(tcp=global_slow_vel, ori=1000)
+        
+        # move down to the slot    
+        pos_recover_probe_world = coordinateFrameTransform(slot_pos_obj, obj_frame_id, global_frame_id, listener)
+        pos_recover_probe_world[2] = z
+        setCart(pos_recover_probe_world, ori)
+        #pause()
+        
+        # move to the world center
+        pos_recover_probe_target_world = center_world
+        pos_recover_probe_target_world[2] = z
+        setCart(pos_recover_probe_target_world, ori)
+        
+        # speed up
+        setSpeed(tcp=globalvel, ori=1000)
     
     # move to the world center
     pos_recover_probe_target_world = center_world
     pos_recover_probe_target_world[2] = zup+0.03  # up more to let vicon see the marker
     setCart(pos_recover_probe_target_world, ori)
     
+def polyapprox(shape, s):
+    ss = shape[0]
+    accu = []
+    for i in range(len(ss)):
+        accu.append(norm(np.array(ss[(i+1) % len(ss)])-np.array(ss[i])))
+    length = accu[-1]
+    targetlength = s*length
+    ind = 0
+    
+    for i in range(len(ss)):
+        if accu[i] > targetlength:
+            ind = i
+    
+    seglength = norm(np.array(ss[(ind+1) % len(ss)])-np.array(ss[ind]))
+    t = (targetlength-accu[ind]) / seglength
+    pos = ss[ind] * (1-t) +  ss[(ind+1) % len(ss)] * t
+    pos = np.append(pos, [0])
+    tangent = np.array(ss[(ind+1) % len(ss)])-np.array(ss[ind])
+    normal = np.array([tangent[1], -tangent[0]]) 
+    normal = normal / norm(normal)  # normalize it
+    normal = np.append(normal, [0])
+    return (pos, normal)
 
 import optparse
 def main(argv):
     # prepare the proxy, listener
     global listener
     global vizpub
-    rospy.init_node('contour_follow', anonymous=True)
+    rospy.init_node('collect_motion_data')
     listener = tf.TransformListener()
     vizpub = rospy.Publisher("visualization_marker", Marker, queue_size=10)
     br = TransformBroadcaster()
@@ -109,6 +148,9 @@ def main(argv):
     parser.add_option('-r', '--real', action="store_true", dest='real_exp', 
                       help='Do the real experiment space', 
                       default=False)
+    parser.add_option('', '--slow', action="store_true", dest='slow', 
+                      help='Set slower global speed', 
+                      default=False)
                       
     (opt, args) = parser.parse_args()
     
@@ -117,6 +159,7 @@ def main(argv):
     global global_slow_vel
     globalvel = 300           # speed for moving around
     global_slow_vel = 30
+    if opt.slow: globalvel = global_slow_vel
     ori = [0, 0, 1, 0]
     z = 0.218                 # the height above the table probe1: 0.29 probe2: 0.218
     surface_thick = 0.01158   # 0.01158 for plywood
@@ -127,6 +170,7 @@ def main(argv):
     dist_before_contact = 0.03 
     dist_after_contact = 0.05
     skip_when_exists = True
+    reset_freq = 2
 
 
     global_frame_id = '/map'
@@ -137,6 +181,7 @@ def main(argv):
     # parameters about object
     shape_id = opt.shape_id
     shape_db = ShapeDB()
+        
     shape_type = shape_db.shape_db[shape_id]['shape_type']
     shape = shape_db.shape_db[shape_id]['shape']
         
@@ -146,8 +191,12 @@ def main(argv):
     # space for the experiment
     real_exp = opt.real_exp
     if real_exp:
-        speeds = [400, 200, 100, 50, 20]
-        side_params = np.linspace(0, 1, 11)  
+        speeds = reversed([20, 50, 100, 200, 400])
+        if shape_type == 'poly':
+            side_params = np.linspace(0, 1, 11)  
+        else:
+            side_params = np.linspace(0,1,40,endpoint=False)
+        
         angles = np.linspace(-pi/180.0*80.0, pi/180*80, 9)  
     else:
         speeds = [20, 50, 100, 200, 400]
@@ -155,7 +204,7 @@ def main(argv):
         angles = np.linspace(-pi/4, pi/4, 3)
 
     # parameters about rosbag
-    dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/push_dataset_motion/'
+    dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/push_dataset_motion_full_%s/' % shape_id
     #topics = ['/joint_states', '/netft_data', '/tf', '/visualization_marker']
     topics = ['-a']
     
@@ -173,13 +222,22 @@ def main(argv):
         for i in range(len(shape)):
             # enumerate the contact point that we want to push
             for s in side_params:
-                pos = np.array(shape[i]) *s + np.array(shape[(i+1) % len(shape)]) *(1-s)
-                pos = np.append(pos, [0])
-                tangent = np.array(shape[(i+1) % len(shape)]) - np.array(shape[i])
-                normal = np.array([tangent[1], -tangent[0]]) 
-                normal = normal / norm(normal)  # normalize it
-                normal = np.append(normal, [0])
-                
+                if shape_type == 'poly':
+                    pos = np.array(shape[i]) *s + np.array(shape[(i+1) % len(shape)]) *(1-s)
+                    #pos = np.array(shape[i]) *(1-s) + np.array(shape[(i+1) % len(shape)]) *(s)   -> do it in next iteration
+                    pos = np.append(pos, [0])
+                    tangent = np.array(shape[(i+1) % len(shape)]) - np.array(shape[i])
+                    normal = np.array([tangent[1], -tangent[0]]) 
+                    normal = normal / norm(normal)  # normalize it
+                    normal = np.append(normal, [0])
+                elif shape_type == 'ellip':
+                    (a,b) = shape[0][0], shape[0][1]
+                    pos = [shape[0][0] * np.cos(s*2*np.pi), shape[0][1] * np.sin(s*2*np.pi), 0]
+                    normal = [np.cos(s*2*np.pi)/a, np.sin(s*2*np.pi)/b, 0]
+                    normal = normal / norm(normal)  # normalize it
+                elif shape_type == 'butt':
+                    pos, normal = polyapprox(shape, s)
+                    
                 # enumerate the direction in which we want to push
                 for t in angles:
                     bagfilename = 'motion_surface=%s_shape=%s_v=%.0f_i=%.3f_s=%.3f_t=%.3f.bag' % (surface_id, shape_id, v, i, s, t)
@@ -234,7 +292,7 @@ def main(argv):
                     setCart(end_pos,ori)
                     
                     # recover
-                    recover(obj_frame_id, global_frame_id, z_recover, obj_slot)
+                    recover(obj_frame_id, global_frame_id, z_recover, obj_slot, not(cnt % reset_freq))
                     #pause()
                     cnt += 1
                     if cnt > limit:
