@@ -201,28 +201,6 @@ def extract_training_data(data):
         data_training.append(newdata)
         
     return data_training
-        
-def plot_training_data(data, indexes, labels, title):
-    data = np.array(data)
-    print '[plot_training_data]', data.shape
-    
-    fig = plt.figure()
-    plt.title(title)
-    
-    if len(indexes) == 3:
-        ax = fig.add_subplot(111, projection='3d')
-        ax.scatter(data[:,indexes[0]], data[:,indexes[1]], data[:,indexes[2]])
-    else:
-        ax = fig.add_subplot(111)
-        ax.scatter(data[:,indexes[0]], data[:,indexes[1]])
-    
-    
-    ax.set_xlabel(labels[indexes[0]])
-    ax.set_ylabel(labels[indexes[1]])
-    if len(indexes) == 3:
-        ax.set_zlabel(labels[indexes[2]])
-    #plt.axis('equal')
-    plt.show()
 
 
 def json2trainingdata(filepath):
@@ -256,6 +234,8 @@ def main(argv):
             pass
     
     labels = ['tip_x', 'tip_y', 'tip_vx', 'tip_vy', 'forcex', 'forcey', 'object_pose_vx', 'object_pose_vy', 'object_pose_vtheta']
+    #labels = ['x', 'y', 'vx', 'vy', 'forcex', 'forcey', 'object_pose_vx', 'object_pose_vy', 'object_pose_vtheta']
+    
     plot_training_data(all_training_data, [0,1], labels, '')
     #plot_training_data(all_training_data, [2,3], labels, '')
     #plot_training_data(all_training_data, [4,5], labels, '')

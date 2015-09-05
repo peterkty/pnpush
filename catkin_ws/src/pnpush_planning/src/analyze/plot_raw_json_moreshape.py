@@ -52,24 +52,41 @@ def plot(data, shape_id, figfname):
     print 'object_pose', len(object_pose), 'tip_pose', len(tip_pose)
 
         
-    for i in (range(0, len(object_pose), sub)) + [len(object_pose)-1]:
+    r = (range(0, len(object_pose), sub)) + [len(object_pose)-1]
+    for i in r:
         
         T = matrix_from_xyzquat(object_pose[i][1:4], object_pose[i][4:8])
         
+        if i == 0:
+            alpha , fill = (0.3, True)
+        elif i == r[-1]:
+            alpha , fill = (0.6, True)
+        else:
+            alpha , fill = (0.6, False)
+        
+        ec, fc = 'black','orangered'
         if shape_type == 'poly' or shape_type == 'polyapprox':
             shape_polygon_3d_world = np.dot(np.dot(invT0, T), shape_polygon_3d.T)
-            obj = mpatches.Polygon(shape_polygon_3d_world.T[:,0:2], closed=True, color='black', alpha=0.8, fill=False, linewidth=1, linestyle='solid')
+            obj = mpatches.Polygon(shape_polygon_3d_world.T[:,0:2], closed=True, fc=fc, ec=ec, alpha=alpha, fill=fill, linewidth=1, linestyle='solid')
         elif shape_type == 'ellip':
             T_T0 = np.dot(invT0, T)
             scale, shear, angles, trans, persp = tfm.decompose_matrix(T_T0)
-            obj = mpatches.Ellipse(trans[0:2], shape[0]*2, shape[1]*2, angle=angles[2], color='black', alpha=0.8, fill=False, linewidth=1, linestyle='solid')
+            obj = mpatches.Ellipse(trans[0:2], shape[0]*2, shape[1]*2, angle=angles[2], fc=fc, ec=ec, alpha=alpha, fill=fill, linewidth=1, linestyle='solid')
             
         ax.add_patch(obj)
     
     # add the probes as circle
-    for i in (range(0, len(tip_pose), sub)) + [len(tip_pose)-1]:
+    r = (range(0, len(tip_pose), sub)) + [len(tip_pose)-1]
+    for i in r:
         tip_pose_0 = np.dot(invT0, tip_pose[i][1:4]+[1])
-        circle = mpatches.Circle(tip_pose_0[0:2], probe_radius, color='black', alpha=0.8, fill=False, linewidth=1, linestyle='solid')
+        if i == 0:
+            alpha , fill = (0.8, False)
+        elif i == r[-1]:
+            alpha , fill = (0.8, False)
+        else:
+            alpha , fill = (0.8, False)
+        circle = mpatches.Circle(tip_pose_0[0:2], probe_radius, color='black', alpha=alpha, fill=fill, linewidth=1, linestyle='solid')
+            
         ax.add_patch(circle)
 
     # render it
