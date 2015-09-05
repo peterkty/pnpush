@@ -20,6 +20,9 @@ def xyzrpy_from_xyzquat(pose):
 def matrix_from_xyzquat(translate, quaternion):
     return np.dot(tfm.compose_matrix(translate=translate) , 
                    tfm.quaternion_matrix(quaternion)).tolist()
+                   
+def rotmatrix_from_quat(quaternion):
+    return (tfm.quaternion_matrix(quaternion)).tolist()
 
 def transformBack(tf_xyzquat, pose):
     T_mat = tfm.concatenate_matrices( tfm.translation_matrix(tf_xyzquat[0:3]), tfm.quaternion_matrix(tf_xyzquat[3:7]))

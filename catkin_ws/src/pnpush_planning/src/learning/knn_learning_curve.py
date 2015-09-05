@@ -30,6 +30,8 @@ def main(argv):
     
     origdata = np.random.permutation(origdata).tolist()
     
+    k = int(argv[2])
+    
     train_xy_errs = []
     train_angle_errs = []
     test_xy_errs = []
@@ -39,7 +41,10 @@ def main(argv):
     std_xy = (norm(np.array(origdata)[:,6:8].flatten(1))**2 / n_origdata)**0.5
     std_angle = (norm(np.array(origdata)[:,8].flatten(1))**2 / n_origdata)**0.5
     
-    for j in range(6, len(origdata), 5):
+    
+    r = [len(origdata)-1]
+    #r = range(6, len(origdata), 5) + [len(origdata)-1]
+    for j in r:
         data = origdata[0:j]
         # cross validation
         n_cross = 5
@@ -52,7 +57,7 @@ def main(argv):
         
         for i in range(n_cross):
             test_seg_begin = i * n_perseg
-            test_seg_end = ((i+1) * n_perseg) if (i < n_cross - 1) else (n_data - 1)
+            test_seg_end = ((i+1) * n_perseg) if (i < n_cross - 1) else (n_data )
             n_test = test_seg_end - test_seg_begin
             
             X_train = np.array(data[0:test_seg_begin] + data[test_seg_end:n_data])[:,0:4].tolist()
@@ -60,7 +65,7 @@ def main(argv):
             X_test = np.array(data[test_seg_begin:test_seg_end])[:,0:4].tolist()
             y_test = np.array(data[test_seg_begin:test_seg_end])[:,6:9].tolist()
             
-            estimator = KNeighborsRegressor(n_neighbors=1)
+            estimator = KNeighborsRegressor(n_neighbors=k)
             estimator.fit(X_train, y_train)
             y_test_predict = estimator.predict(X_test)
             y_train_predict = estimator.predict(X_train)
@@ -80,8 +85,6 @@ def main(argv):
         train_xy_errs.append(train_error_xy/std_xy); train_angle_errs.append(train_error_angle/std_angle); 
         test_xy_errs.append(test_error_xy/std_xy); test_angle_errs.append(test_error_angle/std_angle); 
 
-    print range(6, len(origdata), 5)[-1]
-    print len(origdata)
     print 'test_error_xy', test_xy_errs[-1]*std_xy, 'test_error_angle', test_angle_errs[-1]*std_angle
     #print 'var_xy', std_xy, 'std_angle', std_angle
     print 'error_xy_percent', test_xy_errs[-1], 'error_angle_percent', test_angle_errs[-1]
@@ -89,8 +92,8 @@ def main(argv):
     f = plt.figure(figsize=(7, 3.5))
     f.subplots_adjust(left=None, bottom=0.16, right=None, top=None,
                     wspace=None, hspace=None)
-    plt.plot(range(6, len(origdata), 5), train_xy_errs, 'k--', label='training error', linewidth=2.0)
-    plt.plot(range(6, len(origdata), 5), test_xy_errs, 'k-', label='cross-val error', linewidth=2.0)
+    plt.plot(r, train_xy_errs, 'k--', label='training error', linewidth=2.0)
+    plt.plot(r, test_xy_errs, 'k-', label='cross-val error', linewidth=2.0)
     plt.legend()
     plt.xlabel('training set size')
     plt.ylabel('normalized error')

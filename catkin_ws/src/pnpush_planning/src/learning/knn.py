@@ -28,6 +28,10 @@ def main(argv):
     with open(inputfile) as data_file:    
         data = json.load(data_file)
     
+    data = np.random.permutation(data).tolist()
+    
+    k = int(argv[2])
+    
     # cross validation
     n_cross = 5
     n_data = len(data)
@@ -36,7 +40,7 @@ def main(argv):
     error_angle = 0
     for i in range(n_cross):
         test_seg_begin = i * n_perseg
-        test_seg_end = ((i+1) * n_perseg) #if (i < n_cross - 1) else (n_data - 1)
+        test_seg_end = ((i+1) * n_perseg) if (i < n_cross - 1) else (n_data)
         n_test = test_seg_end - test_seg_begin
         
         X_train = np.array(data[0:test_seg_begin] + data[test_seg_end:n_data])[:,0:4].tolist()
@@ -44,7 +48,7 @@ def main(argv):
         X_test = np.array(data[test_seg_begin:test_seg_end])[:,0:4].tolist()
         y_test = np.array(data[test_seg_begin:test_seg_end])[:,6:9].tolist()
         
-        estimator = KNeighborsRegressor(n_neighbors=3)
+        estimator = KNeighborsRegressor(n_neighbors=k)
         estimator.fit(X_train, y_train)
         y_test_predict = estimator.predict(X_test)
         
