@@ -123,9 +123,6 @@ def plot_force_profile(data, shape_id, figfname, multidim):
         ax.set_ylabel('force (N)')
     plt.show()
 
-def getfield_from_filename(figname, field):
-    return figname[figname.find(field):].split('_')[0].split('=')[1]
-
 def main(argv):
     if len(argv) < 2:
         print 'Usage: plot_raw_json.py *.json'
