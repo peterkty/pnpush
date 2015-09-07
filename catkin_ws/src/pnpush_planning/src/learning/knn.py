@@ -55,14 +55,14 @@ def knn(inputfile, k):
         n_test = test_seg_end - test_seg_begin
         
         X_train = np.array(data[0:test_seg_begin] + data[test_seg_end:n_data])[:,0:4]
-        X_train = np.hstack((X_train, np.array(data[0:test_seg_begin] + data[test_seg_end:n_data])[:,13:16])).tolist()
+        #X_train = np.hstack((X_train, np.array(data[0:test_seg_begin] + data[test_seg_end:n_data])[:,13:16])).tolist()  # comment this out for static model
         
         y_train = np.array(data[0:test_seg_begin] + data[test_seg_end:n_data])[:,6:9]
         y_train = np.hstack((y_train, np.array(data[0:test_seg_begin] + data[test_seg_end:n_data])[:,16:19])).tolist()
         
         
         X_test = np.array(data[test_seg_begin:test_seg_end])[:,0:4]
-        X_test = np.hstack((X_test, np.array(data[test_seg_begin:test_seg_end])[:,13:16])).tolist()
+        #X_test = np.hstack((X_test, np.array(data[test_seg_begin:test_seg_end])[:,13:16])).tolist() # comment this out for static model
         y_test = np.array(data[test_seg_begin:test_seg_end])[:,6:9]
         y_test = np.hstack((y_test, np.array(data[test_seg_begin:test_seg_end])[:,16:19])).tolist()
         
@@ -99,7 +99,7 @@ def knn(inputfile, k):
     # print 'error_vxy_percent %.2f%% ' % (error_vxy/std_vxy*100), 'error_vangle_percent %.2f %%' % (error_vangle/std_vangle*100)
 
     print '%d & %.2f & %.2f & %.2f & %.2f & %.2f & %.2f & %.2f & %.2f\\\\ \hline' % (k, error_xy*(10**6), error_angle*(10**5), error_xy/std_xy*100, error_angle/std_angle*100,
-           error_vxy/std_vxy*100, error_vangle/std_vangle*100)
+           error_vxy*(10**6), error_vangle*(10**5), error_vxy/std_vxy*100, error_vangle/std_vangle*100)
     
 def main(argv):
     for k in range(1,10,2):

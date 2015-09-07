@@ -23,7 +23,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 def plot_training_data(data, indexes, labels, title, xticks = None, 
     yticks = None, axisequal = True, figfname = None, bottom = None, left = None,
-    xlim = None, ylim = None):
+    xlim = None, ylim = None, size = 5):
     data = np.array(data)
     print '[plot_training_data]', data.shape
     
@@ -39,7 +39,7 @@ def plot_training_data(data, indexes, labels, title, xticks = None,
         ax.scatter(data[:,indexes[0]], data[:,indexes[1]], data[:,indexes[2]], s=5, marker='.')
     else:
         ax = fig.add_subplot(111)
-        ax.scatter(data[:,indexes[0]], data[:,indexes[1]], marker='.', s=5)
+        ax.scatter(data[:,indexes[0]], data[:,indexes[1]], marker='.', s=size)
     
     
     
@@ -112,7 +112,12 @@ def main(argv):
 
     tag = 'dynamic'
     outdirname = '/home/mcube/pn-icra16-pushdata/pn-icra16-draft/figures/'
-    labels = ['$x$', '$y$', '$\Delta x$', '$\Delta y$', 'force $x$', 'force $y$', r'$\Delta x$', r'$\Delta y$', r'$\Delta \theta$']
+    labels = ['$x$', '$y$', '$\Delta x$', '$\Delta y$', 'force $x$', 'force $y$', r'$\Delta x$', r'$\Delta y$', r'$\Delta \theta$',
+        '$v_x$', '$v_y$', '$v_x$', '$v_y$',  # 9:  tip_svx, tip_svy, tip_evx, tip_evy, 
+        '$v_x$', '$v_y$', r'$\omega$',       # 13: object_pose_svx, object_pose_svy, object_pose_svtheta, # start speed
+        '$v_x$', '$v_y$', r'$\omega$']       # 16: object_pose_evx, object_pose_evy, object_pose_evtheta  # end speed]
+                                             # 19: tip_speedset (mm)
+    
     # plot_training_data(all_training_data, [0,1], labels, '', 
         # axisequal = True, figfname = outdirname+'motion_tippos_%s.pdf' % tag,
         # bottom = 0.16, left = 0.22)
@@ -132,6 +137,23 @@ def main(argv):
     # plot_limit_surface(all_training_data, axisequal = False, 
         # figfname = outdirname+'motion_limitsurface_%s.pdf' % tag, bottom = 0.16, left = 0.22,
         # xlim = [-8, 8], ylim = [-0.4, 0.4])
+        
+        
+    all_training_data = np.array(all_training_data)
+    all_training_data_v20 = np.array(all_training_data)
+    all_training_data_v20 = all_training_data_v20[all_training_data_v20[:,19] == 20, :]
+    
+    plot_training_data(all_training_data_v20, [9,10], labels, '', 
+        axisequal = True, figfname = None,
+        bottom = 0.16, left = 0.22)
+        
+    # plot_training_data(all_training_data, [11,12], labels, '', 
+        # axisequal = True, figfname = None,
+        # bottom = 0.16, left = 0.22)
+        
+    # plot_training_data(all_training_data, [13,15], labels, '', 
+        # axisequal = False, figfname = outdirname+'motion_object_pose_svx_svtheta_%s.pdf' % tag,
+        # bottom = 0.16, left = 0.22, size = 1)
 
 if __name__=='__main__':
     import sys

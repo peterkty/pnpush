@@ -214,10 +214,11 @@ def extract_training_data(data):
     print 'start_index', start_index, 'end_index', end_index, 'len', len(force)
     
     data_training = []  
-    # tip_x, tip_y, tip_dx, tip_dy, forcex, forcey, object_pose_dx, object_pose_dy, object_pose_dtheta, 
-    # tip_svx, tip_svy, tip_evx, tip_evy, 
-    # object_pose_svx, object_pose_svy, object_pose_svtheta, # start speed
-    # object_pose_evx, object_pose_evy, object_pose_evtheta  # end speed
+    labels = ['$x$', '$y$', '$\Delta x$', '$\Delta y$', 'force $x$', 'force $y$', r'$\Delta x$', r'$\Delta y$', r'$\Delta \theta$',
+        '$v_x$', '$v_y$', '$v_x$', '$v_y$',  # 9:  tip_svx, tip_svy, tip_evx, tip_evy, 
+        '$v_x$', '$v_y$', r'$\omega$',       # 13: object_pose_svx, object_pose_svy, object_pose_svtheta, # start speed
+        '$v_x$', '$v_y$', r'$\omega$']       # 16: object_pose_evx, object_pose_evy, object_pose_evtheta  # end speed]
+                                             # 19: tip_speedset (mm)
     
     for i in (range(start_index, end_index+1-sub, sub)):
         tip_pose_i_obji = transform_to_frame2d(tip_pose[i], object_pose[i])
@@ -245,6 +246,8 @@ def extract_training_data(data):
         
     return data_training
 
+def extend_with_speedset(data, v):
+    return [d + [v] for d in data]
 
 def json2trainingdata(filepath):
         
@@ -252,11 +255,14 @@ def json2trainingdata(filepath):
         data = json.load(data_file)
     
     shape_id = 'rect1'
+    v = getfield_from_filename(filepath, 'v')
     data2d = extract2d_and_cleanup(data)
     data_synced = resample_using_pandas(data2d)
     #animate_2dsynced(data_synced, shape_id, filepath.replace('.json', '.png'))
     data_synced = extend_with_velocity(data_synced, h=0.01)
+    
     data_training = extract_training_data(data_synced)
+    data_training = extend_with_speedset(data_training, int(v))
     #plot_training_data(data_training)
     return data_training
 
@@ -265,6 +271,7 @@ def main(argv):
     import glob
     filelist = glob.glob("%s/motion*.json" % argv[1])
     all_training_data = []
+    
     for json_filepath in filelist:
         # only process v=20
         # if json_filepath.find('v=20_') == -1:
@@ -277,12 +284,6 @@ def main(argv):
             # print json_filepath
             # pass
     
-    labels = ['tip_x', 'tip_y', 'tip_dx', 'tip_dy', 'forcex', 'forcey', 'object_pose_dx', 'object_pose_dy', 'object_pose_dtheta']
-    
-    #plot_training_data(all_training_data, [0,1], labels, '')
-    #plot_training_data(all_training_data, [2,3], labels, '')
-    #plot_training_data(all_training_data, [4,5], labels, '')
-    #plot_training_data(all_training_data, [6,7,8], labels, '')
     
     outputfile= "%s/data_training_with_vel.json" % argv[1]
     with open(outputfile, 'w') as outfile:
