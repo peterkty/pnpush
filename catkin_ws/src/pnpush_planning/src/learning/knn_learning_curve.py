@@ -21,7 +21,7 @@ def main(argv):
     
     # prepare data
     
-    inputfile= "%s/data_training.json" % argv[1]
+    inputfile= argv[1]
     # the data is a 2-d array with these labels for columns
     labels = ['tip_x', 'tip_y', 'tip_vx', 'tip_vy', 'forcex', 'forcey', 'object_pose_vx', 'object_pose_vy', 'object_pose_vtheta']
     
@@ -41,11 +41,12 @@ def main(argv):
     std_xy = (norm(np.array(origdata)[:,6:8].flatten(1))**2 / n_origdata)**0.5
     std_angle = (norm(np.array(origdata)[:,8].flatten(1))**2 / n_origdata)**0.5
     
-    
-    r = [len(origdata)-1]
-    #r = range(6, len(origdata), 5) + [len(origdata)-1]
+    sub = 30
+    #r = [len(origdata)-1]
+    r = range(11, n_origdata, sub) + [len(origdata)-1]
     for j in r:
-        data = origdata[0:j]
+        print j
+        data = origdata[0:(j+1)]
         # cross validation
         n_cross = 5
         n_data = len(data)

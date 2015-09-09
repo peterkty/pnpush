@@ -161,13 +161,39 @@ def animate_2dsynced(data, shape_id, figfname):
         #time.sleep(0.1)
     plt.show()
 
+def wraptopi(data):
+    return ( data + np.pi) % (2 * np.pi ) - np.pi 
+
+def extend_with_velocity(data, h):
+    h = 0.01  # from 10ms
+    
+    tip_pos = np.array(data['tip_poses_2d'])
+    object_pos = np.array(data['object_poses_2d'])
+    #nd = tip_pose.shape[0]
+    
+    tip_vel = (tip_pos[2:,:] - tip_pos[0:-2,:]) / 2 / h
+    tip_pos = tip_pos[1:-1,:]
+    
+    object_vel_xy = (object_pos[2:,0:2] - object_pos[0,0:2]) / 2 / h
+    object_vel_th = wraptopi(object_pos[2:,2:] - object_pos[0,2:]) / 2 / h
+    object_pos = object_pos[1:-1,:]
+    
+    data_extended = {}
+    data_extended['tip_poses_2d'] = tip_pos.tolist()
+    data_extended['tip_vels_2d_vel'] = tip_vel.tolist()
+    data_extended['object_poses_2d'] = object_pos.tolist()
+    data_extended['object_vels_2d'] = np.hstack((object_vel_xy, object_vel_th)).tolist()
+    data_extended['force_2d'] = data['force_2d'][1:-1]
+    
+    return data_extended
 
 
 # data: synced 2d data
-def extract_training_data(data):
-    
+def extract_training_data(data):    
     tip_pose = data['tip_poses_2d']
+    tip_vel = data['tip_vels_2d_vel']
     object_pose = data['object_poses_2d']
+    object_vel = data['object_vels_2d']
     force = data['force_2d']
     
     
@@ -187,21 +213,41 @@ def extract_training_data(data):
             break
     print 'start_index', start_index, 'end_index', end_index, 'len', len(force)
     
-    data_training = []  # tip_x, tip_y, tip_vx, tip_vy, forcex, forcey, object_pose_vx, object_pose_vy, object_pose_vtheta
+    data_training = []  
+    labels = ['$x$', '$y$', '$\Delta x$', '$\Delta y$', 'force $x$', 'force $y$', r'$\Delta x$', r'$\Delta y$', r'$\Delta \theta$',
+        '$v_x$', '$v_y$', '$v_x$', '$v_y$',  # 9:  tip_svx, tip_svy, tip_evx, tip_evy, 
+        '$v_x$', '$v_y$', r'$\omega$',       # 13: object_pose_svx, object_pose_svy, object_pose_svtheta, # start speed
+        '$v_x$', '$v_y$', r'$\omega$']       # 16: object_pose_evx, object_pose_evy, object_pose_evtheta  # end speed]
+                                             # 19: tip_speedset (mm)
+    
     for i in (range(start_index, end_index+1-sub, sub)):
         tip_pose_i_obji = transform_to_frame2d(tip_pose[i], object_pose[i])
         tip_pose_isub_obji = transform_to_frame2d(tip_pose[i+sub], object_pose[i])
+        
+        tip_vel_i_obji = rotate_to_frame2d(tip_vel[i], object_pose[i])
+        tip_vel_isub_obji = rotate_to_frame2d(tip_vel[i+sub], object_pose[i])
+        
         force_i_obji = rotate_to_frame2d(force[i], object_pose[i])
         
         object_pose_i_obji = transform_to_frame2d(object_pose[i][0:2], object_pose[i])
         object_pose_isub_obji = transform_to_frame2d(object_pose[i+sub][0:2], object_pose[i])
         
-        newdata = tip_pose_i_obji + (np.array(tip_pose_isub_obji) - np.array(tip_pose_i_obji)).tolist() + force_i_obji + (np.array(object_pose_isub_obji) - np.array(object_pose_i_obji)).tolist() + [object_pose[i+sub][2] - object_pose[i][2]]
+        object_vel_i_obji = rotate_to_frame2d(object_vel[i][0:2], object_vel[i])
+        object_vel_isub_obji = rotate_to_frame2d(object_vel[i+sub][0:2], object_vel[i])
+        
+        newdata = tip_pose_i_obji + (np.array(tip_pose_isub_obji) - np.array(tip_pose_i_obji)).tolist() +\
+        force_i_obji + (np.array(object_pose_isub_obji) - np.array(object_pose_i_obji)).tolist() + \
+        [object_pose[i+sub][2] - object_pose[i][2]] + \
+        tip_vel_i_obji + tip_vel_isub_obji + \
+        object_vel_i_obji + [object_vel[i][2]] + object_vel_isub_obji + [object_vel[i+sub][2]]
+        
         #print newdata
         data_training.append(newdata)
         
     return data_training
 
+def extend_with_speedset(data, v):
+    return [d + [v] for d in data]
 
 def json2trainingdata(filepath):
         
@@ -209,39 +255,37 @@ def json2trainingdata(filepath):
         data = json.load(data_file)
     
     shape_id = 'rect1'
+    v = getfield_from_filename(filepath, 'v')
     data2d = extract2d_and_cleanup(data)
     data_synced = resample_using_pandas(data2d)
     #animate_2dsynced(data_synced, shape_id, filepath.replace('.json', '.png'))
+    data_synced = extend_with_velocity(data_synced, h=0.01)
+    
     data_training = extract_training_data(data_synced)
+    data_training = extend_with_speedset(data_training, int(v))
     #plot_training_data(data_training)
     return data_training
 
 
 def main(argv):
     import glob
-    filelist = glob.glob("%s/*.json" % argv[1])
+    filelist = glob.glob("%s/motion*.json" % argv[1])
     all_training_data = []
+    
     for json_filepath in filelist:
         # only process v=20
-        if json_filepath.find('v=20_') == -1:
-            continue
+        # if json_filepath.find('v=20_') == -1:
+            # continue
             
-        try:
-            all_training_data.extend(json2trainingdata(json_filepath))
-            print 'len(all_training_data)', len(all_training_data)
-        except:
-            print json_filepath
-            pass
+        # try:
+        all_training_data.extend(json2trainingdata(json_filepath))
+        print 'len(all_training_data)', len(all_training_data)
+        # except:
+            # print json_filepath
+            # pass
     
-    labels = ['tip_x', 'tip_y', 'tip_vx', 'tip_vy', 'forcex', 'forcey', 'object_pose_vx', 'object_pose_vy', 'object_pose_vtheta']
-    #labels = ['x', 'y', 'vx', 'vy', 'forcex', 'forcey', 'object_pose_vx', 'object_pose_vy', 'object_pose_vtheta']
     
-    plot_training_data(all_training_data, [0,1], labels, '')
-    #plot_training_data(all_training_data, [2,3], labels, '')
-    #plot_training_data(all_training_data, [4,5], labels, '')
-    #plot_training_data(all_training_data, [6,7,8], labels, '')
-    
-    outputfile= "%s/data_training.json" % argv[1]
+    outputfile= "%s/data_training_with_vel.json" % argv[1]
     with open(outputfile, 'w') as outfile:
         json.dump(all_training_data, outfile, indent=4)
 

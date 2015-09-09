@@ -31,6 +31,9 @@ def transformBack(tf_xyzquat, pose):
     return tfm.translation_from_matrix(new_pose_mat).tolist() + tfm.quaternion_from_matrix(new_pose_mat).tolist()
 
 
+def getfield_from_filename(figname, field):
+    return figname[figname.find(field):].split('_')[0].split('=')[1]
+
 # something useful for building primitives
 import geometry_msgs.msg
 

@@ -122,9 +122,34 @@ def plot_force_profile(data, shape_id, figfname, multidim):
         ax.set_xlabel('time (sec)')
         ax.set_ylabel('force (N)')
     plt.show()
+    
+def plot_speed_profile(data, shape_id, figfname, multidim):
+    tip_pose = data['tip_poses']
+    
+    
+    # transform to object frame
+    #force_obj = [np.dot(invrotT0, np.array(ft_wrench[1:4] + [1])).tolist() for ft_wrench in data['ft_wrench']]
+    #force_obj = [np.dot(invrotT0, np.array([1,2,3,4])).tolist() for ft_wrench in data['ft_wrench']]
+    
+    starttime = tip_pose[0][0]
+    timearray = np.array(tip_pose)[:,0] - starttime
+    
+    tip_pose = np.array(tip_pose)
+    timediff = (tip_pose[1:,0:1] - tip_pose[0:-1,0:1])
+    
+    tip_vel = (tip_pose[1:,1:3] - tip_pose[0:-1,1:3]) / np.hstack((timediff, timediff))
+    tip_speed = np.sqrt(tip_vel[:,0:1]**2 + tip_vel[:,1:2]**2)
+    print tip_speed.shape
+    #print tip_speed
+    
+    
+    f, ax = plt.subplots(1, sharex = True)
+    ax.plot(timearray[1:], tip_speed)
+    ax.set_xlabel('time (sec)')
+    ax.set_ylabel('speed (m/s)')
+    plt.show()
 
-def getfield_from_filename(figname, field):
-    return figname[figname.find(field):].split('_')[0].split('=')[1]
+
 
 def main(argv):
     if len(argv) < 2:
@@ -140,6 +165,7 @@ def main(argv):
     shape_id = getfield_from_filename(figname, 'shape')
     #plot(data, shape_id, figname)
     plot_force_profile(data, shape_id, figname, multidim = True)
+    plot_speed_profile(data, shape_id, figname, multidim = True)
 
 if __name__=='__main__':
     import sys
