@@ -139,9 +139,6 @@ def plot_speed_profile(data, shape_id, figfname, multidim):
     
     tip_vel = (tip_pose[1:,1:3] - tip_pose[0:-1,1:3]) / np.hstack((timediff, timediff))
     tip_speed = np.sqrt(tip_vel[:,0:1]**2 + tip_vel[:,1:2]**2)
-    print tip_speed.shape
-    #print tip_speed
-    
     
     f, ax = plt.subplots(1, sharex = True)
     ax.plot(timearray[1:], tip_speed)
@@ -153,19 +150,28 @@ def plot_speed_profile(data, shape_id, figfname, multidim):
 
 def main(argv):
     if len(argv) < 2:
-        print 'Usage: plot_raw_json.py *.json'
+        print 'Usage: plot_raw_json.py *.json tip_speed_profile/forceprofile/snapshots'
         return
-        
+    
     bag_filepath = argv[1]
+    
+    if len(argv) < 3:
+        choice = 'snapshots'
+    else:
+        choice = argv[2]
+    
+    # load json file
     with open(bag_filepath) as data_file:    
         data = json.load(data_file)
     
-    #shape_id = 'rect1'
     figname = bag_filepath.replace('.json', '.png')
     shape_id = getfield_from_filename(figname, 'shape')
-    #plot(data, shape_id, figname)
-    plot_force_profile(data, shape_id, figname, multidim = True)
-    plot_speed_profile(data, shape_id, figname, multidim = True)
+    if choice == 'snapshots':
+        plot(data, shape_id, figname)
+    elif choice == 'forceprofile':
+        plot_force_profile(data, shape_id, figname, multidim = True)
+    elif choice == 'tip_speed_profile':
+        plot_speed_profile(data, shape_id, figname, multidim = True)
 
 if __name__=='__main__':
     import sys

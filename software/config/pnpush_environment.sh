@@ -112,6 +112,8 @@ alias zeroft='rosservice call zero'
 
 alias lcmlocal='sudo ifconfig lo multicast; sudo route add -net 224.0.0.0 netmask 240.0.0.0 dev lo'
 
+alias pn='rosrun pnpush_planning'
+
 ppms2mp4()
 {
   bot-ppmsgz $1 mpeg4 10M 30 $1.mp4
