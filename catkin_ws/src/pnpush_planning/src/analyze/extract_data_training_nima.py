@@ -81,7 +81,7 @@ def resample_using_pandas(data):
     
     tip_poses_2d_dt = pd.to_datetime(np.array(tip_poses_2d)[:,0].tolist(), unit='s')    
     tip_poses_2d = pd.DataFrame(np.array(tip_poses_2d)[:,1:3].tolist(), index=tip_poses_2d_dt)
-    tip_poses_2d_resampled = tip_poses_2d.resample('5ms', how='mean')
+    tip_poses_2d_resampled = tip_poses_2d.resample('10ms', how='mean')
     tip_poses_2d_interp = tip_poses_2d_resampled.interpolate()
     
     start_ = tip_poses_2d_interp.index.searchsorted(pd_starttime)
@@ -91,7 +91,7 @@ def resample_using_pandas(data):
     
     object_poses_2d_dt = pd.to_datetime(np.array(object_poses_2d)[:,0].tolist(), unit='s')
     object_poses_2d = pd.DataFrame(np.array(object_poses_2d)[:,1:4].tolist(), index=object_poses_2d_dt)
-    object_poses_2d_resampled = object_poses_2d.resample('5ms', how='mean')
+    object_poses_2d_resampled = object_poses_2d.resample('10ms', how='mean')
     object_poses_2d_interp = object_poses_2d_resampled.interpolate()
     start_ = object_poses_2d_interp.index.searchsorted(pd_starttime)
     end_ = object_poses_2d_interp.index.searchsorted(pd_endtime)
@@ -100,7 +100,7 @@ def resample_using_pandas(data):
     
     force_dt = pd.to_datetime(np.array(force_2d)[:,0].tolist(), unit='s')
     force_2d = pd.DataFrame(np.array(force_2d)[:,1:3].tolist(), index=force_dt)
-    force_2d_resampled = force_2d.resample('5ms', how='mean')
+    force_2d_resampled = force_2d.resample('10ms', how='mean')
     force_2d_interp = force_2d_resampled.interpolate()
     start_ = force_2d_interp.index.searchsorted(pd_starttime)
     end_ = force_2d_interp.index.searchsorted(pd_endtime)
@@ -116,6 +116,7 @@ def resample_using_pandas(data):
     
 def animate_2dsynced(data, shape_id, figfname):
     fig, ax = plt.subplots()
+    fig.set_size_inches((7,7))
     probe_radius = 0.004745   # probe1: 0.00626/2 probe2: 0.004745
     
     sub = 1                 # subsample rate
@@ -155,12 +156,11 @@ def animate_2dsynced(data, shape_id, figfname):
         #ax.add_patch(arrow)
         
         # render it
-        plt.axis([-1, 1, -1, 1])
+        plt.axis([-0.3, 0.3, -0.3, 0.3])
         #plt.axis('equal')
         plt.draw()
         #time.sleep(0.1)
     plt.show()
-
 
 
 # data: synced 2d data
@@ -193,29 +193,50 @@ def extract_training_data(data):
         data_training.append(tip_pose[i]+force[i]+object_pose[i])
         
     return data_training
-        
-def plot_training_data(data, indexes, labels, title):
-    data = np.array(data)
-    print '[plot_training_data]', data.shape
-    
-    fig = plt.figure()
-    plt.title(title)
-    
-    if len(indexes) == 3:
-        ax = fig.add_subplot(111, projection='3d')
-        ax.scatter(data[:,indexes[0]], data[:,indexes[1]], data[:,indexes[2]])
-    else:
-        ax = fig.add_subplot(111)
-        ax.scatter(data[:,indexes[0]], data[:,indexes[1]])
-    
-    
-    ax.set_xlabel(labels[indexes[0]])
-    ax.set_ylabel(labels[indexes[1]])
-    if len(indexes) == 3:
-        ax.set_zlabel(labels[indexes[2]])
-    #plt.axis('equal')
-    plt.show()
 
+def animate_2dsynced2(data, shape_id, figfname):
+    fig, ax = plt.subplots()
+    fig.set_size_inches((7,7))
+    probe_radius = 0.004745   # probe1: 0.00626/2 probe2: 0.004745
+    
+    sub = 1                 # subsample rate
+    tip_pose = np.array(data)[:, 0:2].tolist()
+    object_pose = np.array(data)[:, 4:7].tolist()
+    force = np.array(data)[:, 2:4].tolist()
+    
+    patches = []
+    
+    
+    # add the object as polygon
+    shape_db = ShapeDB()
+    shape_polygon = shape_db.shape_db[shape_id]['shape'] # shape of the objects presented as polygon.
+    shape_polygon_3d = np.hstack((np.array(shape_polygon), np.zeros((len(shape_polygon), 1)), np.ones((len(shape_polygon), 1))))
+    
+
+    print 'object_pose', len(object_pose), 'tip_pose', len(tip_pose), 'force', len(force)
+    plt.ion()
+    for i in (range(0, len(tip_pose), sub)):
+        
+        plt.cla()
+        T = tfm.compose_matrix(translate = object_pose[i][0:2] + [0], angles = (0,0,object_pose[i][2]) )
+        shape_polygon_3d_world = np.dot(T, shape_polygon_3d.T)
+        
+        obj = mpatches.Polygon(shape_polygon_3d_world.T[:,0:2], closed=True, color='blue', alpha=0.05)
+        ax.add_patch(obj)
+    
+        # add the probes as circle
+        circle = mpatches.Circle(tip_pose[i][0:2], probe_radius, ec="none", color='red', alpha=0.5)
+        ax.add_patch(circle)
+        
+        # add the force
+        ax.arrow(tip_pose[i][0], tip_pose[i][1], force[i][0]/100, force[i][1]/100, head_width=0.005, head_length=0.01, fc='k', ec='k')
+        
+        # render it
+        plt.axis([-0.3, 0.3, -0.3, 0.3])
+        #plt.axis('equal')
+        plt.draw()
+        #time.sleep(0.1)
+    plt.show()
 
 def json2trainingdata(filepath):
         
@@ -225,27 +246,30 @@ def json2trainingdata(filepath):
     shape_id = 'rect1'
     data2d = extract2d_and_cleanup(data)
     data_synced = resample_using_pandas(data2d)
-    animate_2dsynced(data_synced, shape_id, filepath.replace('.json', '.png'))
+    #animate_2dsynced(data_synced, shape_id, filepath.replace('.json', '.png'))
     data_training = extract_training_data(data_synced)
+    animate_2dsynced2(data_training, shape_id, filepath.replace('.json', '.png'))
     #plot_training_data(data_training)
     return data_training
 
 
 def main(argv):
     import glob
+    if len(argv) < 2:
+        print 'Usage: extract_data_training_nima.py dirpath'
+        return
+        
     filelist = glob.glob("%s/*.json" % argv[1])
     all_training_data = []
     for json_filepath in filelist:
+        if json_filepath.find('synced.json') >= 0:
+            continue
         training_data = json2trainingdata(json_filepath)
         outputfile= json_filepath.replace('.json','_synced.json')
         with open(outputfile, 'w') as outfile:
             json.dump(training_data, outfile, indent=4)
     
     labels = ['tip_x', 'tip_y', 'tip_vx', 'tip_vy', 'forcex', 'forcey', 'object_pose_vx', 'object_pose_vy', 'object_pose_vtheta']
-    #plot_training_data(all_training_data, [0,1], labels, '')
-    #plot_training_data(all_training_data, [2,3], labels, '')
-    #plot_training_data(all_training_data, [4,5], labels, '')
-    #plot_training_data(all_training_data, [6,7,8], labels, '')
     
 
 if __name__=='__main__':
