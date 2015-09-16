@@ -6,6 +6,7 @@ import tf.transformations as tfm
 import numpy as np
 from ik.roshelper import lookupTransform
 from ik.roshelper import ROS_Wait_For_Msg
+from ik.helper import *
 import tf
 import rospy
 from tf.broadcaster import TransformBroadcaster
@@ -25,11 +26,13 @@ from ik.ik import setSpeed
 
 limits = [0.2, 0.4, -0.3, +0.3, 0.25, 0.5]  #[xmin, xmax, ymin, ymax, zmin, zmax]
 nseg = [5, 5, 5]
-ori = [0, 0.7071, 0.7071, 0]
+ori = [0, 0, 1, 0]
+globalacc = 1             # some big number means no limit, in m/s^2
 
 rospy.init_node('vicon_vs_robot')
 setCartRos = rospy.ServiceProxy('/robot2_SetCartesian', robot_SetCartesian)
 setZone = rospy.ServiceProxy('/robot2_SetZone', robot_SetZone)
+setAcc = rospy.ServiceProxy('/robot2_SetAcc', robot_SetAcc)
 listener = tf.TransformListener()
 
 def xyztolist(pos):
@@ -54,6 +57,7 @@ xt = []
 yt = []
 zt = []
 setSpeed(300, 60)
+setAcc(acc=globalacc, deacc=globalacc)
 
 for x in np.linspace(limits[0],limits[1], nseg[0]):
     for y in np.linspace(limits[2],limits[3], nseg[1]):
@@ -63,6 +67,7 @@ for x in np.linspace(limits[0],limits[1], nseg[0]):
             # get the marker pos from vicon
             vmarkers = ROS_Wait_For_Msg('/vicon/markers', Markers).getmsg()
             rospy.sleep(0.2)
+            #pause()
             try:
                 vmpos = (np.array(xyztolist(vmarkers.markers[-1].translation)) / 1000.0).tolist()
             except:

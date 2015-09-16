@@ -28,9 +28,9 @@ def main(argv):
     parser = optparse.OptionParser()
     parser.add_option('-s', action="store", dest='shape_id', 
                       help='The shape id e.g. rect1-rect3', default='rect1')
-    (opt, args) = parser.parse_args()
     
-    surface_thick = 0.01158    # 0.01158 for plywood  # should move to launch file
+                      
+    (opt, args) = parser.parse_args()
     vicon_ball_size = 0.01415  # in diameter
 
     rospy.init_node('vicon_object_visulizer')
@@ -46,8 +46,9 @@ def main(argv):
     frame_id = shape_db.shape_db[shape_id]['frame_id']
     obj_slot = shape_db.shape_db[shape_id]['slot_pos']
     thickness = shape_db.shape_db[shape_id]['thickness']
+    vicon_marker_plate_thick = 0.002
     
-    obj_des_wrt_vicon = [0,0,-(thickness/2 + vicon_ball_size/2 + 0.002) ,0,0,0,1]  # from vicon to the block (a slight difference in z)
+    obj_des_wrt_vicon = [0,0,-(thickness/2 + vicon_ball_size/2 + vicon_marker_plate_thick + 0.0036) ,0,0,0,1]  # from vicon to the block (a slight difference in z)
         
     r = rospy.Rate(100)
     while not rospy.is_shutdown():

@@ -201,12 +201,23 @@ def main(argv):
     global_slow_vel = 30
     if opt.slow: globalvel = global_slow_vel
     ori = [0, 0, 1, 0]
-    z = 0.218                 # the height above the table probe1: 0.29 probe2: 0.218
-    surface_thick = 0.01158   # 0.01158 for plywood
+    probe_id = 'probe3'
+    probe_lengths = {'probe1' : 0.23746, 'probe2': 0.16649, 'probe3': 0.15947}
+    probe_length = probe_lengths[probe_id]   # probe1: 0.00626/2 probe2: 0.004745 probe3: 0.00475
+    ft_length = 0.04703
+    z = probe_length + ft_length + 0.004 + 0.00    # the height above the table
+    
+    # parameters about the surface
+    surface_id = opt.surface_id
+    
+    surface_thicks = {'plywood': 0.01158, 'abs': 0.01436, 'silicone_rubber': 0.01436}
+    surface_thick = surface_thicks[surface_id]   # 0.01158 for plywood
+    
     z = z + surface_thick
-    z_recover = 0.2285 + 0.002 + surface_thick 
+    z_recover = 0.012 + z  # the height for recovery probe2: 0.2265 probe 3: 0.2226
     zup = z + 0.08 +0.1            # the prepare and end height
-    probe_radius = 0.004745   # probe1: 0.00626/2 probe2: 0.004745
+    probe_radii = {'probe1' : 0.00626/2, 'probe2': 0.004745, 'probe3': 0.00475}
+    probe_radius = probe_radii[probe_id]   
     dist_before_contact = 0.03 
     dist_after_contact = 0.05
     skip_when_exists = True
@@ -214,9 +225,6 @@ def main(argv):
 
 
     global_frame_id = '/map'
-    
-    # parameters about the surface
-    surface_id = opt.surface_id
     
     # parameters about object
     shape_id = opt.shape_id
@@ -232,8 +240,8 @@ def main(argv):
     real_exp = opt.real_exp
     if real_exp:
         #speeds = reversed([20, 50, 100, 200, 400])
-        #speeds = reversed([20, 50, 100, 200, 400, -1])
-        speeds = reversed([-1])
+        speeds = reversed([-1, 20, 50, 100, 200, 400])
+        #speeds = reversed([20])
         if shape_type == 'poly':
             side_params = np.linspace(0, 1, 11)  
         else:
@@ -247,7 +255,7 @@ def main(argv):
         angles = np.linspace(-pi/4, pi/4, 3)
 
     # parameters about rosbag
-    dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/push_dataset_motion_full_%s/' % shape_id
+    dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/straight_push/%s/push_dataset_motion_full_%s/' % (surface_id,shape_id)
     #topics = ['/joint_states', '/netft_data', '/tf', '/visualization_marker']
     topics = ['-a']
     
@@ -267,8 +275,8 @@ def main(argv):
             # enumerate the contact point that we want to push
             for s in side_params:
                 if shape_type == 'poly':
-                    pos = np.array(shape[i]) *s + np.array(shape[(i+1) % len(shape)]) *(1-s)
-                    #pos = np.array(shape[i]) *(1-s) + np.array(shape[(i+1) % len(shape)]) *(s)   -> do it in next iteration
+                    #pos = np.array(shape[i]) *s + np.array(shape[(i+1) % len(shape)]) *(1-s)
+                    pos = np.array(shape[i]) *(1-s) + np.array(shape[(i+1) % len(shape)]) *(s)
                     pos = np.append(pos, [0])
                     tangent = np.array(shape[(i+1) % len(shape)]) - np.array(shape[i])
                     normal = np.array([tangent[1], -tangent[0]]) 
@@ -339,7 +347,7 @@ def main(argv):
                         setSpeed(tcp=globalvel, ori=1000)
                         setAcc(acc=globalacc, deacc=globalacc)
                     else:  # v < 0 acceleration
-                        setSpeed(tcp=30, ori=1000) # some high speed
+                        setSpeed(tcp=30, ori=1000) # some slow speed
                         mid_pos = copy.deepcopy(pos_contact_probe_world)
                         mid_pos[2] = z
                         setCart(mid_pos,ori)
