@@ -176,7 +176,27 @@
     </collision>
   </link>
   
+<!-- probe 3 -->
+  <link name="link_probe">
+    <visual>
+      <geometry>
+        <cylinder radius="0.00475" length="0.15947"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 -0.079735"/>
+      <material name="abb_white">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.00475" length="0.15947"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 -0.079735"/>
+    </collision>
+  </link>
+
 <!-- probe 2 -->
+<!--
   <link name="link_probe">
     <visual>
       <geometry>
@@ -194,6 +214,7 @@
       <origin rpy="0 0 0" xyz="0 0 -0.083245"/>
     </collision>
   </link>
+-->
 <!-- probe 1
   <link name="link_probe">
     <visual>
@@ -260,7 +281,7 @@
     <parent link="link_6"/>
     <child link="link_ft"/>
     <axis xyz="0 0 1"/>
-    <origin rpy="0 0 0" xyz="0 0 0.04703"/>
+    <origin rpy="0 0 0" xyz="0 0 0.04703"/> 
   </joint>
 <!-- probe 1
   <joint name="joint8" type="fixed">
@@ -271,11 +292,20 @@
   </joint>
 -->
 <!-- probe 2 -->
+<!--
   <joint name="joint8" type="fixed">
     <parent link="link_ft"/>
     <child link="link_probe"/>
     <axis xyz="0 0 1"/>
     <origin rpy="0 0 0" xyz="0 0 0.16649"/>
+  </joint>
+-->
+<!-- probe 3 -->
+  <joint name="joint8" type="fixed">
+    <parent link="link_ft"/>
+    <child link="link_probe"/>
+    <axis xyz="0 0 1"/>
+    <origin rpy="0 0 0" xyz="0 0 0.15947"/>
   </joint>
 
   

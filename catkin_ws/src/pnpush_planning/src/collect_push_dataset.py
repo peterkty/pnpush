@@ -37,13 +37,22 @@ from config.shape_db import ShapeDB
 
 setCartRos = rospy.ServiceProxy('/robot2_SetCartesian', robot_SetCartesian)
 setZero = rospy.ServiceProxy('/zero', Zero)
+setAcc = rospy.ServiceProxy('/robot2_SetAcc', robot_SetAcc)
 setZone = rospy.ServiceProxy('/robot2_SetZone', robot_SetZone)
+addBufferRos = rospy.ServiceProxy('/robot2_AddBuffer', robot_AddBuffer)
+
+clearBuffer = rospy.ServiceProxy('/robot2_ClearBuffer', robot_ClearBuffer)
+executeBuffer = rospy.ServiceProxy('/robot2_ExecuteBuffer', robot_ExecuteBuffer)
 
 def setCart(pos, ori):
     param = (np.array(pos) * 1000).tolist() + ori
     print 'setCart', param
     #pause()
     setCartRos(*param)
+
+def addBuffer(pos, ori):
+    param = (np.array(pos) * 1000).tolist() + ori
+    addBufferRos(*param)
 
 def pause():
     print 'Press any key to continue'
@@ -108,29 +117,54 @@ def recover(obj_frame_id, global_frame_id, z, slot_pos_obj, reset):
     pos_recover_probe_target_world = center_world
     pos_recover_probe_target_world[2] = zup+0.03  # up more to let vicon see the marker
     setCart(pos_recover_probe_target_world, ori)
+    setCart([0.2, 0, z + 0.05], ori)  # special
     
 def polyapprox(shape, s):
     ss = shape[0]
     accu = []
+    length = 0
     for i in range(len(ss)):
-        accu.append(norm(np.array(ss[(i+1) % len(ss)])-np.array(ss[i])))
-    length = accu[-1]
+        accu.append(norm(np.array(ss[(i+1) % len(ss)])-np.array(ss[i])) + length)
+        length = accu[-1]
     targetlength = s*length
     ind = 0
     
     for i in range(len(ss)):
         if accu[i] > targetlength:
             ind = i
+            break
     
     seglength = norm(np.array(ss[(ind+1) % len(ss)])-np.array(ss[ind]))
     t = (targetlength-accu[ind]) / seglength
-    pos = ss[ind] * (1-t) +  ss[(ind+1) % len(ss)] * t
+    pos = np.array(ss[ind]) * (1-t) +  np.array(ss[(ind+1) % len(ss)]) * t
     pos = np.append(pos, [0])
     tangent = np.array(ss[(ind+1) % len(ss)])-np.array(ss[ind])
     normal = np.array([tangent[1], -tangent[0]]) 
     normal = normal / norm(normal)  # normalize it
     normal = np.append(normal, [0])
     return (pos, normal)
+
+# check whether the probe will hit the object
+def polyapprox_check_collision(shape, pos_start_probe_object, probe_radius):
+    ss = shape[0]
+    # find the closest point on the shape to pos_start_probe_object
+    min_dist = 10000
+    min_ind = 0
+    safety_margin = 0.005
+    for i in range(len(ss)):
+        dist = norm(np.array(ss[i]) - np.array(pos_start_probe_object[0:2]))
+        if dist < min_dist:
+            min_dist = dist
+            min_ind = i
+            
+    tangent = np.array(ss[(min_ind+1) % len(ss)])-np.array(ss[min_ind])
+    normal = np.array([tangent[1], -tangent[0]]) # pointing out of shape
+    normal = normal / norm(normal)  # normalize it
+    d = np.dot(normal, np.array(pos_start_probe_object[0:2]) - np.array(ss[min_ind]) )
+    if d < probe_radius + safety_margin:
+        return True
+    else:
+        return False
 
 import optparse
 def main(argv):
@@ -145,6 +179,10 @@ def main(argv):
     parser = optparse.OptionParser()
     parser.add_option('-s', action="store", dest='shape_id', 
                       help='The shape id e.g. rect1-rect3', default='rect1')
+                      
+    parser.add_option('', '--surface', action="store", dest='surface_id', 
+                      help='The surface id e.g. plywood, abs', default='plywood')
+                      
     parser.add_option('-r', '--real', action="store_true", dest='real_exp', 
                       help='Do the real experiment space', 
                       default=False)
@@ -158,25 +196,35 @@ def main(argv):
     global globalvel
     global global_slow_vel
     globalvel = 300           # speed for moving around
+    globalmaxacc = 100        # some big number means no limit, in m/s^2
+    globalacc = 1             # some big number means no limit, in m/s^2
     global_slow_vel = 30
     if opt.slow: globalvel = global_slow_vel
     ori = [0, 0, 1, 0]
-    z = 0.218                 # the height above the table probe1: 0.29 probe2: 0.218
-    surface_thick = 0.01158   # 0.01158 for plywood
+    probe_id = 'probe3'
+    probe_lengths = {'probe1' : 0.23746, 'probe2': 0.16649, 'probe3': 0.15947}
+    probe_length = probe_lengths[probe_id]   # probe1: 0.00626/2 probe2: 0.004745 probe3: 0.00475
+    ft_length = 0.04703
+    z = probe_length + ft_length + 0.004 + 0.00    # the height above the table
+    
+    # parameters about the surface
+    surface_id = opt.surface_id
+    
+    surface_thicks = {'plywood': 0.01158, 'abs': 0.01436, 'silicone_rubber': 0.01436}
+    surface_thick = surface_thicks[surface_id]   # 0.01158 for plywood
+    
     z = z + surface_thick
-    z_recover = 0.2285 + surface_thick 
-    zup = z + 0.04            # the prepare and end height
-    probe_radius = 0.004745   # probe1: 0.00626/2 probe2: 0.004745
+    z_recover = 0.012 + z  # the height for recovery probe2: 0.2265 probe 3: 0.2226
+    zup = z + 0.08 +0.1            # the prepare and end height
+    probe_radii = {'probe1' : 0.00626/2, 'probe2': 0.004745, 'probe3': 0.00475}
+    probe_radius = probe_radii[probe_id]   
     dist_before_contact = 0.03 
     dist_after_contact = 0.05
     skip_when_exists = True
-    reset_freq = 2
+    reset_freq = 1
 
 
     global_frame_id = '/map'
-    
-    # parameters about the surface
-    surface_id = 'plywood'
     
     # parameters about object
     shape_id = opt.shape_id
@@ -191,7 +239,9 @@ def main(argv):
     # space for the experiment
     real_exp = opt.real_exp
     if real_exp:
-        speeds = reversed([20, 50, 100, 200, 400])
+        #speeds = reversed([20, 50, 100, 200, 400])
+        speeds = reversed([-1, 20, 50, 100, 200, 400])
+        #speeds = reversed([20])
         if shape_type == 'poly':
             side_params = np.linspace(0, 1, 11)  
         else:
@@ -200,14 +250,16 @@ def main(argv):
         angles = np.linspace(-pi/180.0*80.0, pi/180*80, 9)  
     else:
         speeds = [20, 50, 100, 200, 400]
+        speeds = reversed([-1])
         side_params = np.linspace(0.1,0.9,3)
         angles = np.linspace(-pi/4, pi/4, 3)
 
     # parameters about rosbag
-    dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/push_dataset_motion_full_%s/' % shape_id
+    dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/straight_push/%s/push_dataset_motion_full_%s/' % (surface_id,shape_id)
     #topics = ['/joint_states', '/netft_data', '/tf', '/visualization_marker']
     topics = ['-a']
     
+    setAcc(acc=globalacc, deacc=globalacc)
     setSpeed(tcp=globalvel, ori=1000)
     setZone(0)
     make_sure_path_exists(dir_save_bagfile)
@@ -223,8 +275,8 @@ def main(argv):
             # enumerate the contact point that we want to push
             for s in side_params:
                 if shape_type == 'poly':
-                    pos = np.array(shape[i]) *s + np.array(shape[(i+1) % len(shape)]) *(1-s)
-                    #pos = np.array(shape[i]) *(1-s) + np.array(shape[(i+1) % len(shape)]) *(s)   -> do it in next iteration
+                    #pos = np.array(shape[i]) *s + np.array(shape[(i+1) % len(shape)]) *(1-s)
+                    pos = np.array(shape[i]) *(1-s) + np.array(shape[(i+1) % len(shape)]) *(s)
                     pos = np.append(pos, [0])
                     tangent = np.array(shape[(i+1) % len(shape)]) - np.array(shape[i])
                     normal = np.array([tangent[1], -tangent[0]]) 
@@ -235,7 +287,7 @@ def main(argv):
                     pos = [shape[0][0] * np.cos(s*2*np.pi), shape[0][1] * np.sin(s*2*np.pi), 0]
                     normal = [np.cos(s*2*np.pi)/a, np.sin(s*2*np.pi)/b, 0]
                     normal = normal / norm(normal)  # normalize it
-                elif shape_type == 'butt':
+                elif shape_type == 'polyapprox':
                     pos, normal = polyapprox(shape, s)
                     
                 # enumerate the direction in which we want to push
@@ -251,6 +303,11 @@ def main(argv):
                     # find the start point
                     direc = np.dot(tfm.euler_matrix(0,0,t) , normal.tolist() + [1])[0:3] # in the direction of moving out
                     pos_start_probe_object = pos_probe_contact_object + direc * dist_before_contact
+                    
+                    if shape_type == 'polyapprox' and polyapprox_check_collision(shape, pos_start_probe_object, probe_radius):
+                        print bagfilename, 'will be in collision', 'skip'
+                        continue
+                    
                     # find the end point
                     pos_end_probe_object = pos_probe_contact_object - direc * dist_after_contact
                     
@@ -262,6 +319,9 @@ def main(argv):
                     # transform start and end to world frame
                     pos_start_probe_world = coordinateFrameTransform(pos_start_probe_object, obj_frame_id, global_frame_id, listener)
                     pos_end_probe_world = coordinateFrameTransform(pos_end_probe_object, obj_frame_id, global_frame_id, listener)
+                    pos_contact_probe_world = coordinateFrameTransform(pos_probe_contact_object, obj_frame_id, global_frame_id, listener)
+
+
 
                     # start bag recording
                     # move to startPos
@@ -279,9 +339,23 @@ def main(argv):
                     
                     end_pos = copy.deepcopy(pos_end_probe_world)
                     end_pos[2] = z
-                    setSpeed(tcp=v, ori=1000)
-                    setCart(end_pos,ori)
-                    setSpeed(tcp=globalvel, ori=1000)
+                    
+                    if v > 0:  # constant speed
+                        setAcc(acc=globalmaxacc, deacc=globalmaxacc)
+                        setSpeed(tcp=v, ori=1000)
+                        setCart(end_pos,ori)
+                        setSpeed(tcp=globalvel, ori=1000)
+                        setAcc(acc=globalacc, deacc=globalacc)
+                    else:  # v < 0 acceleration
+                        setSpeed(tcp=30, ori=1000) # some slow speed
+                        mid_pos = copy.deepcopy(pos_contact_probe_world)
+                        mid_pos[2] = z
+                        setCart(mid_pos,ori)
+                        setAcc(acc=-v, deacc=globalmaxacc)
+                        setSpeed(tcp=1000, ori=1000) # some high speed
+                        setCart(end_pos,ori)
+                        setSpeed(tcp=globalvel, ori=1000)
+                        setAcc(acc=globalacc, deacc=globalacc)
                     
                     # end bag recording
                     terminate_ros_node("/record")
