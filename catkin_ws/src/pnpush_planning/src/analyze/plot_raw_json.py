@@ -103,7 +103,6 @@ def plot_force_profile(data, shape_id, figfname, multidim):
     
     # transform to object frame
     force_obj = [np.dot(invrotT0, np.array(ft_wrench[1:4] + [1])).tolist() for ft_wrench in data['ft_wrench']]
-    #force_obj = [np.dot(invrotT0, np.array([1,2,3,4])).tolist() for ft_wrench in data['ft_wrench']]
     
     multidim = True
     starttime = data['ft_wrench'][0][0]
@@ -153,7 +152,7 @@ def main(argv):
         print 'Usage: plot_raw_json.py *.json tip_speed_profile/forceprofile/snapshots'
         return
     
-    bag_filepath = argv[1]
+    json_filepath = argv[1]
     
     if len(argv) < 3:
         choice = 'snapshots'
@@ -161,10 +160,10 @@ def main(argv):
         choice = argv[2]
     
     # load json file
-    with open(bag_filepath) as data_file:    
+    with open(json_filepath) as data_file:    
         data = json.load(data_file)
     
-    figname = bag_filepath.replace('.json', '.png')
+    figname = json_filepath.replace('.json', '.png')
     shape_id = getfield_from_filename(figname, 'shape')
     if choice == 'snapshots':
         plot(data, shape_id, figname)

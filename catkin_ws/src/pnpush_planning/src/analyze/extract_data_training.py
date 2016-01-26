@@ -22,8 +22,6 @@ from mpl_toolkits.mplot3d import Axes3D
 
 import pdb
 def extract2d_and_cleanup(data):
-    probe_radius = 0.004745   # probe1: 0.00626/2 probe2: 0.004745
-    
     tip_pose = data['tip_poses']
     object_pose = data['object_pose']
     ft = data['ft_wrench']
