@@ -20,4 +20,4 @@ robot2: {speedORI: 10.0, speedTCP: 50.0, toolQ0: 1.0,
   workobjectQ0: 1, workobjectQX: 0, workobjectQY: 0, workobjectQZ: 0, 
   workobjectX: 0, workobjectY: 0, workobjectZ: 0,
   
-  zone: 1, robotIp: 192.168.125.1, robotLoggerPort: 5003, robotMotionPort: 5002, hostRRIPort: 13001, vacuum: 0, useRRI: True}
+  zone: 1, robotIp: 192.168.125.1, robotLoggerPort: 5003, robotMotionPort: 5002, hostRRIPort: 13001, vacuum: 0, useRRI: True, useLogger: False}
