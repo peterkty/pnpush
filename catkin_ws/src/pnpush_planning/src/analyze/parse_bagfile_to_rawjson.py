@@ -5,7 +5,7 @@
 
 import rosbag
 import time # for sleep
-import rospy
+#import rospy
 import json
 from ik.helper import *
 from sensor_msgs.msg import *
@@ -15,15 +15,18 @@ from geometry_msgs.msg import TransformStamped
 from tf2_msgs.msg import TFMessage
 import tf
 import tf.transformations as tfm
-
+import h5py
 
 import sys
 import subprocess
 
+useRRI = True
+useH5 = True
 
 def ftmsg2listandflip(ftmsg):
     return [-ftmsg.wrench.force.x,ftmsg.wrench.force.y,-ftmsg.wrench.force.z,
             -ftmsg.wrench.torque.x,ftmsg.wrench.torque.y,-ftmsg.wrench.torque.z]
+            # the sign flip is for transforming to robot frame
             
 def main(argv):
     global pub
@@ -38,19 +41,19 @@ def main(argv):
     
     if len(argv) < 2:  # no bagfile name
         print 'Usage: parse_bagfile_to_json.py [bag_file_path.bag]'
-        print 'Also make sure no roscore is running'
+        print 'Also make sure roscore is running'
         return
     
         
     bag_filepath = argv[1]
     json_filepath = bag_filepath.replace('.bag', '.json')
+    hdf5_filepath = bag_filepath.replace('.bag', '.h5')
     print 'bag_filepath:', bag_filepath
     print 'json_filepath:', json_filepath
+    print 'hdf5_filepath:', hdf5_filepath
     
     
     
-    #roscore_proc = subprocess.Popen('roscore', shell=True)
-    rospy.init_node('listener', anonymous=True)
     
     import rosbag
     bag = rosbag.Bag(bag_filepath)
@@ -80,12 +83,16 @@ def main(argv):
         object_to_world = mat2poselist(T_object_to_world)
         
         object_pose_array.append([msg.header.stamp.to_sec()] + object_to_world)
-        
-    for topic, msg, t in bag.read_messages(topics=['/robot2_CartesianLog']):
-        #tip_array.append([t.to_sec(), 
-        tip_array.append([msg.timeStamp, 
-            msg.x/1000,msg.y/1000,msg.z/1000,
-            msg.qx,msg.qy,msg.qz,msg.q0])
+    
+    if useRRI:
+        for topic, msg, t in bag.read_messages(topics=['/robot2_RRICartState']):
+            tip_array.append([msg.header.stamp.to_sec(), 
+                msg.position[0]/1000,msg.position[1]/1000])
+    else:
+        for topic, msg, t in bag.read_messages(topics=['/robot2_CartesianLog']):
+            tip_array.append([msg.timeStamp, 
+                msg.x/1000,msg.y/1000,msg.z/1000,
+                msg.qx,msg.qy,msg.qz,msg.q0])
         
     for topic, msg, t in bag.read_messages(topics=['/netft_data']):
         ft_array.append([msg.header.stamp.to_sec()] + ftmsg2listandflip(msg))
@@ -100,8 +107,12 @@ def main(argv):
     with open(json_filepath, 'w') as outfile:
         json.dump(data, outfile, indent=4)
         
-    #roscore_proc.terminate()
-
+    
+    # save the data as hdf5
+    with h5py.File(hdf5_filepath, "w") as f:
+        f.create_dataset("tip_array", data=tip_array)
+        f.create_dataset("ft_wrench", data=ft_array)
+        f.create_dataset("object_pose", data=object_pose_array)
     
 if __name__=='__main__':
     main(sys.argv)
