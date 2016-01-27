@@ -240,7 +240,7 @@ def main(argv):
     real_exp = opt.real_exp
     if real_exp:
         #speeds = reversed([20, 50, 100, 200, 400])
-        accelerations = ([0, 1, 2])
+        accelerations = [0, 1, 2]
         speeds = reversed([20, 50, 100, 200, 400])
         #speeds = reversed([20])
         if shape_type == 'poly':
@@ -250,10 +250,10 @@ def main(argv):
         
         angles = np.linspace(-pi/180.0*80.0, pi/180*80, 9)  
     else:
-        accelerations = ([0, 1, 2])
-        speeds = [20, 50, 100, 200, 400]
-        side_params = np.linspace(0.1,0.9,3)
-        angles = np.linspace(-pi/4, pi/4, 3)
+        accelerations = [1, 0]
+        speeds = [400, 50]
+        side_params = np.linspace(0.1,0.9,2)
+        angles = np.linspace(-pi/4, pi/4, 2)
 
     # parameters about rosbag
     dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/straight_push/%s/push_dataset_motion_full_%s/' % (surface_id,shape_id)
@@ -269,7 +269,7 @@ def main(argv):
     limit = 100
     cnt = 0
     # enumerate the acceleration
-    for a in accelerations
+    for acc in accelerations:
 		# enumerate the speed
 		for v in speeds:
 			# enumerate the side we want to push
@@ -294,7 +294,7 @@ def main(argv):
 						
 					# enumerate the direction in which we want to push
 					for t in angles:
-						bagfilename = 'motion_surface=%s_shape=%s_a=%.0f_v=%.0f_i=%.3f_s=%.3f_t=%.3f.bag' % (surface_id, shape_id, a, v, i, s, t)
+						bagfilename = 'motion_surface=%s_shape=%s_a=%.0f_v=%.0f_i=%.3f_s=%.3f_t=%.3f.bag' % (surface_id, shape_id, acc, v, i, s, t)
 						bagfilepath = dir_save_bagfile+bagfilename
 						# if exists then skip it
 						if skip_when_exists and os.path.isfile(bagfilepath):
@@ -311,8 +311,8 @@ def main(argv):
 							continue
 						
 						#find the no-speed start point
-						if a != 0:
-							pos_no_speed_probe_object = pos_no_speed_contact_object + direc * ((v / 1000) * (v / 1000)/ (2 * a))  #distance needed to achieve v at contact point: (v * v / (2 * a)), unites changes
+						if acc != 0:
+							pos_no_speed_probe_object = pos_probe_contact_object + direc * ((v/ 1000.0) * (v/1000.0)/ (2.0 * acc))  #distance needed to achieve v at contact point: (v * v / (2 * a)), unites changes
 						
 						# find the end point
 						pos_end_probe_object = pos_probe_contact_object - direc * dist_after_contact
@@ -326,7 +326,7 @@ def main(argv):
 						pos_start_probe_world = coordinateFrameTransform(pos_start_probe_object, obj_frame_id, global_frame_id, listener)
 						pos_end_probe_world = coordinateFrameTransform(pos_end_probe_object, obj_frame_id, global_frame_id, listener)
 						pos_contact_probe_world = coordinateFrameTransform(pos_probe_contact_object, obj_frame_id, global_frame_id, listener)
-						if a != 0:
+						if acc != 0:
 							pos_no_speed_probe_world = coordinateFrameTransform(pos_no_speed_probe_object, obj_frame_id, global_frame_id, listener)
 						
 						
@@ -349,7 +349,7 @@ def main(argv):
 						end_pos = copy.deepcopy(pos_end_probe_world)
 						end_pos[2] = z
 						
-						if a == 0:  # constant speed
+						if acc == 0:  # constant speed
 							setAcc(acc=globalmaxacc, deacc=globalmaxacc)
 							setSpeed(tcp=v, ori=1000)
 							setCart(end_pos,ori)
@@ -360,7 +360,8 @@ def main(argv):
 							mid_pos = copy.deepcopy(pos_no_speed_probe_world)
 							mid_pos[2] = z
 							setCart(mid_pos,ori)
-							setAcc(acc=a, deacc=globalmaxacc)
+							print 'acc=', acc, 'mid_pos=',mid_pos
+							setAcc(acc=acc, deacc=globalmaxacc)
 							setSpeed(tcp=1000, ori=1000) # some high speed
 							setCart(end_pos,ori)
 							setSpeed(tcp=globalvel, ori=1000)

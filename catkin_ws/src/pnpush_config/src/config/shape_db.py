@@ -66,9 +66,9 @@ def processButtShape(shape):
        if not(len(newss) > 0 and (s[0] == newss[-1][0] and s[1] == newss[-1][1])):
            newss.append(s)
     ss = newss
-    print np.max(np.array(ss)[:,0]) - np.min(np.array(ss)[:,0])
-    print np.max(np.array(ss)[:,1]) - np.min(np.array(ss)[:,1])
-    print 'len(ss)', len(ss)
+    #print np.max(np.array(ss)[:,0]) - np.min(np.array(ss)[:,0])
+    #print np.max(np.array(ss)[:,1]) - np.min(np.array(ss)[:,1])
+    #print 'len(ss)', len(ss)
     # plt.plot(np.array(ss)[:,0], np.array(ss)[:,1])
     # plt.axis('equal')
     # plt.show()

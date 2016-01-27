@@ -10,16 +10,12 @@
     <rosparam command="load" file="$(find parameters)/loggerParams.yaml"/>
     <rosparam command="load" file="$(find regraspComm)/config/regrasp_params.yaml"/>
     <!--<node pkg="robot_node" type="robot_node" name="robot_node1" output="screen" args="1">
-        <remap from="robot1_RosJointState" to="joint_states" />
-    </node>-->   <!--with robot number args="1"-->
-    
-    <!--<node pkg="robot_node" type="robot_node" name="robot_node1" output="screen" args="1"/>-->
+        <remap from="robot1_RRIJointState" to="joint_states" />
+    </node>-->    <!--with robot number args="1"-->
     
     <node pkg="robot_node" type="robot_node" name="robot_node2" output="screen" args="2">
-        <remap from="robot2_RosJointState" to="joint_states" />
-    </node>
-    
-    
+        <remap from="robot2_RRIJointState" to="joint_states" />
+    </node>   <!--with robot number args="2"-->
     
     <!--
     <node pkg="logger_node" type="logger_node" name="logger_node" output="screen"/>-->
