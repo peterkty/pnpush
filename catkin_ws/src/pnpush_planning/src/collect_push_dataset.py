@@ -201,8 +201,8 @@ def main(argv):
     global_slow_vel = 30
     if opt.slow: globalvel = global_slow_vel
     ori = [0, 0, 1, 0]
-    probe_id = 'probe3'
-    probe_lengths = {'probe1' : 0.23746, 'probe2': 0.16649, 'probe3': 0.15947}
+    probe_id = 'probe4'
+    probe_lengths = {'probe1' : 0.23746, 'probe2': 0.16649, 'probe3': 0.15947, 'probe4': 0.15653}
     probe_length = probe_lengths[probe_id]   # probe1: 0.00626/2 probe2: 0.004745 probe3: 0.00475
     ft_length = 0.04703
     z = probe_length + ft_length + 0.004 + 0.00    # the height above the table
@@ -380,8 +380,8 @@ def main(argv):
             break;
 
     # move back to startPos
-    start_pos = [0.2, 0, z + 0.05]
-    setCart(start_pos,ori)
+    #start_pos = [0.2, 0, z + 0.05]
+    #setCart(start_pos,ori)
 
 def terminate_ros_node(s):
     list_cmd = subprocess.Popen("rosnode list", shell=True, stdout=subprocess.PIPE)
