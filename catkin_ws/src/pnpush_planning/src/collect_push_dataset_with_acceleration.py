@@ -249,10 +249,13 @@ def main(argv):
         
         angles = np.linspace(-pi/180.0*80.0, pi/180*80, 9)  
     else:
-        accelerations = [1, 0]
+        accelerations = [2, 1, 0]
         speeds = [400, 50]
-        side_params = np.linspace(0.1,0.9,2)
         angles = np.linspace(-pi/4, pi/4, 2)
+        if shape_type == 'poly':
+            side_params = np.linspace(0.1,0.9,2)
+        else:
+            side_params = np.linspace(0,1,40,endpoint=False)
 
     # parameters about rosbag
     dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/straight_push/%s/push_dataset_motion_full_%s/' % (surface_id,shape_id)
