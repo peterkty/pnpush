@@ -240,8 +240,8 @@ def main(argv):
     real_exp = opt.real_exp
     if real_exp:
         #speeds = reversed([20, 50, 100, 200, 400])
-        accelerations = [0, 1, 2]
-        speeds = [20, 50, 100, 200, 400]
+        accelerations = [0, 1]
+        speeds = [10, 20, 50, 75, 100, 150, 200, 300, 400, 500]
         if shape_type == 'poly':
             side_params = np.linspace(0, 1, 11)  
         else:
