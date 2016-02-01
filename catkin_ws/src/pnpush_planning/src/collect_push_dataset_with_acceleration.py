@@ -240,8 +240,14 @@ def main(argv):
     real_exp = opt.real_exp
     if real_exp:
         #speeds = reversed([20, 50, 100, 200, 400])
-        accelerations = [0, 1]
+        accelerations = [0.1, 0.2, 0.5, 0.75, 1, 1.5, 2, 2.5]
+        num_acc = len(accelerations)
         speeds = [10, 20, 50, 75, 100, 150, 200, 300, 400, 500]
+        num_speed = len(accelerations)
+        
+        speeds = np.append(speeds, np.repeat(-1, num_acc))
+        accelerations = np.append(np.repeat(0, num_speed), accelerations)
+        
         if shape_type == 'poly':
             side_params = np.linspace(0, 1, 11)  
         else:
@@ -249,13 +255,13 @@ def main(argv):
         
         angles = np.linspace(-pi/180.0*80.0, pi/180*80, 9)  
     else:
-        accelerations = [2, 1, 0]
-        speeds = [400, 50]
+        accelerations = [0 0 0.1 1 2.5]
+        speeds = [50 400 -1 -1 -1]
         angles = np.linspace(-pi/4, pi/4, 2)
         if shape_type == 'poly':
-            side_params = np.linspace(0.1,0.9,2)
+            side_params = np.linspace(0.1,0.9,1)
         else:
-            side_params = np.linspace(0,1,40,endpoint=False)
+            side_params = np.linspace(0,1,1,endpoint=False)
 
     # parameters about rosbag
     dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/straight_push/%s/push_dataset_motion_full_%s/' % (surface_id,shape_id)
@@ -270,127 +276,116 @@ def main(argv):
     # hack to restart the script to prevent ros network issues.
     limit = 100
     cnt = 0
-    # enumerate the acceleration
-        
+    cnt_acc = -1
+    # enumerate the possible trajectories
     for acc in accelerations:
-        # enumerate the speed
-        for v in speeds:
-            # enumerate the side we want to push
-            for i in range(len(shape)):
-                # enumerate the contact point that we want to push
-                for s in side_params:
-                    if shape_type == 'poly':
-                        pos = np.array(shape[i]) *(1-s) + np.array(shape[(i+1) % len(shape)]) *(s)
-                        pos = np.append(pos, [0])
-                        tangent = np.array(shape[(i+1) % len(shape)]) - np.array(shape[i])
-                        normal = np.array([tangent[1], -tangent[0]]) 
-                        normal = normal / norm(normal)  # normalize it
-                        normal = np.append(normal, [0])
-                    elif shape_type == 'ellip':
-                        (a,b) = shape[0][0], shape[0][1]
-                        pos = [shape[0][0] * np.cos(s*2*np.pi), shape[0][1] * np.sin(s*2*np.pi), 0]
-                        normal = [np.cos(s*2*np.pi)/a, np.sin(s*2*np.pi)/b, 0]
-                        normal = normal / norm(normal)  # normalize it
-                    elif shape_type == 'polyapprox':
-                        pos, normal = polyapprox(shape, s)
-                        
-                    # enumerate the direction in which we want to push
-                    for t in angles:
-                        bagfilename = 'motion_surface=%s_shape=%s_a=%.0f_v=%.0f_i=%.3f_s=%.3f_t=%.3f.bag' % (surface_id, shape_id, acc, v, i, s, t)
-                        bagfilepath = dir_save_bagfile+bagfilename
-                        # if exists then skip it
-                        if skip_when_exists and os.path.isfile(bagfilepath):
-                            #print bagfilepath, 'exits', 'skip'
-                            continue  
-                        # find the probe pos in contact in object frame
-                        pos_probe_contact_object = pos + normal * probe_radius
-                        # find the start point
-                        direc = np.dot(tfm.euler_matrix(0,0,t) , normal.tolist() + [1])[0:3] # in the direction of moving out
-                        pos_start_probe_object = pos_probe_contact_object + direc * dist_before_contact
-                        
-                        if shape_type == 'polyapprox' and polyapprox_check_collision(shape, pos_start_probe_object, probe_radius):
-                            print bagfilename, 'will be in collision', 'skip'
-                            continue
-                        
-                        #find the no-speed start point
-                        if acc != 0:
-                            pos_no_speed_probe_object = pos_probe_contact_object + direc * ((v/ 1000.0) * (v/1000.0)/ (2.0 * acc))  #distance needed to achieve v at contact point: (v * v / (2 * a)), unites changes
-                        
-                        # find the end point
-                        pos_end_probe_object = pos_probe_contact_object - direc * dist_after_contact
-                        
-                        # zero force torque sensor
-                        rospy.sleep(0.1)
-                        setZero()
-                        wait_for_ft_calib()
-                        
-                        # transform start and end to world frame
-                        pos_start_probe_world = coordinateFrameTransform(pos_start_probe_object, obj_frame_id, global_frame_id, listener)
-                        pos_end_probe_world = coordinateFrameTransform(pos_end_probe_object, obj_frame_id, global_frame_id, listener)
-                        pos_contact_probe_world = coordinateFrameTransform(pos_probe_contact_object, obj_frame_id, global_frame_id, listener)
-                        if acc != 0:
-                            pos_no_speed_probe_world = coordinateFrameTransform(pos_no_speed_probe_object, obj_frame_id, global_frame_id, listener)
-                        
-                        
+		cnt_acc +=1
+		# enumerate the side we want to push
+		for i in range(len(shape)):
+			# enumerate the contact point that we want to push
+			for s in side_params:
+				if shape_type == 'poly':
+					pos = np.array(shape[i]) *(1-s) + np.array(shape[(i+1) % len(shape)]) *(s)
+					pos = np.append(pos, [0])
+					tangent = np.array(shape[(i+1) % len(shape)]) - np.array(shape[i])
+					normal = np.array([tangent[1], -tangent[0]]) 
+					normal = normal / norm(normal)  # normalize it
+					normal = np.append(normal, [0])
+				elif shape_type == 'ellip':
+					(a,b) = shape[0][0], shape[0][1]
+					pos = [shape[0][0] * np.cos(s*2*np.pi), shape[0][1] * np.sin(s*2*np.pi), 0]
+					normal = [np.cos(s*2*np.pi)/a, np.sin(s*2*np.pi)/b, 0]
+					normal = normal / norm(normal)  # normalize it
+				elif shape_type == 'polyapprox':
+					pos, normal = polyapprox(shape, s)
+					
+				# enumerate the direction in which we want to push
+				for t in angles:
+					bagfilename = 'motion_surface=%s_shape=%s_a=%.0f_v=%.0f_i=%.3f_s=%.3f_t=%.3f.bag' % (surface_id, shape_id, acc, speeds[cnt_acc], i, s, t)
+					bagfilepath = dir_save_bagfile+bagfilename
+					# if exists then skip it
+					if skip_when_exists and os.path.isfile(bagfilepath):
+						#print bagfilepath, 'exits', 'skip'
+						continue  
+					# find the probe pos in contact in object frame
+					pos_probe_contact_object = pos + normal * probe_radius
+					# find the start point
+					direc = np.dot(tfm.euler_matrix(0,0,t) , normal.tolist() + [1])[0:3] # in the direction of moving out
+					pos_start_probe_object = pos_probe_contact_object + direc * dist_before_contact
+					
+					if shape_type == 'polyapprox' and polyapprox_check_collision(shape, pos_start_probe_object, probe_radius):
+						print bagfilename, 'will be in collision', 'skip'
+						continue
+					
+					# find the end point
+					pos_end_probe_object = pos_probe_contact_object - direc * dist_after_contact
+					
+					# zero force torque sensor
+					rospy.sleep(0.1)
+					setZero()
+					wait_for_ft_calib()
+					
+					# transform start and end to world frame
+					pos_start_probe_world = coordinateFrameTransform(pos_start_probe_object, obj_frame_id, global_frame_id, listener)
+					pos_end_probe_world = coordinateFrameTransform(pos_end_probe_object, obj_frame_id, global_frame_id, listener)
+					pos_contact_probe_world = coordinateFrameTransform(pos_probe_contact_object, obj_frame_id, global_frame_id, listener)
 
 
-                        # start bag recording
-                        # move to startPos
-                        start_pos = copy.deepcopy(pos_start_probe_world)
-                        start_pos[2] = zup
-                        setCart(start_pos,ori)
-            
-                        start_pos = copy.deepcopy(pos_start_probe_world)
-                        start_pos[2] = z
-                        setCart(start_pos,ori)
-                        
-                        rosbag_proc = subprocess.Popen('rosbag record -q -O %s %s' % (bagfilename, " ".join(topics)) , shell=True, cwd=dir_save_bagfile)
-                        #print 'rosbag_proc.pid=', rosbag_proc.pid
-                        rospy.sleep(0.5)
-                        
-                        end_pos = copy.deepcopy(pos_end_probe_world)
-                        end_pos[2] = z
-                        
-                        if acc == 0:  # constant speed
-                            setAcc(acc=globalmaxacc, deacc=globalmaxacc)
-                            setSpeed(tcp=v, ori=1000)
-                            setCart(end_pos,ori)
-                            setSpeed(tcp=globalvel, ori=1000)
-                            setAcc(acc=globalacc, deacc=globalacc)
-                        else:  # there is acceleration
-                            setSpeed(tcp=30, ori=1000) # some slow speed
-                            mid_pos = copy.deepcopy(pos_no_speed_probe_world)
-                            mid_pos[2] = z
-                            setCart(mid_pos,ori)
-                            setAcc(acc=acc, deacc=globalmaxacc)
-                            setSpeed(tcp=1000, ori=1000) # some high speed
-                            setCart(end_pos,ori)
-                            setSpeed(tcp=globalvel, ori=1000)
-                            setAcc(acc=globalacc, deacc=globalacc)
-                        
-                        # end bag recording
-                        terminate_ros_node("/record")
-                        
-                        # move up vertically
-                        end_pos = copy.deepcopy(pos_end_probe_world)
-                        end_pos[2] = zup
-                        setCart(end_pos,ori)
-                        
-                        # recover
-                        recover(obj_frame_id, global_frame_id, z_recover, obj_slot, not(cnt % reset_freq))
-                        #pause()
-                        cnt += 1
-                        if cnt > limit:
-                            break;
-                    if cnt > limit:
-                        break;
-                if cnt > limit:
-                    break;
-            if cnt > limit:
-                break;
-        if cnt > limit:
-            break;
-
+					# start bag recording
+					# move to startPos
+					start_pos = copy.deepcopy(pos_start_probe_world)
+					start_pos[2] = zup
+					setCart(start_pos,ori)
+		
+					start_pos = copy.deepcopy(pos_start_probe_world)
+					start_pos[2] = z
+					setCart(start_pos,ori)
+					
+					rosbag_proc = subprocess.Popen('rosbag record -q -O %s %s' % (bagfilename, " ".join(topics)) , shell=True, cwd=dir_save_bagfile)
+					#print 'rosbag_proc.pid=', rosbag_proc.pid
+					rospy.sleep(0.5)
+					
+					end_pos = copy.deepcopy(pos_end_probe_world)
+					end_pos[2] = z
+					
+					setSpeed(tcp=30, ori=1000) # some slow speed
+					mid_pos = copy.deepcopy(pos_contact_probe_world)
+					mid_pos[2] = z
+					setCart(mid_pos,ori)
+					
+					if acc == 0:  # constant speed
+						setAcc(acc=globalmaxacc, deacc=globalmaxacc)
+						setSpeed(tcp=speeds[cnt_acc], ori=1000)
+					else:  # there is acceleration
+						setAcc(acc=acc, deacc=globalmaxacc)
+						setSpeed(tcp=1000, ori=1000) # some high speed
+						
+					setCart(end_pos,ori)
+					setSpeed(tcp=globalvel, ori=1000)
+					setAcc(acc=globalacc, deacc=globalacc)
+					# end bag recording
+					terminate_ros_node("/record")
+					
+					# move up vertically
+					end_pos = copy.deepcopy(pos_end_probe_world)
+					end_pos[2] = zup
+					setCart(end_pos,ori)
+					
+					center_world = [0.35, 0, 0]
+					distance_obj_center = np.linalg.norm(obj_frame_id-center_world)
+					allowed_distance = 0.14   #could change depending on the object considered
+					# recover
+					recover(obj_frame_id, global_frame_id, z_recover, obj_slot, distance_obj_center < allowed_distance)
+					#pause()
+					cnt += 1
+					if cnt > limit:
+						break;
+				if cnt > limit:
+					break;
+			if cnt > limit:
+				break;
+		if cnt > limit:
+			break;
 
     # move back to startPos
     start_pos = [0.2, 0, z + 0.05]
