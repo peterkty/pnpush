@@ -15,7 +15,7 @@ def main(argv):
     dirname = sys.argv[1]
     filelist = glob.glob("%s/*.bag" % dirname)
     
-    toplot = False
+    toplot = True
     
     for bag_filepath in filelist:
         if not os.path.exists(bag_filepath.replace('bag','json')):
