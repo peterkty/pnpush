@@ -24,8 +24,8 @@ from rigid_transform_3D import rigid_transform_3D
 import tf.transformations as tfm
 from ik.ik import setSpeed
 
-limits = [0.2, 0.4, -0.3, +0.3, 0.25, 0.5]  #[xmin, xmax, ymin, ymax, zmin, zmax]
-nseg = [5, 5, 5]
+limits = [0.2, 0.4, -0.2, +0.2, 0.25, 0.4]  #[xmin, xmax, ymin, ymax, zmin, zmax]
+nseg = [3, 3, 3]
 ori = [0, 0, 1, 0]
 globalacc = 1             # some big number means no limit, in m/s^2
 
