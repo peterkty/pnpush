@@ -75,7 +75,7 @@ def main(argv):
     max_y = 0.197
     min_y = -0.233
     range_x = np.linspace(max_x, min_x, 3)
-    acc = -1
+    acc = 0
     vel = 20
     rep = 0
     nrep = 100

@@ -28,8 +28,10 @@ def plot(data, shape_id, figfname):
     fig, ax = plt.subplots()
     fig.set_size_inches(7,7)
 
-    v = int(figfname.split('_')[-4].split('=')[1])
+    v = int(figfname.split('_')[3].split('=')[1])
     sub = int(30 / (v / 20.0))                 # subsample rate
+    if sub < 1:
+        sub = 1
     tip_pose = data['tip_poses']
     
     patches = []
@@ -47,13 +49,17 @@ def plot(data, shape_id, figfname):
     
     object_pose = data['object_pose']
     
-    invT0 = np.linalg.inv(matrix_from_xyzquat(object_pose[0][1:4], object_pose[0][4:8]))
+    if len(object_pose) > 0:
+        invT0 = np.linalg.inv(matrix_from_xyzquat(object_pose[0][1:4], object_pose[0][4:8]))
+    elif len(tip_pose) > 0:
+        invT0 = np.linalg.inv(matrix_from_xyzquat(tip_pose[0][1:3]+[0], [0,0,0,1]))
 
 
     print 'object_pose', len(object_pose), 'tip_pose', len(tip_pose)
 
-        
-    r = (range(0, len(object_pose), sub)) + [len(object_pose)-1]
+    r = []
+    if len(object_pose) > 0:
+        r = (range(0, len(object_pose), sub)) + [len(object_pose)-1]
     for i in r:
         
         T = matrix_from_xyzquat(object_pose[i][1:4], object_pose[i][4:8])
