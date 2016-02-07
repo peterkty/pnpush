@@ -30,66 +30,36 @@ from marker_helper import createArrowMarker
 from marker_helper import createSphereMarker
 from tf.broadcaster import TransformBroadcaster
 from math import pi
-import pdb
 import copy
 import subprocess, os, signal
 from config.shape_db import ShapeDB
+from config.probe_db import ProbeDB
+from config.probe_db import ft_length
+from config.surface_db import SurfaceDB
+import config.helper as helper
+from config.helper import norm, pause
 
 setCartRos = rospy.ServiceProxy('/robot2_SetCartesian', robot_SetCartesian)
 setZero = rospy.ServiceProxy('/zero', Zero)
 setAcc = rospy.ServiceProxy('/robot2_SetAcc', robot_SetAcc)
 setZone = rospy.ServiceProxy('/robot2_SetZone', robot_SetZone)
-addBufferRos = rospy.ServiceProxy('/robot2_AddBuffer', robot_AddBuffer)
-
-clearBuffer = rospy.ServiceProxy('/robot2_ClearBuffer', robot_ClearBuffer)
-executeBuffer = rospy.ServiceProxy('/robot2_ExecuteBuffer', robot_ExecuteBuffer)
 
 def setCart(pos, ori):
     param = (np.array(pos) * 1000).tolist() + ori
     print 'setCart', param
-    #pause()
     setCartRos(*param)
-
-def addBuffer(pos, ori):
-    param = (np.array(pos) * 1000).tolist() + ori
-    addBufferRos(*param)
-
-def pause():
-    print 'Press any key to continue'
-    raw_input()
-
-def norm(vect):
-    vect = np.array(vect)
-    return np.sqrt(np.dot(vect, vect))
-    
-def poselist2mat(pose):
-    return np.dot(tfm.translation_matrix(pose[0:3]), tfm.quaternion_matrix(pose[3:7]))
-
-def mat2poselist(mat):
-    pos = tfm.translation_from_matrix(mat)
-    quat = tfm.quaternion_from_matrix(mat)
-    return pos.tolist() + quat.tolist()
 
 def wait_for_ft_calib():
     ROS_Wait_For_Msg('/netft_data', geometry_msgs.msg.WrenchStamped).getmsg()
 
-import os
-import errno
-
-def make_sure_path_exists(path):
-    try:
-        os.makedirs(path)
-    except OSError as exception:
-        if exception.errno != errno.EEXIST:
-            raise
-
-def recover(obj_frame_id, global_frame_id, z, slot_pos_obj, reset):
+def recover(obj_frame_id, global_frame_id, z, slot_pos_obj, reset, center_world):
     global globalvel
     global global_slow_vel
     zup = z + 0.03
+    z_ofset = z + 0.004
     ori = [0, 0, 1, 0]
-    center_world = [0.35, 0, 0]
     slot_pos_obj = slot_pos_obj + [0]
+    _center_world = copy.deepcopy(center_world)
     if reset:
         # move above the slot
         pos_recover_probe_world = coordinateFrameTransform(slot_pos_obj, obj_frame_id, global_frame_id, listener)
@@ -101,22 +71,22 @@ def recover(obj_frame_id, global_frame_id, z, slot_pos_obj, reset):
         
         # move down to the slot    
         pos_recover_probe_world = coordinateFrameTransform(slot_pos_obj, obj_frame_id, global_frame_id, listener)
-        pos_recover_probe_world[2] = z
+        pos_recover_probe_world[2] = z_ofset
         setCart(pos_recover_probe_world, ori)
         #pause()
         
         # move to the world center
-        pos_recover_probe_target_world = center_world
-        pos_recover_probe_target_world[2] = z
+        pos_recover_probe_target_world = _center_world
+        pos_recover_probe_target_world[2] = z_ofset
         setCart(pos_recover_probe_target_world, ori)
         
         # speed up
         setSpeed(tcp=globalvel, ori=1000)
     
-    # move to the world center
-    pos_recover_probe_target_world = center_world
-    pos_recover_probe_target_world[2] = zup+0.03  # up more to let vicon see the marker
-    setCart(pos_recover_probe_target_world, ori)
+        # move to the world center
+        pos_recover_probe_target_world = _center_world
+        pos_recover_probe_target_world[2] = zup+0.03  # up more to let vicon see the marker
+        setCart(pos_recover_probe_target_world, ori)
     setCart([0.2, 0, z + 0.05], ori)  # special
     
 def polyapprox(shape, s):
@@ -186,9 +156,13 @@ def main(argv):
     parser.add_option('-r', '--real', action="store_true", dest='real_exp', 
                       help='Do the real experiment space', 
                       default=False)
+                      
     parser.add_option('', '--slow', action="store_true", dest='slow', 
                       help='Set slower global speed', 
                       default=False)
+                      
+    parser.add_option('', '--probe', action="store", dest='probe_id', 
+                      help='The probe id e.g. probe1-4', default='probe4')
                       
     (opt, args) = parser.parse_args()
     
@@ -196,35 +170,34 @@ def main(argv):
     global globalvel
     global global_slow_vel
     globalvel = 300           # speed for moving around
-    globalmaxacc = 100        # some big number means no limit, in m/s^2
-    globalacc = 1             # some big number means no limit, in m/s^2
+    globalmaxacc = 100        # big number means no limit, in m/s^2
+    globalacc = 1             # big number means no limit, in m/s^2
     global_slow_vel = 30
     if opt.slow: globalvel = global_slow_vel
     ori = [0, 0, 1, 0]
-    probe_id = 'probe4'
-    probe_lengths = {'probe1' : 0.23746, 'probe2': 0.16649, 'probe3': 0.15947, 'probe4': 0.15653}
-    probe_length = probe_lengths[probe_id]   
-    ft_length = 0.04703
-    z = probe_length + ft_length + 0.007 + 0.00    # the height above the table
+    center_world = [0.375, 0, 0]
+    
+    probe_db = ProbeDB()
+    probe_length = probe_db.db[opt.probe_id]['length']
+    z = probe_length + ft_length + 0.007   # the height above the table
     
     # parameters about the surface
     surface_id = opt.surface_id
     
-    surface_thicks = {'plywood': 0.01158, 'abs': 0.01448, 'silicone_rubber': 0.01448, 'delrin': 0.01322}
-    surface_thick = surface_thicks[surface_id]   
+    surface_db = SurfaceDB()
+    surface_thick = surface_db.db[surface_id]['thickness']
     
     z = z + surface_thick
-    z_recover = 0.012 + z  # the height for recovery probe2: 0.2265 probe 3: 0.2226
+    z_recover = 0.012 + z  # the height for recovery 
     zup = z + 0.08 +0.1            # the prepare and end height
-    probe_radii = {'probe1' : 0.00626/2, 'probe2': 0.004745, 'probe3': 0.00475, 'probe4': 0.00475}
-    probe_radius = probe_radii[probe_id]   
+    probe_radius = probe_db.db[opt.probe_id]['radius']
     dist_before_contact = 0.03 
     dist_after_contact = 0.05
     skip_when_exists = True
     reset_freq = 1
 
 
-    global_frame_id = '/map'
+    global_frame_id = helper.global_frame_id
     
     # parameters about object
     shape_id = opt.shape_id
@@ -271,7 +244,7 @@ def main(argv):
     setAcc(acc=globalacc, deacc=globalacc)
     setSpeed(tcp=globalvel, ori=1000)
     setZone(0)
-    make_sure_path_exists(dir_save_bagfile)
+    helper.make_sure_path_exists(dir_save_bagfile)
     
     # hack to restart the script to prevent ros network issues.
     limit = 100
@@ -341,7 +314,7 @@ def main(argv):
                     start_pos[2] = z
                     setCart(start_pos,ori)
                     
-                    rosbag_proc = subprocess.Popen('rosbag record -q -O %s %s' % (bagfilename, " ".join(topics)) , shell=True, cwd=dir_save_bagfile)
+                    rosbag_proc = start_ros_bag(bagfilename, topics, dir_save_bagfile)
                     #print 'rosbag_proc.pid=', rosbag_proc.pid
                     rospy.sleep(0.5)
                     
@@ -364,20 +337,21 @@ def main(argv):
                     setSpeed(tcp=globalvel, ori=1000)
                     setAcc(acc=globalacc, deacc=globalacc)
                     # end bag recording
-                    terminate_ros_node("/record")
+                    helper.terminate_ros_node("/record")
                     
                     # move up vertically
                     end_pos = copy.deepcopy(pos_end_probe_world)
                     end_pos[2] = zup
                     setCart(end_pos,ori)
                     
-                    center_world = [0.35, 0, 0]
                     distance_obj_center = np.linalg.norm(np.array(pos_center_obj_world)-np.array(center_world))
                     print "pos_center_obj_world" , pos_center_obj_world
-                    allowed_distance = 0.10   #could change depending on the object considered
+                    allowed_distance = 0.06   #could change depending on the object considered
                     print "distance_obj_center", distance_obj_center
+                    print "center_world", center_world
+                    
                     # recover
-                    recover(obj_frame_id, global_frame_id, z_recover, obj_slot, distance_obj_center > allowed_distance)
+                    recover(obj_frame_id, global_frame_id, z_recover, obj_slot, distance_obj_center > allowed_distance, center_world)
                     #pause()
                     cnt += 1
                     if cnt > limit:
@@ -388,19 +362,6 @@ def main(argv):
                 break;
         if cnt > limit:
             break;
-
-    # move back to startPos
-    start_pos = [0.2, 0, z + 0.05]
-    #setCart(start_pos,ori)
-
-def terminate_ros_node(s):
-    list_cmd = subprocess.Popen("rosnode list", shell=True, stdout=subprocess.PIPE)
-    list_output = list_cmd.stdout.read()
-    retcode = list_cmd.wait()
-    assert retcode == 0, "List command returned %d" % retcode
-    for str in list_output.split("\n"):
-        if (str.startswith(s)):
-            os.system("rosnode kill " + str)
 
 
 if __name__=='__main__':

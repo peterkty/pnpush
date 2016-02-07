@@ -1,11 +1,3 @@
-
-# This is the object set 1 with only one steel block
-shape_db0 = {
-  "rect1" : {
-    "shape_poly" : [[-0.0985/2, -0.0985/2], [0.0985/2, -0.0985/2]]
-  }
-}
-
 import math
 import numpy as np
 import matplotlib.pyplot as plt
