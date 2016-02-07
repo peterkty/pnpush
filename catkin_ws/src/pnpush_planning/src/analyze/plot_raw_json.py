@@ -22,7 +22,8 @@ def plot(data, shape_id, figfname):
     #data['ft_wrench']
     #data['object_pose']
     
-    probe_radius = 0.004745   # probe1: 0.00626/2 probe2: 0.004745
+    probe_radii = {'probe1' : 0.00626/2, 'probe2': 0.004745, 'probe3': 0.00475, 'probe4': 0.00475}
+    probe_radius = probe_radii['probe4']
     
     fig, ax = plt.subplots()
     fig.set_size_inches(7,7)
@@ -78,7 +79,7 @@ def plot(data, shape_id, figfname):
     # add the probes as circle
     r = (range(0, len(tip_pose), sub)) + [len(tip_pose)-1]
     for i in r:
-        tip_pose_0 = np.dot(invT0, tip_pose[i][1:4]+[1])
+        tip_pose_0 = np.dot(invT0, tip_pose[i][1:3]+[0,1])
         if i == 0:
             alpha , fill = (0.8, False)
         elif i == r[-1]:
