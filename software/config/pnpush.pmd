@@ -33,7 +33,7 @@ cmd "9-collect-push-dataset" {
     host = "localhost";
 }
 cmd "9-collect-friction-mapping" {
-    exec = "rosrun pnpush_planning collect_friction_mapping.py";
+    exec = "rosrun pnpush_planning collect_friction_mapping.py --surface delrin";
     host = "localhost";
 }
 cmd "2-abb" {
