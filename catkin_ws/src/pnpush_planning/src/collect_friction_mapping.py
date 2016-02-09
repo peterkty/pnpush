@@ -107,6 +107,8 @@ def main(argv):
             setCart([x, max_y, z], ori)
             
         helper.terminate_ros_node("/record")
+        if rep == nrep -1:
+            rospy.sleep(1)   # make sure record is terminated completely
     
 if __name__=='__main__':
     main(sys.argv)
