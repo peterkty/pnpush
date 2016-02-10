@@ -18,6 +18,8 @@ def main(argv):
                       help='Not do the friction map plotting. ', default=False)
     parser.add_option('', '--plotfmap', action="store_true", dest='plotfmap', 
                       help='Do the friction map plotting. ', default=False)
+    parser.add_option('', '--avgcolorbar', action="store", type='float', dest='avgcolorbar', 
+                      help='Color bar', nargs=2, default=(0,1))
   
     (opt, args) = parser.parse_args()
                    
@@ -38,7 +40,8 @@ def main(argv):
             proc.wait()
 
         if plotfmap and not os.path.exists(bag_filepath.replace('.bag','_fmap.png')):
-            proc = subprocess.Popen('rosrun pnpush_planning plot_friction_map.py %s' % (bag_filepath.replace('.bag', '.h5')) , shell=True)
+            proc = subprocess.Popen('rosrun pnpush_planning plot_friction_map.py %s --avgcolorbar %f %f' % 
+                       (bag_filepath.replace('.bag', '.h5'), opt.avgcolorbar[0], opt.avgcolorbar[1]) , shell=True)
             proc.wait()
 
 if __name__=='__main__':
