@@ -27,13 +27,13 @@ cmd "3-ft" {
     exec = "rosrun netft_rdt_driver netft_node --address 192.168.125.2 --rate 250";
     host = "localhost";
 }
-cmd "9-collect-push-dataset" {
+cmd "9a-collect-push-dataset" {
     auto_respawn = "true";
     exec = "rosrun pnpush_planning collect_push_dataset_with_acceleration.py --real  -s ellip1  --surface plywood";
     host = "localhost";
 }
-cmd "9-collect-friction-mapping" {
-    exec = "rosrun pnpush_planning collect_friction_mapping.py --surface delrin";
+cmd "9b-collect-friction-mapping" {
+    exec = "rosrun pnpush_planning collect_friction_mapping.py --surface pu";
     host = "localhost";
 }
 cmd "2-abb" {
