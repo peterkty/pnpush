@@ -82,6 +82,7 @@ def main(argv):
     rep = 0
     nrep = 1
     
+    zerofreq = 5  # every freq back and forth, zero the force torque
     setSpeed(tcp=vel, ori=1000)
      
     dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/friction_scan_fine/%s/%s/' % (opt.surface_id,shape_id)
@@ -102,8 +103,14 @@ def main(argv):
         setCart([range_x[0], max_y, z], ori)
         
         rosbag_proc = helper.start_ros_bag(bagfilename, topics, dir_save_bagfile)
-        for x in range_x:
+        for ind, x in enumerate(range_x):
             setCart([x, max_y, z], ori)
+            
+            # if ind % zerofreq == 0:
+                # setCart([x, max_y, z_place], ori)
+                # setZero()
+                # setCart([x, max_y, z], ori)
+                
             setCart([x, min_y, z], ori)
             setCart([x, max_y, z], ori)
             
