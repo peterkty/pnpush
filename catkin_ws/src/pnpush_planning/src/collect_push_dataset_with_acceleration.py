@@ -56,7 +56,7 @@ def recover(obj_frame_id, global_frame_id, z, slot_pos_obj, reset, center_world)
     global globalvel
     global global_slow_vel
     zup = z + 0.03
-    z_ofset = z + 0.004
+    z_ofset = z + 0.005
     ori = [0, 0, 1, 0]
     slot_pos_obj = slot_pos_obj + [0]
     _center_world = copy.deepcopy(center_world)
@@ -83,11 +83,11 @@ def recover(obj_frame_id, global_frame_id, z, slot_pos_obj, reset, center_world)
         # speed up
         setSpeed(tcp=globalvel, ori=1000)
     
-        # move to the world center
+        # move up
         pos_recover_probe_target_world = _center_world
-        pos_recover_probe_target_world[2] = zup+0.03  # up more to let vicon see the marker
+        pos_recover_probe_target_world[2] = zup  # 
         setCart(pos_recover_probe_target_world, ori)
-    setCart([0.2, 0, z + 0.05], ori)  # special
+    setCart([0.2, 0, z + 0.05], ori)  # move back to let vicon see the marker
     
 def polyapprox(shape, s):
     ss = shape[0]
@@ -169,9 +169,9 @@ def main(argv):
     # set the parameters
     global globalvel
     global global_slow_vel
-    globalvel = 300           # speed for moving around
+    globalvel = 600           # speed for moving around
     globalmaxacc = 100        # big number means no limit, in m/s^2
-    globalacc = 1             # big number means no limit, in m/s^2
+    globalacc = 1.3             # big number means no limit, in m/s^2
     global_slow_vel = 30
     if opt.slow: globalvel = global_slow_vel
     ori = [0, 0, 1, 0]
@@ -189,7 +189,7 @@ def main(argv):
     
     z = z + surface_thick
     z_recover = 0.012 + z  # the height for recovery 
-    zup = z + 0.08 +0.1            # the prepare and end height
+    zup = z + 0.04            # the prepare and end height
     probe_radius = probe_db.db[opt.probe_id]['radius']
     dist_before_contact = 0.03 
     dist_after_contact = 0.05
@@ -314,14 +314,14 @@ def main(argv):
                     start_pos[2] = z
                     setCart(start_pos,ori)
                     
-                    rosbag_proc = start_ros_bag(bagfilename, topics, dir_save_bagfile)
+                    rosbag_proc = helper.start_ros_bag(bagfilename, topics, dir_save_bagfile)
                     #print 'rosbag_proc.pid=', rosbag_proc.pid
                     rospy.sleep(0.5)
                     
                     end_pos = copy.deepcopy(pos_end_probe_world)
                     end_pos[2] = z
                     
-                    setSpeed(tcp=30, ori=1000) # some slow speed
+                    setSpeed(tcp=global_slow_vel, ori=1000) # some slow speed
                     mid_pos = copy.deepcopy(pos_contact_probe_world)
                     mid_pos[2] = z
                     setCart(mid_pos,ori)

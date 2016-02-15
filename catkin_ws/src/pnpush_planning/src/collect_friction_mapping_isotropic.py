@@ -24,6 +24,10 @@ setZone = rospy.ServiceProxy('/robot2_SetZone', robot_SetZone)
 setSpeed = rospy.ServiceProxy('/robot2_SetSpeed', robot_SetSpeed)
 
 
+def wait_for_ft_calib():
+    from ik.roshelper import ROS_Wait_For_Msg
+    ROS_Wait_For_Msg('/netft_data', geometry_msgs.msg.WrenchStamped).getmsg()
+    
 def setCart(pos, ori):
     
     param = (np.array(pos) * 1000).tolist() + ori
@@ -86,8 +90,8 @@ def main(argv):
             
         for deg in degs_order:
             th = np.deg2rad(deg)
-            start_pos = [np.sin(th)* radius, np.cos(th)* radius]
-            end_pos = [np.sin(th+np.pi)* radius, np.cos(th+np.pi)* radius]
+            start_pos = [np.sin(th)* radius + center[0], np.cos(th)* radius + center[1]]
+            end_pos = [np.sin(th+np.pi)* radius + center[0], np.cos(th+np.pi)* radius + center[1]]
         
             bagfilename = 'record_surface=%s_shape=%s_a=%.0f_v=%.0f_deg=%d_rep=%03d.bag' % (opt.surface_id, shape_id, acc*1000, vel, deg, rep)
             print bagfilename
@@ -101,6 +105,7 @@ def main(argv):
             setCart([start_pos[0], start_pos[1], z], ori)
             setCart([start_pos[0], start_pos[1], z_place], ori)
             setZero()
+            wait_for_ft_calib()
             setCart([start_pos[0], start_pos[1], z], ori)
             setSpeed(tcp=vel, ori=1000)
             

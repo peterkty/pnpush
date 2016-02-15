@@ -24,6 +24,10 @@ setZone = rospy.ServiceProxy('/robot2_SetZone', robot_SetZone)
 setSpeed = rospy.ServiceProxy('/robot2_SetSpeed', robot_SetSpeed)
 
 
+def wait_for_ft_calib():
+    from ik.roshelper import ROS_Wait_For_Msg
+    ROS_Wait_For_Msg('/netft_data', geometry_msgs.msg.WrenchStamped).getmsg()
+    
 def setCart(pos, ori):
     
     param = (np.array(pos) * 1000).tolist() + ori
@@ -82,7 +86,7 @@ def main(argv):
     min_y = -0.233
     range_x = np.linspace(max_x, min_x, 3)
     acc = 0
-    vels = [10, 20, 50, 75, 100, 150, 200, 300, 400, 500]
+    vels = reversed([10, 20, 50, 75, 100, 150, 200, 300, 400, 500])
     rep = 0
     nrep = 1
      
@@ -104,6 +108,7 @@ def main(argv):
             setCart([range_x[0], max_y, z], ori)
             setCart([range_x[0], max_y, z_place], ori)
             setZero()
+            wait_for_ft_calib()
             setCart([range_x[0], max_y, z], ori)
             setSpeed(tcp=vel, ori=1000)
             
