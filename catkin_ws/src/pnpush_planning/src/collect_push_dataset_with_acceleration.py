@@ -222,7 +222,10 @@ def main(argv):
         accelerations = np.append(np.repeat(0, num_speed), accelerations)
         
         if shape_type == 'poly':
-            side_params = np.linspace(0, 1, 11)  
+            if shape == 'hex':
+                side_params = np.linspace(0, 1, 6)  # decrease the number of pushes
+            else:
+                side_params = np.linspace(0, 1, 11)  
         else:
             side_params = np.linspace(0,1,40,endpoint=False)
         
