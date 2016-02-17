@@ -71,6 +71,7 @@ def main(argv):
     print image_avg
     print image_std
     
+    plt.rc('font', family='serif', size=30)
     plt.imshow(image_avg, extent=(rangey[0]+0.05, rangey[2]-0.05, rangex[2]-0.05, rangex[0]+0.05),
            interpolation='nearest', cmap=cm.Greys, vmin=opt.avgcolorbar[0], vmax=opt.avgcolorbar[1])
            

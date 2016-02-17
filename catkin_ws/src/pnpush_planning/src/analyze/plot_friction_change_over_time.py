@@ -120,6 +120,7 @@ def main(argv):
         
     plt.errorbar(rangexx, vals, fmt='-o', color='k')
     
+    
     plt.ylabel('Coefficient of friction')
     plt.xlabel('Push time')
     #plt.title('Change of frictional coefficient over time')

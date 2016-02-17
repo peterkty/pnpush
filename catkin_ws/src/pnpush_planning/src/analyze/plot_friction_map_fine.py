@@ -8,28 +8,17 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import pdb
 
-def main(argv):
-    parser = optparse.OptionParser()
-    
-    parser.add_option('', '--avgcolorbar', action="store", type='float', dest='avgcolorbar', 
-                      help='Color bar', nargs=2, default=(None,None))
-    parser.add_option('', '--res', action="store", type='float', dest='res', 
-                      help='Resolution in meter', nargs=2, default=(0.005,0.005))
-    parser.add_option('', '--limits', action="store", type='float', dest='limits', 
-                      help='Resolution in meter', nargs=4, default=(0.250,0.450, -0.233, 0.197)) # [minx, maxx, miny, maxy]
-    parser.add_option('', '--N', action="store", type='float', dest='N', 
-                      help='Resolution in meter', nargs=1, default=(0.8374 * 9.81)) # [minx, maxx, miny, maxy]
-                      
-    (opt, args) = parser.parse_args()
-    
+def plot(opt, args):
     if len(args) < 1:  # no bagfile name
         parser.error("Usage: plot_friction_map_fine.py [bag_file_path.h5]")
         return
     
     hdf5_filepath = args[0]
-    figfname = hdf5_filepath.replace('.h5', '_fmap.png')
+    figfname_png = hdf5_filepath.replace('.h5', '_fmap.png')
+    figfname_pdf = hdf5_filepath.replace('.h5', '_fmap.pdf')
     figfname_std = hdf5_filepath.replace('.h5', '_fmapstd.png')
-    figfname_hist = hdf5_filepath.replace('.h5', '_fmaphist.png')
+    figfname_hist_png = hdf5_filepath.replace('.h5', '_fmaphist.png')
+    figfname_hist_pdf = hdf5_filepath.replace('.h5', '_fmaphist.pdf')
     ft_wrench = []
     
     min_x, max_x, min_y, max_y = opt.limits
@@ -48,6 +37,7 @@ def main(argv):
     image_avg =  [[0 for i in range(n_y)] for j in range(n_x)]
     image_std =  [[0 for i in range(n_y)] for j in range(n_x)]
     all_vals = []
+    all_image_vals = []
     
     N = opt.N
     
@@ -67,6 +57,7 @@ def main(argv):
             if len(image_vals[idx][idy]) > 0:
                 image_avg[idx][idy] = sum(image_vals[idx][idy]) / len(image_vals[idx][idy]) / N
                 image_std[idx][idy] = np.std(image_vals[idx][idy]) / N
+                all_image_vals.append(image_avg[idx][idy])
             else:
                 image_avg[idx][idy] = image_avg[idx-1][idy] # hack
     
@@ -74,29 +65,73 @@ def main(argv):
     print 'std', '%.3f' % (np.std(all_vals) / N)
     print 'max', '%.3f' % (np.max(all_vals) / N)
     print 'min', '%.3f' % (np.min(all_vals) / N)
-    plt.hist(np.array(all_vals)/N, 500, normed=1, histtype='stepfilled', facecolor='grey', alpha=0.75)
-    plt.savefig(figfname_hist)
+    minn = np.min(all_image_vals)
+    maxx = np.max(all_image_vals)
+    
+    fig, ax = plt.subplots()
+    plt.rc('text', usetex=True)
+    plt.rc('font', family='serif', size=30)
+    plt.hist(np.array(all_vals)/N, 500, normed=1, histtype='stepfilled', facecolor='white', alpha=0.75)
+    plt.title(opt.title)
+    #ax.set_title(opt.title)
+    
+    xticks = plt.xticks()
+    yticks = plt.yticks()
+    #print xticks
+    plt.xticks(np.linspace(0, 0.6, 3))
+    plt.yticks(np.linspace(0, 25, 3))
+    #plt.yticks(np.linspace(yticks[0][1], yticks[0][-2], 3))
+    
+    plt.savefig(figfname_hist_png)
+    plt.savefig(figfname_hist_pdf)
     plt.close()
+    
     #print image_avg
     #print image_std
+    fig, ax = plt.subplots()
+    plt.rc('font', family='serif', size=30)
+    plt.title(opt.title)
     plt.imshow(image_avg, extent=(rangey[0], rangey[-1]+opt.res[1], rangex[-1]+opt.res[0], rangex[0]),
            interpolation='nearest', cmap=cm.Greys, vmin=opt.avgcolorbar[0], vmax=opt.avgcolorbar[1])
-           
-    plt.colorbar()
+    plt.gca().xaxis.set_visible(False)
+    plt.gca().yaxis.set_visible(False)
     
-    plt.savefig(figfname)
+    cbar = plt.colorbar(orientation='horizontal', ticks=[minn, maxx])
+    cbar.ax.set_xticklabels([('%.2f' % minn), ('%.2f' % maxx)])
     
-    print figfname
+    plt.savefig(figfname_png)
+    plt.savefig(figfname_pdf)
     
-    plt.show()
+    print figfname_png
+    
+    #plt.show()
     plt.close()
     
     plt.imshow(image_std, extent=(rangey[0], rangey[-1]+opt.res[1], rangex[-1]+opt.res[0], rangex[0]),
            interpolation='nearest', cmap=cm.Greys)
            
-    plt.colorbar()
+    plt.colorbar(orientation='horizontal')
     
     plt.savefig(figfname_std)
+    
+
+def main(argv):
+    parser = optparse.OptionParser()
+    
+    parser.add_option('', '--avgcolorbar', action="store", type='float', dest='avgcolorbar', 
+                      help='Color bar', nargs=2, default=(None,None))
+    parser.add_option('', '--res', action="store", type='float', dest='res', 
+                      help='Resolution in meter', nargs=2, default=(0.005,0.005))
+    parser.add_option('', '--limits', action="store", type='float', dest='limits', 
+                      help='Resolution in meter', nargs=4, default=(0.250,0.450, -0.233, 0.197)) # [minx, maxx, miny, maxy]
+    parser.add_option('', '--N', action="store", type='float', dest='N', 
+                      help='Resolution in meter', nargs=1, default=(0.8374 * 9.81)) # [minx, maxx, miny, maxy]
+                      
+    parser.add_option('', '--title', action="store", type='string', dest='title', 
+                      help='Title', default='')
+                      
+    (opt, args) = parser.parse_args()
+    plot(opt, args)
     
     
 
