@@ -23,7 +23,10 @@ setAcc = rospy.ServiceProxy('/robot2_SetAcc', robot_SetAcc)
 setZone = rospy.ServiceProxy('/robot2_SetZone', robot_SetZone)
 setSpeed = rospy.ServiceProxy('/robot2_SetSpeed', robot_SetSpeed)
 
-
+def wait_for_ft_calib():
+    from ik.roshelper import ROS_Wait_For_Msg
+    ROS_Wait_For_Msg('/netft_data', geometry_msgs.msg.WrenchStamped).getmsg()
+    
 def setCart(pos, ori):
     
     param = (np.array(pos) * 1000).tolist() + ori
@@ -97,6 +100,7 @@ def main(argv):
         setCart([range_x[0], max_y, z], ori)
         setCart([range_x[0], max_y, z_place], ori)
         setZero()
+        wait_for_ft_calib()
         #pause()
         setCart([range_x[0], max_y, z], ori)
         
