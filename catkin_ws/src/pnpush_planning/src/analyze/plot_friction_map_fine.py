@@ -71,7 +71,6 @@ def plot(opt, args):
     fig, ax = plt.subplots()
     plt.rc('text', usetex=True)
     plt.rc('font', family='serif', size=30)
-    plt.hist(np.array(all_vals)/N, 500, normed=1, histtype='stepfilled', facecolor='white', alpha=0.75)
     plt.title(opt.title)
     #ax.set_title(opt.title)
     
@@ -123,9 +122,9 @@ def main(argv):
     parser.add_option('', '--res', action="store", type='float', dest='res', 
                       help='Resolution in meter', nargs=2, default=(0.005,0.005))
     parser.add_option('', '--limits', action="store", type='float', dest='limits', 
-                      help='Resolution in meter', nargs=4, default=(0.250,0.450, -0.233, 0.197)) # [minx, maxx, miny, maxy]
+                      help='Limits [minx, maxx, miny, maxy]', nargs=4, default=(0.250,0.450, -0.233, 0.197)) 
     parser.add_option('', '--N', action="store", type='float', dest='N', 
-                      help='Resolution in meter', nargs=1, default=(0.8374 * 9.81)) # [minx, maxx, miny, maxy]
+                      help='Normal force', nargs=1, default=(0.8374 * 9.81)) 
                       
     parser.add_option('', '--title', action="store", type='string', dest='title', 
                       help='Title', default='')
