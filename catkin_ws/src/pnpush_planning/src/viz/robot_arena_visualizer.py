@@ -16,7 +16,7 @@ import sys
 def vizBlock(pose, mesh, frame_id):
     global vizpub
     meshmarker = createMeshMarker(mesh, 
-                 offset=tuple(pose[0:3]), rgba=(0.1,0.1,0.1,1),
+                 offset=tuple(pose[0:3]), rgba=(0.5,0.5,0.6,1),
                  orientation=tuple(pose[3:7]), frame_id=frame_id)
     vizpub.publish(meshmarker)
 
@@ -29,7 +29,7 @@ def main(argv):
     
     mesh = 'package://pnpush_config/models/robot_arena/robot_arena.stl'
     frame_id = '/map'
-    r = rospy.Rate(1000)
+    r = rospy.Rate(1)
     while not rospy.is_shutdown():
         # get box pose from vicon
         vizBlock([0,0,0,0,0,0,1], mesh, frame_id)

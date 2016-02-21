@@ -17,7 +17,9 @@ robot2: {speedORI: 10.0, speedTCP: 50.0, toolQ0: 1.0,
   toolMass: 0.3, 
   toolCGX: -0.1, toolCGY: 8.3, toolCGZ: 310.4, 
   toolIX: 0.023, toolIY: 0.02, toolIZ: 0.036, 
-  workobjectQ0: 1, workobjectQX: 0, workobjectQY: 0, workobjectQZ: 0, 
-  workobjectX: 0, workobjectY: 0, workobjectZ: 0,
+  workobjectQ0: 0.70711, workobjectQX: 0, workobjectQY: 0.70711, workobjectQZ: 0, 
+  workobjectX: 0, workobjectY: 0, workobjectZ: 600,
   
+  xworkobjectQ0: 0.70711, xworkobjectQX: 0, xworkobjectQY: -0.707, xworkobjectQZ: 0, 
+  xworkobjectX: 600, xworkobjectY: 0, xworkobjectZ: 0,
   zone: 1, robotIp: 192.168.125.1, robotLoggerPort: 5003, robotMotionPort: 5002, hostRRIPort: 13001, vacuum: 0, useRRI: True, useLogger: False}
