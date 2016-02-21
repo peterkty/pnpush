@@ -175,66 +175,23 @@
       <origin rpy="0 0 0" xyz="0 0 -0.023515"/>
     </collision>
   </link>
-  
-<!-- probe 3 -->
   <link name="link_probe">
     <visual>
       <geometry>
-        <cylinder radius="0.00475" length="0.15947"/>
+        <cylinder radius="0.00475" length="0.15653"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0 0 -0.079735"/>
+      <origin rpy="0 0 0" xyz="0 0 -0.078265"/>
       <material name="abb_white">
         <color rgba="1 1 1 1"/>
       </material>
     </visual>
     <collision>
       <geometry>
-        <cylinder radius="0.00475" length="0.15947"/>
+        <cylinder radius="0.00475" length="0.15653"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0 0 -0.079735"/>
+      <origin rpy="0 0 0" xyz="0 0 -0.078265"/>
     </collision>
   </link>
-
-<!-- probe 2 -->
-<!--
-  <link name="link_probe">
-    <visual>
-      <geometry>
-        <cylinder radius="0.004745" length="0.16649"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 -0.083245"/>
-      <material name="abb_white">
-        <color rgba="1 1 1 1"/>
-      </material>
-    </visual>
-    <collision>
-      <geometry>
-        <cylinder radius="0.004745" length="0.16649"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 -0.083245"/>
-    </collision>
-  </link>
--->
-<!-- probe 1
-  <link name="link_probe">
-    <visual>
-      <geometry>
-        <cylinder radius="0.00313" length="0.23746"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 -0.11873"/>
-      <material name="abb_white">
-        <color rgba="1 1 1 1"/>
-      </material>
-    </visual>
-    <collision>
-      <geometry>
-        <cylinder radius="0.00313" length="0.23746"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 -0.11873"/>
-    </collision>
-  </link>
-  
--->
   <joint name="joint1" type="revolute">
     <parent link="base_link"/>
     <child link="link_1"/>
@@ -283,29 +240,11 @@
     <axis xyz="0 0 1"/>
     <origin rpy="0 0 0" xyz="0 0 0.04703"/> 
   </joint>
-<!-- probe 1
   <joint name="joint8" type="fixed">
     <parent link="link_ft"/>
     <child link="link_probe"/>
     <axis xyz="0 0 1"/>
-    <origin rpy="0 0 0" xyz="0 0 0.23746"/>
-  </joint>
--->
-<!-- probe 2 -->
-<!--
-  <joint name="joint8" type="fixed">
-    <parent link="link_ft"/>
-    <child link="link_probe"/>
-    <axis xyz="0 0 1"/>
-    <origin rpy="0 0 0" xyz="0 0 0.16649"/>
-  </joint>
--->
-<!-- probe 3 -->
-  <joint name="joint8" type="fixed">
-    <parent link="link_ft"/>
-    <child link="link_probe"/>
-    <axis xyz="0 0 1"/>
-    <origin rpy="0 0 0" xyz="0 0 0.15947"/>
+    <origin rpy="0 0 0" xyz="0 0 0.15653"/>
   </joint>
 
   
