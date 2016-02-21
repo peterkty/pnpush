@@ -5,7 +5,6 @@
 
 import rosbag
 import time # for sleep
-#import rospy
 import json
 from ik.helper import *
 from sensor_msgs.msg import *
@@ -16,9 +15,11 @@ from tf2_msgs.msg import TFMessage
 import tf
 import tf.transformations as tfm
 import h5py
+import optparse
 
 import sys
 import subprocess
+import numpy as np
 
 useRRI = True
 useH5 = True
@@ -39,18 +40,29 @@ def main(argv):
     ft_array = []
     object_pose_array = []
     
-    if len(argv) < 2:  # no bagfile name
-        print 'Usage: parse_bagfile_to_json.py [bag_file_path.bag]'
-        print 'Also make sure roscore is running'
-        return
     
-        
-    bag_filepath = argv[1]
+    parser = optparse.OptionParser()
+    parser.add_option('', '--json', action="store_true", dest='json', 
+                      help='To output json or not. ', default=True)
+    parser.add_option('', '--nojson', action="store_false", dest='json', 
+                      help='To output json or not. ', default=True)
+    parser.add_option('', '--h5', action="store_true", dest='h5', 
+                      help='To output h5 or not. ', default=True)
+    parser.add_option('', '--noh5', action="store_true", dest='h5', 
+                      help='To output h5 or not. ', default=True)
+  
+    (opt, args) = parser.parse_args()
+    if len(args) < 1:  # no bagfile name
+        parser.error("Usage: parse_bagfile_to_json.py [bag_file_path.bag]")
+        return
+    bag_filepath = args[0]
     json_filepath = bag_filepath.replace('.bag', '.json')
     hdf5_filepath = bag_filepath.replace('.bag', '.h5')
     print 'bag_filepath:', bag_filepath
-    print 'json_filepath:', json_filepath
-    print 'hdf5_filepath:', hdf5_filepath
+    if opt.json:
+        print 'json_filepath:', json_filepath
+    if opt.h5:
+        print 'hdf5_filepath:', hdf5_filepath
     
     
     
@@ -65,7 +77,7 @@ def main(argv):
             child_frame_id = msg.transforms[i].child_frame_id
             t = msg.transforms[i].transform
             if child_frame_id == '/viconworld':
-                vicon_to_world = [t.translation.x,t.translation.y,t.translation.z] + [t.rotation.x,t.rotation.y,t.rotation.z,t.rotation.w]
+                vicon_to_world = [t.translation.x,t.translation.y,t.translation.z] + [t.rotation.x,t.rotation.y,t.rotation.z,t.rotation.w]  # should change to x,y,theta
                 break
         if len(vicon_to_world) > 0: break
                  
@@ -87,12 +99,8 @@ def main(argv):
     if useRRI:
         for topic, msg, t in bag.read_messages(topics=['/robot2_RRICartState']):
             tip_array.append([msg.header.stamp.to_sec(), 
-                msg.position[0]/1000,msg.position[1]/1000])
-    else:
-        for topic, msg, t in bag.read_messages(topics=['/robot2_CartesianLog']):
-            tip_array.append([msg.timeStamp, 
-                msg.x/1000,msg.y/1000,msg.z/1000,
-                msg.qx,msg.qy,msg.qz,msg.q0])
+                msg.position[0]/1000,msg.position[1]/1000,msg.position[5]/180.0*np.pi])  # x,y,theta_yaw
+
         
     for topic, msg, t in bag.read_messages(topics=['/netft_data']):
         ft_array.append([msg.header.stamp.to_sec()] + ftmsg2listandflip(msg))
@@ -104,16 +112,18 @@ def main(argv):
     data = {'tip_poses': tip_array, 'ft_wrench': ft_array, 'object_pose': object_pose_array}
     
     # save the data
-    with open(json_filepath, 'w') as outfile:
-        json.dump(data, outfile, indent=4)
+    if opt.json:
+        with open(json_filepath, 'w') as outfile:
+            json.dump(data, outfile, indent=4)
         
     
     # save the data as hdf5
-    with h5py.File(hdf5_filepath, "w") as f:
-        f.create_dataset("tip_array", data=tip_array)
-        f.create_dataset("ft_wrench", data=ft_array)
-        f.create_dataset("object_pose", data=object_pose_array)
-    
+    if opt.h5:
+        with h5py.File(hdf5_filepath, "w") as f:
+            f.create_dataset("tip_array", data=tip_array)
+            f.create_dataset("ft_wrench", data=ft_array)
+            f.create_dataset("object_pose", data=object_pose_array)
+        
 if __name__=='__main__':
     main(sys.argv)
 

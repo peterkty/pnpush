@@ -22,13 +22,16 @@ def plot(data, shape_id, figfname):
     #data['ft_wrench']
     #data['object_pose']
     
-    probe_radius = 0.004745   # probe1: 0.00626/2 probe2: 0.004745
+    probe_radii = {'probe1' : 0.00626/2, 'probe2': 0.004745, 'probe3': 0.00475, 'probe4': 0.00475}
+    probe_radius = probe_radii['probe4']
     
     fig, ax = plt.subplots()
     fig.set_size_inches(7,7)
 
-    v = int(figfname.split('_')[-4].split('=')[1])
+    v = int(figfname.split('_')[3].split('=')[1])
     sub = int(30 / (v / 20.0))                 # subsample rate
+    if sub < 1:
+        sub = 1
     tip_pose = data['tip_poses']
     
     patches = []
@@ -46,13 +49,17 @@ def plot(data, shape_id, figfname):
     
     object_pose = data['object_pose']
     
-    invT0 = np.linalg.inv(matrix_from_xyzquat(object_pose[0][1:4], object_pose[0][4:8]))
+    if len(object_pose) > 0:
+        invT0 = np.linalg.inv(matrix_from_xyzquat(object_pose[0][1:4], object_pose[0][4:8]))
+    elif len(tip_pose) > 0:
+        invT0 = np.linalg.inv(matrix_from_xyzquat(tip_pose[0][1:3]+[0], [0,0,0,1]))
 
 
     print 'object_pose', len(object_pose), 'tip_pose', len(tip_pose)
 
-        
-    r = (range(0, len(object_pose), sub)) + [len(object_pose)-1]
+    r = []
+    if len(object_pose) > 0:
+        r = (range(0, len(object_pose), sub)) + [len(object_pose)-1]
     for i in r:
         
         T = matrix_from_xyzquat(object_pose[i][1:4], object_pose[i][4:8])
@@ -78,7 +85,7 @@ def plot(data, shape_id, figfname):
     # add the probes as circle
     r = (range(0, len(tip_pose), sub)) + [len(tip_pose)-1]
     for i in r:
-        tip_pose_0 = np.dot(invT0, tip_pose[i][1:4]+[1])
+        tip_pose_0 = np.dot(invT0, tip_pose[i][1:3]+[0,1])
         if i == 0:
             alpha , fill = (0.8, False)
         elif i == r[-1]:

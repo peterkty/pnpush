@@ -28,6 +28,3 @@
 [submodule "ros_ws/netft"]
 	path = ros_ws/netft
 	url = git@github.mit.edu:mCube/netft.git
-[submodule "catkin_ws/src/abb"]
-	path = catkin_ws/src/abb
-	url = https://github.com/ros-industrial/abb.git

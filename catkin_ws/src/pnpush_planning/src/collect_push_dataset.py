@@ -201,8 +201,8 @@ def main(argv):
     global_slow_vel = 30
     if opt.slow: globalvel = global_slow_vel
     ori = [0, 0, 1, 0]
-    probe_id = 'probe3'
-    probe_lengths = {'probe1' : 0.23746, 'probe2': 0.16649, 'probe3': 0.15947}
+    probe_id = 'probe4'
+    probe_lengths = {'probe1' : 0.23746, 'probe2': 0.16649, 'probe3': 0.15947, 'probe4': 0.15653}
     probe_length = probe_lengths[probe_id]   # probe1: 0.00626/2 probe2: 0.004745 probe3: 0.00475
     ft_length = 0.04703
     z = probe_length + ft_length + 0.004 + 0.00    # the height above the table
@@ -249,10 +249,11 @@ def main(argv):
         
         angles = np.linspace(-pi/180.0*80.0, pi/180*80, 9)  
     else:
-        speeds = [20, 50, 100, 200, 400]
-        speeds = reversed([-1])
-        side_params = np.linspace(0.1,0.9,3)
-        angles = np.linspace(-pi/4, pi/4, 3)
+        speeds = [20, 100, 400, -1]
+        #speeds = reversed([-1])
+        #shape = [shape[0]]
+        side_params = [0.1]#np.linspace(0.1,0.9,3)
+        angles = [0] #np.linspace(-pi/4, pi/4, 3)
 
     # parameters about rosbag
     dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/straight_push/%s/push_dataset_motion_full_%s/' % (surface_id,shape_id)
@@ -379,8 +380,8 @@ def main(argv):
             break;
 
     # move back to startPos
-    start_pos = [0.2, 0, z + 0.05]
-    setCart(start_pos,ori)
+    #start_pos = [0.2, 0, z + 0.05]
+    #setCart(start_pos,ori)
 
 def terminate_ros_node(s):
     list_cmd = subprocess.Popen("rosnode list", shell=True, stdout=subprocess.PIPE)
