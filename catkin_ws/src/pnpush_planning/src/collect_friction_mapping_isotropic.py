@@ -90,8 +90,8 @@ def main(argv):
             
         for deg in degs_order:
             th = np.deg2rad(deg)
-            start_pos = [np.sin(th)* radius + center[0], np.cos(th)* radius + center[1]]
-            end_pos = [np.sin(th+np.pi)* radius + center[0], np.cos(th+np.pi)* radius + center[1]]
+            start_pos = [np.cos(th)* radius + center[0], np.sin(th)* radius + center[1]]
+            end_pos = [np.cos(th+np.pi)* radius + center[0], np.sin(th+np.pi)* radius + center[1]]
         
             bagfilename = 'record_surface=%s_shape=%s_a=%.0f_v=%.0f_deg=%d_rep=%03d.bag' % (opt.surface_id, shape_id, acc*1000, vel, deg, rep)
             print bagfilename
