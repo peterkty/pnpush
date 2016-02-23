@@ -106,7 +106,7 @@ def main(argv):
 
     plt.tight_layout()
     axes.set_xlabel('sliding direction in angles (deg)')
-    axes.set_ylabel('$v \cdot f - max(v \cdot f^*)$ (m*N/s)')
+    axes.set_ylabel('$\Delta P$ (m*N/s)')
         
     legend = plt.legend(loc='lower right', ncol = 4)
     
