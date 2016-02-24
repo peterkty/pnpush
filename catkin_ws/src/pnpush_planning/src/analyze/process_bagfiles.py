@@ -36,7 +36,7 @@ def main(argv):
             proc.wait()
             
         if plotmotion and not os.path.exists(bag_filepath.replace('bag','png')):
-            proc = subprocess.Popen('rosrun pnpush_planning plot_raw_json.py %s snapshots' % (bag_filepath.replace('.bag', '.json')) , shell=True)
+            proc = subprocess.Popen('rosrun pnpush_planning plot_raw_h5.py %s snapshots' % (bag_filepath.replace('.bag', '.h5')) , shell=True)
             proc.wait()
 
         if plotfmap and not os.path.exists(bag_filepath.replace('.bag','_fmap.png')):

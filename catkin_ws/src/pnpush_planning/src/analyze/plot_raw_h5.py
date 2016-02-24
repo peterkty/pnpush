@@ -5,6 +5,7 @@
 
 import numpy as np
 import json
+import h5py
 
 import matplotlib
 import matplotlib.patches as mpatches
@@ -15,7 +16,9 @@ from config.shape_db import ShapeDB
 
 import tf.transformations as tfm
 from ik.helper import *
+from config.helper import *
 from matplotlib.pyplot import savefig
+
 
 def plot(data, shape_id, figfname):
     #data['tip_poses']
@@ -27,12 +30,18 @@ def plot(data, shape_id, figfname):
     
     fig, ax = plt.subplots()
     fig.set_size_inches(7,7)
-
-    v = int(figfname.split('_')[3].split('=')[1])
-    sub = int(30 / (v / 20.0))                 # subsample rate
-    if sub < 1:
-        sub = 1
-    tip_pose = data['tip_poses']
+    
+    v = int(getfield_from_filename(os.path.basename(figfname), 'v'))
+    a = int(getfield_from_filename(os.path.basename(figfname), 'a'))
+    
+    
+    if a!=0:
+        sub = int((2500.0**2) * 2 /(a**2))
+        if sub < 1: sub = 1
+    elif v!=-1:
+        sub = int(30*20 / (v))                 # subsample rate
+        if sub < 1: sub = 1
+    tip_pose = data['tip_pose']
     
     patches = []
     
@@ -50,9 +59,10 @@ def plot(data, shape_id, figfname):
     object_pose = data['object_pose']
     
     if len(object_pose) > 0:
-        invT0 = np.linalg.inv(matrix_from_xyzquat(object_pose[0][1:4], object_pose[0][4:8]))
+        #invT0 = np.linalg.inv(matrix_from_xyzquat(object_pose[0][1:4], object_pose[0][4:8]))
+        invT0 = np.linalg.inv(matrix_from_xyzrpy(object_pose[0][1:3].tolist() + [0], [0,0,object_pose[0][3]]))
     elif len(tip_pose) > 0:
-        invT0 = np.linalg.inv(matrix_from_xyzquat(tip_pose[0][1:3]+[0], [0,0,0,1]))
+        invT0 = np.linalg.inv(matrix_from_xyzquat(tip_pose[0][1:3].tolist() +[0], [0,0,0,1]))
 
 
     print 'object_pose', len(object_pose), 'tip_pose', len(tip_pose)
@@ -62,7 +72,7 @@ def plot(data, shape_id, figfname):
         r = (range(0, len(object_pose), sub)) + [len(object_pose)-1]
     for i in r:
         
-        T = matrix_from_xyzquat(object_pose[i][1:4], object_pose[i][4:8])
+        T = matrix_from_xyzrpy(object_pose[i][1:3].tolist() + [0], [0,0,object_pose[i][3]])
         
         if i == 0:
             alpha , fill = (0.3, True)
@@ -85,7 +95,7 @@ def plot(data, shape_id, figfname):
     # add the probes as circle
     r = (range(0, len(tip_pose), sub)) + [len(tip_pose)-1]
     for i in r:
-        tip_pose_0 = np.dot(invT0, tip_pose[i][1:3]+[0,1])
+        tip_pose_0 = np.dot(invT0, tip_pose[i][1:3].tolist()+[0,1])
         if i == 0:
             alpha , fill = (0.8, False)
         elif i == r[-1]:
@@ -130,7 +140,7 @@ def plot_force_profile(data, shape_id, figfname, multidim):
     plt.show()
     
 def plot_speed_profile(data, shape_id, figfname, multidim):
-    tip_pose = data['tip_poses']
+    tip_pose = data['tip_pose']
     
     
     # transform to object frame
@@ -156,21 +166,20 @@ def plot_speed_profile(data, shape_id, figfname, multidim):
 
 def main(argv):
     if len(argv) < 2:
-        print 'Usage: plot_raw_json.py *.json tip_speed_profile/forceprofile/snapshots'
+        print 'Usage: plot_raw_json.py *.h5 tip_speed_profile/forceprofile/snapshots'
         return
     
-    json_filepath = argv[1]
+    h5_filepath = argv[1]
     
     if len(argv) < 3:
         choice = 'snapshots'
     else:
         choice = argv[2]
+        
+    data = h5py.File(h5_filepath, "r", driver='core')
     
-    # load json file
-    with open(json_filepath) as data_file:    
-        data = json.load(data_file)
     
-    figname = json_filepath.replace('.json', '.png')
+    figname = h5_filepath.replace('.h5', '.png')
     shape_id = getfield_from_filename(figname, 'shape')
     if choice == 'snapshots':
         plot(data, shape_id, figname)
@@ -178,6 +187,8 @@ def main(argv):
         plot_force_profile(data, shape_id, figname, multidim = True)
     elif choice == 'tip_speed_profile':
         plot_speed_profile(data, shape_id, figname, multidim = True)
+        
+    data.close()
 
 if __name__=='__main__':
     import sys

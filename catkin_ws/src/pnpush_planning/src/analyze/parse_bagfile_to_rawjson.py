@@ -22,7 +22,6 @@ import subprocess
 import numpy as np
 
 useRRI = True
-useH5 = True
 
 def ftmsg2listandflip(ftmsg):
     return [-ftmsg.wrench.force.x,ftmsg.wrench.force.y,-ftmsg.wrench.force.z,
@@ -77,7 +76,7 @@ def main(argv):
             child_frame_id = msg.transforms[i].child_frame_id
             t = msg.transforms[i].transform
             if child_frame_id == '/viconworld':
-                vicon_to_world = [t.translation.x,t.translation.y,t.translation.z] + [t.rotation.x,t.rotation.y,t.rotation.z,t.rotation.w]  # should change to x,y,theta
+                vicon_to_world = [t.translation.x,t.translation.y,t.translation.z] + [t.rotation.x,t.rotation.y,t.rotation.z,t.rotation.w]  
                 break
         if len(vicon_to_world) > 0: break
                  
@@ -93,26 +92,34 @@ def main(argv):
         T_object_to_world = np.dot(T_viconworld_to_world, T_object_to_viconworld)
         
         object_to_world = mat2poselist(T_object_to_world)
+        yaw = tfm.euler_from_quaternion(object_to_world[3:7])[2]
         
-        object_pose_array.append([msg.header.stamp.to_sec()] + object_to_world)
+        #object_pose_array.append([msg.header.stamp.to_sec()] + object_to_world + [yaw])  # x,y,z, qx,qy,qz,qw, yaw  
+        object_pose_array.append([msg.header.stamp.to_sec()] + object_to_world[0:2] + [yaw]) # x,y,yaw
     
     if useRRI:
         for topic, msg, t in bag.read_messages(topics=['/robot2_RRICartState']):
+            rpy = tfm.euler_from_matrix(
+            np.dot(tfm.inverse_matrix(tfm.euler_matrix(-np.pi,0,-np.pi)), 
+            tfm.euler_matrix(msg.position[3]/180.0*np.pi,msg.position[4]/180.0*np.pi,msg.position[5]/180.0*np.pi)))
+            # let the preferred pushing orientation be angle zero 
+            
             tip_array.append([msg.header.stamp.to_sec(), 
-                msg.position[0]/1000,msg.position[1]/1000,msg.position[5]/180.0*np.pi])  # x,y,theta_yaw
+                msg.position[0]/1000,msg.position[1]/1000, rpy[2]])  # x,y,theta_yaw
 
         
     for topic, msg, t in bag.read_messages(topics=['/netft_data']):
-        ft_array.append([msg.header.stamp.to_sec()] + ftmsg2listandflip(msg))
+        ft = ftmsg2listandflip(msg)
+        ft_array.append([msg.header.stamp.to_sec()] + ft[0:2] + [ft[5]])  # consider to change to ft_x, ft_y, torque_z
         
         
     bag.close()
     
     
-    data = {'tip_poses': tip_array, 'ft_wrench': ft_array, 'object_pose': object_pose_array}
     
     # save the data
     if opt.json:
+        data = {'tip_pose': tip_array, 'ft_wrench': ft_array, 'object_pose': object_pose_array}
         with open(json_filepath, 'w') as outfile:
             json.dump(data, outfile, indent=4)
         
@@ -120,7 +127,7 @@ def main(argv):
     # save the data as hdf5
     if opt.h5:
         with h5py.File(hdf5_filepath, "w") as f:
-            f.create_dataset("tip_array", data=tip_array)
+            f.create_dataset("tip_pose", data=tip_array)
             f.create_dataset("ft_wrench", data=ft_array)
             f.create_dataset("object_pose", data=object_pose_array)
         

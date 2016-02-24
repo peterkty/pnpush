@@ -19,11 +19,11 @@ import os
 import tf.transformations as tfm
 
 
-# setCartRos = rospy.ServiceProxy('/robot2_SetCartesian', robot_SetCartesian)
-# setZero = rospy.ServiceProxy('/zero', Zero)
-# setAcc = rospy.ServiceProxy('/robot2_SetAcc', robot_SetAcc)
-# setZone = rospy.ServiceProxy('/robot2_SetZone', robot_SetZone)
-# setSpeed = rospy.ServiceProxy('/robot2_SetSpeed', robot_SetSpeed)
+setCartRos = rospy.ServiceProxy('/robot2_SetCartesian', robot_SetCartesian)
+setZero = rospy.ServiceProxy('/zero', Zero)
+setAcc = rospy.ServiceProxy('/robot2_SetAcc', robot_SetAcc)
+setZone = rospy.ServiceProxy('/robot2_SetZone', robot_SetZone)
+setSpeed = rospy.ServiceProxy('/robot2_SetSpeed', robot_SetSpeed)
 
 
 def wait_for_ft_calib():
@@ -77,58 +77,52 @@ def main(argv):
     vel = 20
     degs = xrange(0, 360, 5)
     rep = 0
-    nrep = 2
     #radius = 0.06
     radii = [0.06, 0.03, 0]
     rotdegs_default = np.linspace(0, 300, 11)
      
-    dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/friction_scan_isotropic/%s/%s/' % (opt.surface_id,shape_id)
+    dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/friction_scan_limitsurface/%s/%s/' % (opt.surface_id,shape_id)
     helper.make_sure_path_exists(dir_save_bagfile)
     
-    
-    for rep in xrange(nrep):
-        if rep % 2 == 0:
-            degs_order = degs
-        else:
-            degs_order = reversed(degs)
+    rep = 0
             
-        for radius in radii:
-            for deg in degs_order:  # translation velocity direction
-                th = np.deg2rad(deg)
-                if radius == 0:
-                    rotdegs = [10]
-                    setSpeed(tcp=vel, ori=10) # to prevent rotating very quick
-                else:
-                    rotdegs = rotdegs_default
-                    setSpeed(tcp=vel, ori=1000)
-                    
-                for rotdeg in rotdegs:  # rotation velocity direction
-                    rotth = np.deg2rad(deg)
-                    start_ori = ik.helper.qwxyz_from_qxyzw(tfm.quaternion_from_matrix((np.dot(tfm.euler_matrix(0,np.pi,0), tfm.euler_matrix(0,0,rotth)))))
-                    end_ori = ik.helper.qwxyz_from_qxyzw(tfm.quaternion_from_matrix((np.dot(tfm.euler_matrix(0,np.pi,0), tfm.euler_matrix(0,0,-rotth)))))
-                    start_pos = [np.cos(th)* radius + center[0], np.sin(th)* radius + center[1]]
-                    end_pos = [np.cos(th+np.pi)* radius + center[0], np.sin(th+np.pi)* radius + center[1]]
+    for radius in radii:
+        for deg in degs_order:  # translation velocity direction
+            th = np.deg2rad(deg)
+            if radius == 0:
+                rotdegs = [10]
+                setSpeed(tcp=vel, ori=10) # to prevent rotating very quick
+            else:
+                rotdegs = rotdegs_default
+                setSpeed(tcp=vel, ori=1000)
                 
-                    bagfilename = 'record_surface=%s_shape=%s_a=%.0f_v=%.0f_deg=%d_rotdeg=%d_radius=%.2f_rep=%03d.bag' % (opt.surface_id, shape_id, acc*1000, vel, deg, rotdeg, radius, rep)
-                    print bagfilename
-                    bagfilepath = dir_save_bagfile+bagfilename
-                    
-                    if skip_when_exists and os.path.isfile(bagfilepath):
-                        #print bagfilepath, 'exits', 'skip'
-                        continue  
-                    
-                    setSpeed(tcp=global_slow_speed, ori=1000)
-                    setCart([start_pos[0], start_pos[1], z], start_ori)
-                    setCart([start_pos[0], start_pos[1], z_place], start_ori)
-                    setZero()
-                    wait_for_ft_calib()
-                    setCart([start_pos[0], start_pos[1], z], start_ori)
-                    setSpeed(tcp=vel, ori=1000)
+            for rotdeg in rotdegs:  # rotation velocity direction
+                rotth = np.deg2rad(deg)
+                start_ori = ik.helper.qwxyz_from_qxyzw(tfm.quaternion_from_matrix((np.dot(tfm.euler_matrix(0,np.pi,0), tfm.euler_matrix(0,0,rotth)))))
+                end_ori = ik.helper.qwxyz_from_qxyzw(tfm.quaternion_from_matrix((np.dot(tfm.euler_matrix(0,np.pi,0), tfm.euler_matrix(0,0,-rotth)))))
+                start_pos = [np.cos(th)* radius + center[0], np.sin(th)* radius + center[1]]
+                end_pos = [np.cos(th+np.pi)* radius + center[0], np.sin(th+np.pi)* radius + center[1]]
+            
+                bagfilename = 'record_surface=%s_shape=%s_a=%.0f_v=%.0f_deg=%d_rotdeg=%d_radius=%.2f_rep=%03d.bag' % (opt.surface_id, shape_id, acc*1000, vel, deg, rotdeg, radius, rep)
+                print bagfilename
+                bagfilepath = dir_save_bagfile+bagfilename
+                
+                if skip_when_exists and os.path.isfile(bagfilepath):
+                    #print bagfilepath, 'exits', 'skip'
+                    continue  
+                
+                setSpeed(tcp=global_slow_speed, ori=1000)
+                setCart([start_pos[0], start_pos[1], z], start_ori)
+                setCart([start_pos[0], start_pos[1], z_place], start_ori)
+                setZero()
+                wait_for_ft_calib()
+                setCart([start_pos[0], start_pos[1], z], start_ori)
+                setSpeed(tcp=vel, ori=1000)
 
-                    rosbag_proc = helper.start_ros_bag(bagfilename, topics, dir_save_bagfile)
-                    setCart([end_pos[0], end_pos[1], z], end_ori)
+                rosbag_proc = helper.start_ros_bag(bagfilename, topics, dir_save_bagfile)
+                setCart([end_pos[0], end_pos[1], z], end_ori)
 
-                    helper.terminate_ros_node("/record")
+                helper.terminate_ros_node("/record")
             
     rospy.sleep(1)   # make sure record is terminated completely
     

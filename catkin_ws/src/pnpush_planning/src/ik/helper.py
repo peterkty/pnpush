@@ -24,6 +24,10 @@ def matrix_from_xyzquat(translate, quaternion):
     return np.dot(tfm.compose_matrix(translate=translate) , 
                    tfm.quaternion_matrix(quaternion)).tolist()
                    
+def matrix_from_xyzrpy(translate, rpy):
+    return np.dot(tfm.compose_matrix(translate=translate) , 
+                   tfm.euler_matrix(*rpy)).tolist()
+                   
 def rotmatrix_from_quat(quaternion):
     return (tfm.quaternion_matrix(quaternion)).tolist()
 
@@ -33,9 +37,6 @@ def transformBack(tf_xyzquat, pose):
     new_pose_mat = np.dot(pose_mat, tfm.inverse_matrix(T_mat))
     return tfm.translation_from_matrix(new_pose_mat).tolist() + tfm.quaternion_from_matrix(new_pose_mat).tolist()
 
-
-def getfield_from_filename(figname, field):
-    return figname[figname.find(field):].split('_')[0].split('=')[1]
 
 # something useful for building primitives
 import geometry_msgs.msg
