@@ -49,7 +49,6 @@ global_slow_vel = 30
 ori = [0, 0, 1, 0]
 center_world = [0.375, 0, 0]
 global_slow_vel
-ori = [0, 0, 1, 0]
 dist_before_contact = 0.03 
 dist_after_contact = 0.05
 skip_when_exists = True
