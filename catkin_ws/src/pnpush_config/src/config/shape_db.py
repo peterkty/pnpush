@@ -82,7 +82,7 @@ class ShapeDB:
         
         self.shape_db["hex"]["shape"] = makeShapePolyNGon(0.06050, 6)
         
-        self.shape_db["butt"]["shape"] = processButtShape(self.shape_db["butt"]["shape"])
+        self.shape_db["butter"]["shape"] = processButtShape(self.shape_db["butter"]["shape"])
         
         # all have same thickness
         for key in self.shape_db:
@@ -104,49 +104,78 @@ class ShapeDB:
         "rect1" : {
             "slot_pos" : [],
             "shape_type" : 'poly',
-            "mass" : None
+            "mass" : 0.8374,
+            "moment_of_inertia": 0.001131,  # kgm^2
+            "centroid": (0,0)
         },
         "rect2" : {
             "slot_pos" : [],
             "shape_type" : 'poly',
-            "mass" : None
+            "mass" : 1.045,
+            "moment_of_inertia": 0.001808,
+            "centroid": (0,0)
         },
         "rect3" : {
             "slot_pos" : [],
-            "shape_type" : 'poly'
+            "shape_type" : 'poly',
+            "mass" : 1.2508,
+            "moment_of_inertia": 0.002744,
+            "centroid": (0,0)
         },
         "tri1" : {
             "slot_pos" : [],
-            "shape_type" : 'poly'
+            "shape_type" : 'poly',
+            "mass" : 0.8028,
+            "moment_of_inertia": 0.001414,
+            "centroid": (0.00303333, 0.00306333)
         },
         "tri2" : {
             "slot_pos" : [],
-            "shape_type" : 'poly'
+            "shape_type" : 'poly',
+            "mass" : 0.9826,
+            "moment_of_inertia": 0.002108,
+            "centroid": (-0.00541556, 0.00309479)
         },
         "tri3" : {
             "slot_pos" : [],
-            "shape_type" : 'poly'
+            "shape_type" : 'poly',
+            "mass" : 1.1326,
+            "moment_of_inertia": 0.002957,
+            "centroid": (-0.01387576, 0.0031902 )
         },
         "ellip1" : {
             "slot_pos" : [],
-            "shape_type" : 'ellip'
+            "shape_type" : 'ellip',
+            "mass" : 0.8937,
+            "moment_of_inertia": 0.001231,
+            "centroid": (0,0)
         },
         "ellip2" : {
             "slot_pos" : [],
-            "shape_type" : 'ellip'
+            "shape_type" : 'ellip',
+            "mass" : 1.1104,
+            "moment_of_inertia": 0.001953,
+            "centroid": (0,0)
         },
         "ellip3" : {
             "slot_pos" : [],
-            "shape_type" : 'ellip'
+            "shape_type" : 'ellip',
+            "mass" : 1.3338,
+            "moment_of_inertia": 0.002973,
+            "centroid": (0,0)
         },
         "hex" : {
             "slot_pos" : [],
-            "shape_type" : 'poly'
+            "shape_type" : 'poly',
+            "mass" : 0.9827,
+            "moment_of_inertia": 0.001497
         },
-        # use polygon?
-        "butt" : {
+        "butter" : {
             "slot_pos" : [],
             "shape_type" : 'polyapprox',
+            "mass" : 1.1974,
+            "centroid": (0,0),
+            "moment_of_inertia": 0.00295317243122,
             "shape": [[[430.6373116,305.3778861],
 [430.717624,304.7557722],
 [430.7979365,304.1336582],
