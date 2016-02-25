@@ -175,7 +175,7 @@ class ShapeDB:
             "shape_type" : 'polyapprox',
             "mass" : 1.1974,
             "centroid": (0,0),
-            "moment_of_inertia": 0.00295317243122,
+            "moment_of_inertia": 0.00295433407908,
             "shape": [[[430.6373116,305.3778861],
 [430.717624,304.7557722],
 [430.7979365,304.1336582],
