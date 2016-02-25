@@ -18,7 +18,7 @@ def xyzrpy_from_xyzquat(pose):
     return pose[0:3] + list(tfm.euler_from_quaternion(pose[3:7])) # x,y,z,qx,qy,qz,qw
 
 def qwxyz_from_qxyzw(pose):
-    return [pose[3]]+pose[0:3]
+    return [pose[3]]+list(pose[0:3])
     
 def matrix_from_xyzquat(translate, quaternion):
     return np.dot(tfm.compose_matrix(translate=translate) , 

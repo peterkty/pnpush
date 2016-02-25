@@ -32,7 +32,7 @@ def wait_for_ft_calib():
     
 def setCart(pos, ori):
     
-    param = (np.array(pos) * 1000).tolist() + ori
+    param = (np.array(pos) * 1000).tolist() + list(ori)
     print 'setCart', param
     #pause()
     setCartRos(*param)
@@ -50,7 +50,7 @@ def main(argv):
     
     shape_id = 'rect1'
     ori = [0, 0, 1, 0]  # qw qx qy qz
-    center_world = [0.375, 0, 0]
+    center_world = [0.375, -0.05, 0]
     z = 0.147-0.01158 + SurfaceDB().db[opt.surface_id]['thickness']
     z_place = z+0.03
     z_up = z_place+0.03
@@ -75,19 +75,25 @@ def main(argv):
     range_x = np.linspace(max_x, min_x, 3)
     acc = 0
     vel = 20
-    degs = xrange(0, 360, 5)
+    degs_default = xrange(0, 360, 5)
     rep = 0
     #radius = 0.06
-    radii = [0.06, 0.03, 0]
-    rotdegs_default = np.linspace(0, 300, 11)
+    radii = [0.03, 0.015, 0]
+    rotdegs_default = np.linspace(0, 80, 11)
      
     dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/friction_scan_limitsurface/%s/%s/' % (opt.surface_id,shape_id)
     helper.make_sure_path_exists(dir_save_bagfile)
     
     rep = 0
-            
+    
+    cnt = 0 
+    cntlimit = 100
     for radius in radii:
-        for deg in degs_order:  # translation velocity direction
+        if radius == 0:
+            degs = [0]
+        else:
+            degs = degs_default
+        for deg in degs:  # translation velocity direction
             th = np.deg2rad(deg)
             if radius == 0:
                 rotdegs = [10]
@@ -97,7 +103,7 @@ def main(argv):
                 setSpeed(tcp=vel, ori=1000)
                 
             for rotdeg in rotdegs:  # rotation velocity direction
-                rotth = np.deg2rad(deg)
+                rotth = np.deg2rad(rotdeg)
                 start_ori = ik.helper.qwxyz_from_qxyzw(tfm.quaternion_from_matrix((np.dot(tfm.euler_matrix(0,np.pi,0), tfm.euler_matrix(0,0,rotth)))))
                 end_ori = ik.helper.qwxyz_from_qxyzw(tfm.quaternion_from_matrix((np.dot(tfm.euler_matrix(0,np.pi,0), tfm.euler_matrix(0,0,-rotth)))))
                 start_pos = [np.cos(th)* radius + center[0], np.sin(th)* radius + center[1]]
@@ -123,6 +129,11 @@ def main(argv):
                 setCart([end_pos[0], end_pos[1], z], end_ori)
 
                 helper.terminate_ros_node("/record")
+                
+                cnt += 1
+                if cnt > cntlimit:
+                    rospy.sleep(1)   # make sure record is terminated completely
+                    return
             
     rospy.sleep(1)   # make sure record is terminated completely
     

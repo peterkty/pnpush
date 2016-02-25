@@ -47,7 +47,7 @@ def main(argv):
     
     shape_id = 'rect1'
     ori = [0, 0, 1, 0]
-    center_world = [0.375, 0, 0]
+    center_world = [0.375, -0.05, 0]
     z = 0.147-0.01158 + SurfaceDB().db[opt.surface_id]['thickness']
     z_place = z+0.03
     z_up = z_place+0.03
