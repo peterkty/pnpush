@@ -31,6 +31,14 @@ def mat2poselist(mat):
     quat = tfm.quaternion_from_matrix(mat)
     return pos.tolist() + quat.tolist()
 
+def getfield_from_filename(figname, field):
+    pairs = figname.split('_')
+    for p in pairs:
+        tmp = p.split('=')
+        if tmp[0] == field:
+            return tmp[1]
+        
+    return None
 
 def norm(vect):
     vect = np.array(vect)

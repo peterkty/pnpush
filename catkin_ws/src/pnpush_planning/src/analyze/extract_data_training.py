@@ -15,6 +15,7 @@ from config.shape_db import ShapeDB
 
 import tf.transformations as tfm
 from ik.helper import *
+from config.helper import *
 from matplotlib.pyplot import savefig
 import time
 
