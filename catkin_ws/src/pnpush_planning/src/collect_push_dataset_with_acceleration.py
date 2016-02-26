@@ -52,11 +52,8 @@ global_slow_vel
 dist_before_contact = 0.03 
 dist_after_contact = 0.05
 skip_when_exists = True
-z = 0
-zup = 0
-z_ofset = 0
 listener = None
-hasRobot = False
+hasRobot = True
 obj_frame_id = ''
 global_frame_id = helper.global_frame_id
 obj_slot = None
@@ -90,7 +87,10 @@ def wait_for_ft_calib():
         ROS_Wait_For_Msg('/netft_data', geometry_msgs.msg.WrenchStamped).getmsg()
 
 def recover(slot_pos_obj, reset):
-    z_recover = 0.012 + z  # the height for recovery 
+    global z, zup
+    #import pdb; pdb.set_trace()
+    z_recover = 0.016 + z  # the height for recovery 
+    z_ofset = z_recover
     slot_pos_obj = slot_pos_obj + [0]
     _center_world = copy.deepcopy(center_world)
     if reset:
@@ -169,7 +169,7 @@ def polyapprox_check_collision(shape, pos_start_probe_object, probe_radius):
     else:
         return False
 
-def run_it(accelerations, speeds, shape, side_params, angles, nrep, shape_type, probe_radius, dir_save_bagfile, opt):
+def run_it(accelerations, speeds, shape, nside, side_params, angles, nrep, shape_type, probe_radius, dir_save_bagfile, opt):
     # hack to restart the script to prevent ros network issues.
     limit = 100
     cnt = 0
@@ -178,7 +178,7 @@ def run_it(accelerations, speeds, shape, side_params, angles, nrep, shape_type, 
     # enumerate the possible trajectories
     for cnt_acc, acc in enumerate(accelerations):
         # enumerate the side we want to push
-        for i in range(len(shape)):
+        for i in range(nside):
             # enumerate the contact point that we want to push
             for s in side_params:
                 if shape_type == 'poly':
@@ -368,13 +368,15 @@ def main(argv):
                 side_params = np.linspace(0,1,40,endpoint=False)
             
             angles = np.linspace(-pi/180.0*80.0, pi/180*80, 9)
+            nside = len(shape)
         else:
             # set the nominal parameters
             side_params = [0.7]
             angles = [0]
             speeds = [20]
             accelerations = []
-            shape = shape[0:1]  # only do it on one side
+            nside = 1
+            #shape = shape[0:1]  # only do it on one side
             
             # what dimension we want to explore
             if opt.reptype == 'normal':
@@ -410,7 +412,7 @@ def main(argv):
     setZone(0)
     helper.make_sure_path_exists(dir_save_bagfile)
     
-    run_it(accelerations, speeds, shape, side_params, angles, opt.nrep, 
+    run_it(accelerations, speeds, shape, nside, side_params, angles, opt.nrep, 
           shape_type, probe_radius, dir_save_bagfile, opt)
 
 

@@ -8,11 +8,11 @@ import math
 from interactive_markers.interactive_marker_server import *
 from std_msgs.msg import *
 
-def createMeshMarker(resource, offset=(0,0,0), rgba=(1,0,0,1), orientation=(0,0,0,1), scale=1, scales=(1,1,1), frame_id="/map"):
+def createMeshMarker(resource, offset=(0,0,0), rgba=(1,0,0,1), orientation=(0,0,0,1), scale=1, scales=(1,1,1), frame_id="/map", marker_id = 0):
     marker = Marker()
     marker.mesh_resource = resource;
     marker.header.frame_id = frame_id
-    marker.id = 0
+    marker.id = marker_id
     marker.type = marker.MESH_RESOURCE
     marker.scale.x = scale*scales[0]
     marker.scale.y = scale*scales[1]

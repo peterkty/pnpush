@@ -1,10 +1,10 @@
 group "visualization" {
     cmd "2-show-surface" {
-        exec = "rosrun pnpush_planning surface_visualizer.py -s plywood";
+        exec = "rosrun pnpush_planning surface_visualizer.py -s abs";
         host = "localhost";
     }
     cmd "1-show-block" {
-        exec = "rosrun pnpush_planning vicon_object_visualizer.py -s hex";
+        exec = "rosrun pnpush_planning vicon_object_visualizer.py -s rect1";
         host = "localhost";
     }
     cmd "0-show-robot-arena" {
@@ -23,8 +23,41 @@ cmd "7-contour-following" {
     exec = "rosrun pnpush_planning contour_follow.py";
     host = "localhost";
 }
-cmd "1-perception-real" {
-    exec = "roslaunch pnpush_config robot_perception.launch";
+cmd "0-matlabpush" {
+    exec = "matlab -nodesktop -nodisplay -nosplash -r \"tic; cd([getenv('PNPUSH_BASE'), '/software']); addpath_pods; addpath_drake; toc; cd ../software/planning/ik_server/; ikTrajServerSocket;\"";
+    host = "localhost";
+}
+cmd "4-vicon" {
+    exec = "roslaunch pnpush_config vicon.launch";
+    host = "localhost";
+}
+cmd "6-goprepare" {
+    exec = "rosservice call robot2_SetJoints \"{j1: 0, j2: -4.98, j3: 61.91, j4: 0, j5: 33.07, j6: 0}\"";
+    host = "localhost";
+}
+cmd "6-gohome" {
+    exec = "rosservice call robot2_SetJoints \"{j1: 0, j2: 0, j3: 0, j4: 0, j5: 90, j6: 0}\"";
+    host = "localhost";
+}
+cmd "9b-collect-friction-mapping" {
+    exec = "rosrun pnpush_planning collect_friction_mapping.py --surface plywood --cage";
+    host = "localhost";
+}
+cmd "9a-collect-push-dataset-rep" {
+    exec = "rosrun pnpush_planning collect_push_dataset_with_acceleration.py --real  -s rect1  --surface abs --nrep 50";
+    host = "localhost";
+}
+cmd "3-ft" {
+    exec = "rosrun netft_rdt_driver netft_node --address 192.168.125.2 --rate 250";
+    host = "localhost";
+}
+cmd "9f-collect-limitsurface" {
+    auto_respawn = "true";
+    exec = "rosrun pnpush_planning collect_friction_mapping_limitsurface.py --surface abs";
+    host = "localhost";
+}
+cmd "8-show-ft-value" {
+    exec = "rosrun pnpush_planning get_averaged_ft.py";
     host = "localhost";
 }
 cmd "8-show-ft-value" {
@@ -35,45 +68,8 @@ cmd "9c-collect-friction-mapping-fine" {
     exec = "rosrun pnpush_planning collect_friction_mapping_fine.py --surface delrin";
     host = "localhost";
 }
-cmd "4-vicon" {
-    exec = "roslaunch vicon_bridge vicon.launch";
-    host = "localhost";
-}
-cmd "9f-collect-limitsurface" {
-    auto_respawn = "true";
-    exec = "rosrun pnpush_planning collect_friction_mapping_limitsurface.py --surface plywood";
-    host = "localhost";
-}
-cmd "0-matlabpush" {
-    exec = "matlab -nodesktop -nodisplay -nosplash -r \"tic; cd([getenv('PNPUSH_BASE'), '/software']); addpath_pods; addpath_drake; toc; cd ../software/planning/ik_server/; ikTrajServerSocket;\"";
-    host = "localhost";
-}
-cmd "3-ft" {
-    exec = "rosrun netft_rdt_driver netft_node --address 192.168.125.2 --rate 100";
-    host = "localhost";
-}
-cmd "6-goodplace-to-start" {
-    exec = "rosservice call robot2_SetJoints \"{j1: -7.53, j2: 5.8, j3: 31.64, j4: 0, j5: -40, j6: 0}\"";
-    host = "localhost";
-}
-cmd "2-abb" {
-    exec = "roslaunch pnpush_config abb.launch";
-    host = "localhost";
-}
-cmd "9b-collect-friction-mapping" {
-    exec = "rosrun pnpush_planning collect_friction_mapping.py --surface plywood --cage";
-    host = "localhost";
-}
-cmd "8-show-ft-value" {
-    exec = "rosrun pnpush_planning get_averaged_ft.py";
-    host = "localhost";
-}
 cmd "1-perception-virtual" {
     exec = "roslaunch pnpush_config robot_perception.launch have_robot:=false";
-    host = "localhost";
-}
-cmd "0-roscore" {
-    exec = "roscore";
     host = "localhost";
 }
 cmd "9a-collect-push-dataset" {
@@ -81,20 +77,28 @@ cmd "9a-collect-push-dataset" {
     exec = "rosrun pnpush_planning collect_push_dataset_with_acceleration.py --real  -s hex  --surface plywood";
     host = "localhost";
 }
-cmd "9d-collect-friction-mapping-vels" {
-    exec = "rosrun pnpush_planning collect_friction_mapping_vels.py --surface plywood";
-    host = "localhost";
-}
-cmd "6-goprepare" {
-    exec = "rosservice call robot2_SetJoints \"{j1: 0, j2: -4.98, j3: 61.91, j4: 0, j5: 33.07, j6: 0}\"";
-    host = "localhost";
-}
 cmd "5-rviz" {
     exec = "rosrun rviz rviz -d $PNPUSH_BASE/catkin_ws/src/pnpush_config/rviz/rvizconfig.rviz";
     host = "localhost";
 }
-cmd "6-gohome" {
-    exec = "rosservice call robot2_SetJoints \"{j1: 0, j2: 0, j3: 0, j4: 0, j5: 90, j6: 0}\"";
+cmd "2-abb" {
+    exec = "roslaunch pnpush_config abb.launch";
+    host = "localhost";
+}
+cmd "0-roscore" {
+    exec = "roscore";
+    host = "localhost";
+}
+cmd "9d-collect-friction-mapping-vels" {
+    exec = "rosrun pnpush_planning collect_friction_mapping_vels.py --surface plywood";
+    host = "localhost";
+}
+cmd "1-perception-real" {
+    exec = "roslaunch pnpush_config robot_perception.launch";
+    host = "localhost";
+}
+cmd "6-goodplace-to-start" {
+    exec = "rosservice call robot2_SetJoints \"{j1: -17.35, j2: -35.15, j3: 69.13, j4: -29.21, j5: -37.68, j6: 0}\"";
     host = "localhost";
 }
 
