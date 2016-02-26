@@ -25,7 +25,7 @@ def main(argv):
                    
         
     dirname = args[0]
-    filelist = glob.glob("%s/*.bag" % dirname)
+    filelist = sorted(glob.glob("%s/*.bag" % dirname))
     
     plotmotion = opt.plotmotion
     plotfmap = opt.plotfmap

@@ -97,7 +97,7 @@ def main(argv):
             th = np.deg2rad(deg)
             # import pdb; pdb.set_trace()
             if radius == 0:
-                rotdegs = [80]
+                rotdegs = [80, -80]
                 orispeed = 10 # to prevent rotating very quick
             else:
                 rotdegs = rotdegs_default
