@@ -36,7 +36,8 @@ def main(argv):
     i = 0
     s = 0.7
     t = 0
-                        
+
+    vals = []
     for rep in opt.nrep:
         h5filename = 'motion_surface=%s_shape=%s_a=%.0f_v=%.0f_rep=%03d.h5' % (opt.surface_id, shape_id, acc*1000, vel, i, rep)
         # motion_surface=plywood_shape=rect1_a=0_v=20_i=0.000_s=0.700_t=0.000_rep=0000.bag
@@ -47,8 +48,9 @@ def main(argv):
             break
             
         f = h5py.File(filepath, "r")
-        tip_array = f['tip_array'].value
-        tip_array = f['tip_array'].value
-        
+        tip_array = f['tip_pose'].value
+        object_pose = f['object_pose'].value
         f.close()
+        
+        
     
