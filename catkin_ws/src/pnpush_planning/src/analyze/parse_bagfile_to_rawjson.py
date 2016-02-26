@@ -80,22 +80,23 @@ def main(argv):
                 break
         if len(vicon_to_world) > 0: break
                  
+    if len(vicon_to_world) > 0:
+        T_viconworld_to_world = poselist2mat(vicon_to_world)
+        
+        for topic, msg, t in bag.read_messages(topics=['/vicon/StainlessSteel/StainlessSteel']):
+            pose_viconworld = [msg.transform.translation.x,msg.transform.translation.y,msg.transform.translation.z,
+                msg.transform.rotation.x,msg.transform.rotation.y,msg.transform.rotation.z,msg.transform.rotation.w]
+            
+            T_object_to_viconworld = poselist2mat(pose_viconworld)
+            
+            T_object_to_world = np.dot(T_viconworld_to_world, T_object_to_viconworld)
+            
+            object_to_world = mat2poselist(T_object_to_world)
+            yaw = tfm.euler_from_quaternion(object_to_world[3:7])[2]
+            
+            #object_pose_array.append([msg.header.stamp.to_sec()] + object_to_world + [yaw])  # x,y,z, qx,qy,qz,qw, yaw  
+            object_pose_array.append([msg.header.stamp.to_sec()] + object_to_world[0:2] + [yaw]) # x,y,yaw
     
-    T_viconworld_to_world = poselist2mat(vicon_to_world)
-    
-    for topic, msg, t in bag.read_messages(topics=['/vicon/StainlessSteel/StainlessSteel']):
-        pose_viconworld = [msg.transform.translation.x,msg.transform.translation.y,msg.transform.translation.z,
-            msg.transform.rotation.x,msg.transform.rotation.y,msg.transform.rotation.z,msg.transform.rotation.w]
-        
-        T_object_to_viconworld = poselist2mat(pose_viconworld)
-        
-        T_object_to_world = np.dot(T_viconworld_to_world, T_object_to_viconworld)
-        
-        object_to_world = mat2poselist(T_object_to_world)
-        yaw = tfm.euler_from_quaternion(object_to_world[3:7])[2]
-        
-        #object_pose_array.append([msg.header.stamp.to_sec()] + object_to_world + [yaw])  # x,y,z, qx,qy,qz,qw, yaw  
-        object_pose_array.append([msg.header.stamp.to_sec()] + object_to_world[0:2] + [yaw]) # x,y,yaw
     
     if useRRI:
         for topic, msg, t in bag.read_messages(topics=['/robot2_RRICartState']):

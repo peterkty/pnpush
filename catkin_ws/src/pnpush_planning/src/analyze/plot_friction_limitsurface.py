@@ -55,19 +55,23 @@ def main(argv):
     markerstyles = ['', '', '^', 'o']
     markeverys = [1,1,3,3]
     rangex = xrange(0, 360, opt.res)
-    raidus = 0.001
-    degs = xrange(0, 360, 5)
+    raidus = 0.0005
+    degs_default = xrange(0, 360, 5)
     rep = 0
-    radii = [0.06, 0.03, 0]
-    rotdegs_default = np.linspace(0, 300, 11)
+    radii = [0, 0.05]
+    rotdegs_default = np.linspace(0, 80, 21)
      
-    
     
     
     vals = []
     for radius in radii:
+        if radius == 0:
+            degs = [0]
+        else:
+            degs = degs_default
         for deg in degs:  # translation velocity direction
             th = np.deg2rad(deg)
+            
             if radius == 0:
                 rotdegs = [10]
             else:
@@ -82,15 +86,16 @@ def main(argv):
                 
                 vel_direc = [np.array(end_pos) - np.array(start_pos), 2*rotth]
             
-                h5filename = 'record_surface=%s_shape=%s_a=%.0f_v=%.0f_deg=%d_rotdeg=%d_radius=%.2f_rep=%03d.h5' % (opt.surface_id, shape_id, acc*1000, vel, deg, rotdeg, radius, rep)
+                h5filename = 'record_surface=%s_shape=%s_a=%.0f_v=%.0f_deg=%d_rotdeg=%d_radius=%.3f_rep=%03d.h5' % (opt.surface_id, shape_id, acc*1000, vel, deg, rotdeg, radius, rep)
                 
                 filepath = '%s/%s/%s/%s' % (dir_to_friction_scan_ls,opt.surface_id,shape_id,h5filename)
+                print 'processing', filepath
                 if not os.path.isfile(filepath):
-                    print 'not exists', filepath
+                    print 'not exists'
                     break
                     
                 f = h5py.File(filepath, "r")
-                tip_array = f['tip_array'].value
+                tip_array = f['tip_pose'].value
                 ft_wrench = f['ft_wrench'].value
                 f.close()
                 
@@ -99,9 +104,8 @@ def main(argv):
                 for i, tip_pos  in enumerate(tip_array):
                     if np.linalg.norm(np.array(tip_pos[1:3]) - np.array(center)) < raidus:
                         ft_i = int(i * scale)
-                        vals.append(list(ft_wrench[ft_i][1:3]) + list(ft_wrench[ft_i][5:6]))  # force x y and torque in z
+                        vals.append(list(ft_wrench[ft_i][1:3]) + list([ft_wrench[ft_i][3]]))  # force x y and torque in z
     
-    #import pdb; pdb.set_trace()
     
     from mpl_toolkits.mplot3d import Axes3D
     
@@ -112,8 +116,13 @@ def main(argv):
     #axes = plt.gca()
     axes.grid(True, linewidth = 0.25, color='grey')
     axes.set_axisbelow(True)
+    
+    #import pdb; pdb.set_trace()
+    #vals = vals[0::10]
     (x,y,z) = zip(*vals)
-    axes.scatter(x, y, z, c='k', marker='.')
+    axes.scatter(x, y, z, c=y, marker='.')
+    
+    axes.scatter(x, y, -np.array(z), c=y, marker='.')
         
     #plt.errorbar(rangex, diffs, color='k',  fmt=linestyles[inds]+markerstyles[inds], 
     # label=surface, markevery = markeverys[inds], markersize=5, linewidth=0.5)

@@ -77,9 +77,8 @@ def main(argv):
     vel = 20
     degs_default = xrange(0, 360, 5)
     rep = 0
-    #radius = 0.06
-    radii = [0.03, 0.015, 0]
-    rotdegs_default = np.linspace(0, 80, 11)
+    radii = [0, 0.05]
+    rotdegs_default = np.linspace(-80, 80, 21)
      
     dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/friction_scan_limitsurface/%s/%s/' % (opt.surface_id,shape_id)
     helper.make_sure_path_exists(dir_save_bagfile)
@@ -96,7 +95,7 @@ def main(argv):
         for deg in degs:  # translation velocity direction
             th = np.deg2rad(deg)
             if radius == 0:
-                rotdegs = [10]
+                rotdegs = [80]
                 setSpeed(tcp=vel, ori=10) # to prevent rotating very quick
             else:
                 rotdegs = rotdegs_default
@@ -109,7 +108,7 @@ def main(argv):
                 start_pos = [np.cos(th)* radius + center[0], np.sin(th)* radius + center[1]]
                 end_pos = [np.cos(th+np.pi)* radius + center[0], np.sin(th+np.pi)* radius + center[1]]
             
-                bagfilename = 'record_surface=%s_shape=%s_a=%.0f_v=%.0f_deg=%d_rotdeg=%d_radius=%.2f_rep=%03d.bag' % (opt.surface_id, shape_id, acc*1000, vel, deg, rotdeg, radius, rep)
+                bagfilename = 'record_surface=%s_shape=%s_a=%.0f_v=%.0f_deg=%d_rotdeg=%d_radius=%.3f_rep=%03d.bag' % (opt.surface_id, shape_id, acc*1000, vel, deg, rotdeg, radius, rep)
                 print bagfilename
                 bagfilepath = dir_save_bagfile+bagfilename
                 
