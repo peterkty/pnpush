@@ -87,6 +87,7 @@ def main(argv):
     
     cnt = 0 
     cntlimit = 100
+    orispeed = 10
     for radius in radii:
         if radius == 0:
             degs = [0]
@@ -94,12 +95,13 @@ def main(argv):
             degs = degs_default
         for deg in degs:  # translation velocity direction
             th = np.deg2rad(deg)
+            # import pdb; pdb.set_trace()
             if radius == 0:
                 rotdegs = [80]
-                setSpeed(tcp=vel, ori=10) # to prevent rotating very quick
+                orispeed = 10 # to prevent rotating very quick
             else:
                 rotdegs = rotdegs_default
-                setSpeed(tcp=vel, ori=1000)
+                orispeed = 1000
                 
             for rotdeg in rotdegs:  # rotation velocity direction
                 rotth = np.deg2rad(rotdeg)
@@ -116,13 +118,13 @@ def main(argv):
                     #print bagfilepath, 'exits', 'skip'
                     continue  
                 
-                setSpeed(tcp=global_slow_speed, ori=1000)
+                setSpeed(tcp=global_slow_speed, ori=orispeed)
                 setCart([start_pos[0], start_pos[1], z], start_ori)
                 setCart([start_pos[0], start_pos[1], z_place], start_ori)
                 setZero()
                 wait_for_ft_calib()
                 setCart([start_pos[0], start_pos[1], z], start_ori)
-                setSpeed(tcp=vel, ori=1000)
+                setSpeed(tcp=vel, ori=orispeed)
 
                 rosbag_proc = helper.start_ros_bag(bagfilename, topics, dir_save_bagfile)
                 setCart([end_pos[0], end_pos[1], z], end_ori)
