@@ -20,7 +20,7 @@ def vizBlock(pose, mesh, frame_id):
     global vizpub
     meshmarker = createMeshMarker(mesh, 
                  offset=tuple(pose[0:3]), rgba=(0.5,0.5,0.5,1),
-                 orientation=tuple(pose[3:7]), frame_id=frame_id)
+                 orientation=tuple(pose[3:7]), frame_id=frame_id, marker_id = 2)
     vizpub.publish(meshmarker)
 
 import optparse
