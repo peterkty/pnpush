@@ -95,7 +95,7 @@ def main(argv):
         for deg in degs:  # translation velocity direction
             th = np.deg2rad(deg)
             if radius == 0:
-                rotdegs = [80]
+                rotdegs = [80, -80]
                 setSpeed(tcp=vel, ori=10) # to prevent rotating very quick
             else:
                 rotdegs = rotdegs_default
