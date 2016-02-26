@@ -35,6 +35,8 @@ def main(argv):
     
     figfname_png = dir_to_friction_scan_ls + '/friction_limitsurface_%s.png' % opt.surface_id
     figfname_pdf = dir_to_friction_scan_ls + '/friction_limitsurface_%s.pdf' % opt.surface_id
+    figfname_png_2d = dir_to_friction_scan_ls + '/friction_limitsurface_%s_2d.png' % opt.surface_id
+    figfname_pdf_2d = dir_to_friction_scan_ls + '/friction_limitsurface_%s_2d.pdf' % opt.surface_id
     ft_wrench = []
     
     min_x, max_x, min_y, max_y = opt.limits
@@ -55,15 +57,21 @@ def main(argv):
     markerstyles = ['', '', '^', 'o']
     markeverys = [1,1,3,3]
     rangex = xrange(0, 360, opt.res)
-    raidus = 0.0005
+    thres = 0.002
     degs_default = xrange(0, 360, 5)
     rep = 0
     radii = [0, 0.05]
-    rotdegs_default = np.linspace(0, 80, 21)
+    rotdegs_default = np.linspace(-80, 80, 21)
      
+    #hack
+    #degs_default = [0, 180]
+    #radii = [0, 0.05]
+    #rotdegs_default = np.linspace(-64, 64, 17)
     
     
     vals = []
+    vals_y_extreme = []
+    vals_x_extreme = []
     for radius in radii:
         if radius == 0:
             degs = [0]
@@ -73,7 +81,7 @@ def main(argv):
             th = np.deg2rad(deg)
             
             if radius == 0:
-                rotdegs = [10]
+                rotdegs = [80, -80]
             else:
                 rotdegs = rotdegs_default
                 
@@ -102,10 +110,18 @@ def main(argv):
                 scale = (len(ft_wrench)*1.0/len(tip_array))
                 
                 for i, tip_pos  in enumerate(tip_array):
-                    if np.linalg.norm(np.array(tip_pos[1:3]) - np.array(center)) < raidus:
-                        ft_i = int(i * scale)
-                        vals.append(list(ft_wrench[ft_i][1:3]) + list([ft_wrench[ft_i][3]]))  # force x y and torque in z
-    
+                    if radius == 0: # use the center part only
+                        if np.linalg.norm(np.array(tip_pos[3]) - np.array(0)) < np.deg2rad(10):
+                            ft_i = int(i * scale)
+                            vals.append(list(ft_wrench[ft_i][1:3]) + list([ft_wrench[ft_i][3]]))  # force x y and torque in z
+                            vals_y_extreme.append(np.abs(ft_wrench[ft_i][3]))
+                    else:
+                        if np.linalg.norm(np.array(tip_pos[1:3]) - np.array(center)) < thres and np.linalg.norm(np.array(tip_pos[3]) - np.array(0)) < np.deg2rad(1):
+                            ft_i = int(i * scale)
+                            vals.append(list(ft_wrench[ft_i][1:3]) + list([ft_wrench[ft_i][3]]))  # force x y and torque in z
+                            if np.allclose(rotdeg, 0):
+                                vals_x_extreme.append(np.linalg.norm(ft_wrench[ft_i][1:3]))
+                            #print ft_wrench[ft_i][0] - tip_pos[0]
     
     from mpl_toolkits.mplot3d import Axes3D
     
@@ -120,12 +136,8 @@ def main(argv):
     #import pdb; pdb.set_trace()
     #vals = vals[0::10]
     (x,y,z) = zip(*vals)
-    axes.scatter(x, y, z, c=y, marker='.')
+    axes.scatter(x, y, z, c=z, marker='.')
     
-    axes.scatter(x, y, -np.array(z), c=y, marker='.')
-        
-    #plt.errorbar(rangex, diffs, color='k',  fmt=linestyles[inds]+markerstyles[inds], 
-    # label=surface, markevery = markeverys[inds], markersize=5, linewidth=0.5)
 
     plt.tight_layout()
     axes.set_xlabel('force x')
@@ -139,6 +151,65 @@ def main(argv):
                 wspace=None, hspace=None)
     plt.savefig(figfname_png)
     plt.savefig(figfname_pdf)
+    plt.show()
+    
+    
+    
+    # plot just 2d
+    
+    
+    fig = plt.figure()
+    axes = plt.gca()
+    from latexify import latexify; latexify(scale = 2)
+    
+    ######
+    from matplotlib.patches import Ellipse
+    
+    w = np.average(vals_x_extreme)*2
+    h = np.average(vals_y_extreme)*2
+    stdw = np.std(vals_x_extreme)*2
+    stdh = np.std(vals_y_extreme)*2
+    
+    meane = Ellipse(xy=(0,0), width=w, height=h, angle=0, zorder=2)
+    ue = Ellipse(xy=(0,0), width=w+stdw, height=h+stdh, angle=0, zorder=0)
+    le = Ellipse(xy=(0,0), width=w-stdw, height=h-stdh, angle=0, zorder=1)
+    
+    axes.add_artist(ue)
+    ue.set_alpha(0.2)
+    ue.set_facecolor((0,0,0.5))
+    
+    axes.add_artist(le)
+    le.set_alpha(1)
+    le.set_facecolor((1,1,1))
+    
+    axes.add_artist(meane)
+    meane.set_alpha(1)
+    meane.set_facecolor('none')
+    ##########
+    
+    
+    
+    (x,y,z) = zip(*vals)
+    plt.scatter(x, z, c='k', marker='.', zorder=3)
+    axes.set_xlabel('force x')
+    axes.set_ylabel('moment')
+    plt.tick_params(
+    axis='x',          # changes apply to the x-axis
+    which='both',      # both major and minor ticks are affected
+    bottom='off',      # ticks along the bottom edge are off
+    top='off'         # ticks along the top edge are off
+    )
+    plt.tick_params(
+    axis='y',          # changes apply to the x-axis
+    which='both',      # both major and minor ticks are affected
+    bottom='off',      # ticks along the bottom edge are off
+    top='off'         # ticks along the top edge are off
+    )
+    
+    
+    
+    plt.savefig(figfname_png_2d)
+    plt.savefig(figfname_pdf_2d)
     plt.show()
     
 

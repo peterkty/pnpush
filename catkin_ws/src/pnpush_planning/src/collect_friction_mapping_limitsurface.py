@@ -99,6 +99,8 @@ def main(argv):
             if radius == 0:
                 rotdegs = [80, -80]
                 orispeed = 10 # to prevent rotating very quick
+            elif deg in [0, 90, 180, 270]:
+                rotdegs = np.linspace(-88, 88, 45)
             else:
                 rotdegs = rotdegs_default
                 orispeed = 1000
