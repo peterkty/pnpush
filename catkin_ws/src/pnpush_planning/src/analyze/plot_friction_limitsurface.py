@@ -62,9 +62,9 @@ def main(argv):
     rep = 0
     radii = [0, 0.05]
     rotdegs_default = np.linspace(-80, 80, 21)
-     
+      
     #hack
-    #degs_default = [0, 180]
+    degs_default = [0, 180]
     #radii = [0, 0.05]
     #rotdegs_default = np.linspace(-64, 64, 17)
     
@@ -82,6 +82,8 @@ def main(argv):
             
             if radius == 0:
                 rotdegs = [80, -80]
+            elif deg in [0, 90, 180, 270]:
+                rotdegs = np.linspace(-88, 88, 45)
             else:
                 rotdegs = rotdegs_default
                 
@@ -206,6 +208,8 @@ def main(argv):
     top='off'         # ticks along the top edge are off
     )
     
+    plt.subplots_adjust(left=None, bottom=0.13, right=None, top=None,
+                wspace=None, hspace=None)
     
     
     plt.savefig(figfname_png_2d)
