@@ -75,9 +75,9 @@ def main(argv):
     range_x = np.linspace(max_x, min_x, 3)
     acc = 0
     vel = 20
-    degs_default = [0, 90, 180, 270]# + list(xrange(0, 360, 5))
+    degs_default = [0, 180] + list(xrange(0, 360, 5))
     rep = 0
-    radii = [0, 0.05]
+    radii = [0, 0.0125 , 0.025, 0.05]
     rotdegs_default = np.linspace(-80, 80, 21)
      
     dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/friction_scan_limitsurface/%s/%s/' % (opt.surface_id,shape_id)

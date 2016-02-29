@@ -40,11 +40,11 @@ cmd "6-gohome" {
     host = "localhost";
 }
 cmd "9b-collect-friction-mapping" {
-    exec = "rosrun pnpush_planning collect_friction_mapping.py --surface plywood --cage";
+    exec = "rosrun pnpush_planning collect_friction_mapping.py --surface abs --cage";
     host = "localhost";
 }
 cmd "9a-collect-push-dataset-rep" {
-    exec = "rosrun pnpush_planning collect_push_dataset_with_acceleration.py --real  -s rect1  --surface abs --nrep 50";
+    exec = "rosrun pnpush_planning collect_push_dataset_with_acceleration.py --real  -s rect1  --surface abs --nrep 2500";
     host = "localhost";
 }
 cmd "3-ft" {

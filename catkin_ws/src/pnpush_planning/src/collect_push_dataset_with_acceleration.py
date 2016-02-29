@@ -48,9 +48,7 @@ globalacc = 1.3             # big number means no limit, in m/s^2
 global_slow_vel = 30
 ori = [0, 0, 1, 0]
 center_world = [0.375, 0, 0]
-global_slow_vel
 dist_before_contact = 0.03 
-dist_after_contact = 0.05
 skip_when_exists = True
 listener = None
 hasRobot = True
@@ -169,7 +167,7 @@ def polyapprox_check_collision(shape, pos_start_probe_object, probe_radius):
     else:
         return False
 
-def run_it(accelerations, speeds, shape, nside, side_params, angles, nrep, shape_type, probe_radius, dir_save_bagfile, opt):
+def run_it(accelerations, speeds, shape, nside, side_params, angles, nrep, shape_type, probe_radius, dir_save_bagfile, dist_after_contact, opt):
     # hack to restart the script to prevent ros network issues.
     limit = 100
     cnt = 0
@@ -250,17 +248,18 @@ def run_it(accelerations, speeds, shape, nside, side_params, angles, nrep, shape
                         start_pos[2] = z
                         setCart(start_pos,ori)
                         
-                        rosbag_proc = helper.start_ros_bag(bagfilename, topics, dir_save_bagfile)
-                        rospy.sleep(0.5)
+                        rosbag_proc = helper.start_ros_bag(bagfilename, topics, dir_save_bagfile) # this should move after midpos
+                        rospy.sleep(0.5) # this should move after midpos
                         
-                        end_pos = copy.deepcopy(pos_end_probe_world)
-                        end_pos[2] = z
                         
                         setSpeed(tcp=global_slow_vel, ori=1000) # some slow speed
                         mid_pos = copy.deepcopy(pos_contact_probe_world)
                         mid_pos[2] = z
                         setCart(mid_pos,ori)
                         
+                        
+                        end_pos = copy.deepcopy(pos_end_probe_world)
+                        end_pos[2] = z
                         if acc == 0:  # constant speed
                             setAcc(acc=globalmaxacc, deacc=globalmaxacc)
                             setSpeed(tcp=speeds[cnt_acc], ori=1000)
@@ -280,7 +279,8 @@ def run_it(accelerations, speeds, shape, nside, side_params, angles, nrep, shape
                         setCart(end_pos,ori)
                         
                         distance_obj_center = np.linalg.norm(np.array(pos_center_obj_world)-np.array(center_world))
-                        allowed_distance = 0.06   #could change depending on the object considered
+                        #allowed_distance = 0.06   #could change depending on the object considered
+                        allowed_distance = 0.0   #could change depending on the object considered
                         
                         # recover
                         recover(obj_slot, distance_obj_center > allowed_distance)
@@ -339,7 +339,7 @@ def main(argv):
     z_recover = 0.012 + z  # the height for recovery 
     zup = z + 0.04            # the prepare and end height
     probe_radius = probe_db.db[opt.probe_id]['radius']
-
+    
 
     # parameters about object
     shape_id = opt.shape_id
@@ -354,6 +354,7 @@ def main(argv):
     # space for the experiment
     real_exp = opt.real_exp
     rep_label = ''
+    dist_after_contact = 0.05
     if real_exp:
         if opt.nrep == 1:
             accelerations = [0.1, 0.2, 0.5, 0.75, 1, 1.5, 2, 2.5]
@@ -369,6 +370,8 @@ def main(argv):
             
             angles = np.linspace(-pi/180.0*80.0, pi/180*80, 9)
             nside = len(shape)
+            
+            
         else:
             # set the nominal parameters
             side_params = [0.7]
@@ -376,6 +379,8 @@ def main(argv):
             speeds = [20]
             accelerations = []
             nside = 1
+            
+            dist_after_contact = 0.15
             #shape = shape[0:1]  # only do it on one side
             
             # what dimension we want to explore
@@ -413,7 +418,7 @@ def main(argv):
     helper.make_sure_path_exists(dir_save_bagfile)
     
     run_it(accelerations, speeds, shape, nside, side_params, angles, opt.nrep, 
-          shape_type, probe_radius, dir_save_bagfile, opt)
+          shape_type, probe_radius, dir_save_bagfile, dist_after_contact, opt)
 
 
 if __name__=='__main__':
