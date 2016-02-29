@@ -57,10 +57,10 @@ def main(argv):
     markerstyles = ['', '', '^', 'o']
     markeverys = [1,1,3,3]
     rangex = xrange(0, 360, opt.res)
-    thres = 0.002
+    thres = 0.001
     degs_default = xrange(0, 360, 5)
     rep = 0
-    radii = [0, 0.05]
+    radii = [0, 0.0125,0.025, 0.05]
     rotdegs_default = np.linspace(-80, 80, 21)
       
     #hack
@@ -113,7 +113,7 @@ def main(argv):
                 
                 for i, tip_pos  in enumerate(tip_array):
                     if radius == 0: # use the center part only
-                        if np.linalg.norm(np.array(tip_pos[3]) - np.array(0)) < np.deg2rad(10):
+                        if np.linalg.norm(np.array(tip_pos[3]) - np.array(0)) < np.deg2rad(1):
                             ft_i = int(i * scale)
                             vals.append(list(ft_wrench[ft_i][1:3]) + list([ft_wrench[ft_i][3]]))  # force x y and torque in z
                             vals_y_extreme.append(np.abs(ft_wrench[ft_i][3]))
@@ -125,44 +125,42 @@ def main(argv):
                                 vals_x_extreme.append(np.linalg.norm(ft_wrench[ft_i][1:3]))
                             #print ft_wrench[ft_i][0] - tip_pos[0]
     
-    from mpl_toolkits.mplot3d import Axes3D
-    
-    from latexify import latexify; latexify(scale = 2)
-    
-    fig = plt.figure()
-    axes = fig.add_subplot(111, projection='3d')
-    #axes = plt.gca()
-    axes.grid(True, linewidth = 0.25, color='grey')
-    axes.set_axisbelow(True)
-    
-    #import pdb; pdb.set_trace()
-    #vals = vals[0::10]
-    (x,y,z) = zip(*vals)
-    axes.scatter(x, y, z, c=z, marker='.')
-    
-
-    plt.tight_layout()
-    axes.set_xlabel('force x')
-    axes.set_ylabel('force y')
-    axes.set_zlabel('moment')
-        
-    #legend = plt.legend(loc='lower right', ncol = 4)
-    
-    #legend.get_frame().set_linewidth(0.25)
-    plt.subplots_adjust(left=0.12, bottom=0.13, right=None, top=None,
-                wspace=None, hspace=None)
-    plt.savefig(figfname_png)
-    plt.savefig(figfname_pdf)
-    plt.show()
+    # from mpl_toolkits.mplot3d import Axes3D
+    # 
+    # from latexify import latexify; latexify(scale = 2)
+    # 
+    # fig = plt.figure()
+    # axes = fig.add_subplot(111, projection='3d')
+    # #axes = plt.gca()
+    # axes.grid(True, linewidth = 0.25, color='grey')
+    # axes.set_axisbelow(True)
+    # 
+    # (x,y,z) = zip(*vals)
+    # axes.scatter(x, y, z, c=z, marker='.')
+    # 
+# 
+    # #plt.tight_layout()
+    # axes.set_xlabel('force x')
+    # axes.set_ylabel('force y')
+    # axes.set_zlabel('moment')
+        # 
+    # #legend = plt.legend(loc='lower right', ncol = 4)
+    # 
+    # #legend.get_frame().set_linewidth(0.25)
+    # plt.subplots_adjust(left=0.12, bottom=0.13, right=None, top=None,
+                # wspace=None, hspace=None)
+    # plt.savefig(figfname_png)
+    # plt.savefig(figfname_pdf)
+    # plt.show()
     
     
     
     # plot just 2d
     
     
+    from latexify import latexify; latexify(scale = 1, fontsize = 14)
     fig = plt.figure()
     axes = plt.gca()
-    from latexify import latexify; latexify(scale = 2)
     
     ######
     from matplotlib.patches import Ellipse
@@ -173,16 +171,18 @@ def main(argv):
     stdh = np.std(vals_y_extreme)*2
     
     meane = Ellipse(xy=(0,0), width=w, height=h, angle=0, zorder=2)
-    ue = Ellipse(xy=(0,0), width=w+stdw, height=h+stdh, angle=0, zorder=0)
-    le = Ellipse(xy=(0,0), width=w-stdw, height=h-stdh, angle=0, zorder=1)
+    ue = Ellipse(xy=(0,0), width=w+stdw*2, height=h+stdh*2, angle=0, zorder=0)
+    le = Ellipse(xy=(0,0), width=w-stdw*2, height=h-stdh*2, angle=0, zorder=1)
     
     axes.add_artist(ue)
     ue.set_alpha(0.2)
     ue.set_facecolor((0,0,0.5))
+    ue.set_edgecolor('none')
     
     axes.add_artist(le)
     le.set_alpha(1)
     le.set_facecolor((1,1,1))
+    le.set_edgecolor('none')
     
     axes.add_artist(meane)
     meane.set_alpha(1)
@@ -192,29 +192,37 @@ def main(argv):
     
     
     (x,y,z) = zip(*vals)
-    plt.scatter(x, z, c='k', marker='.', zorder=3)
-    axes.set_xlabel('force x')
-    axes.set_ylabel('moment')
-    plt.tick_params(
-    axis='x',          # changes apply to the x-axis
-    which='both',      # both major and minor ticks are affected
-    bottom='off',      # ticks along the bottom edge are off
-    top='off'         # ticks along the top edge are off
-    )
-    plt.tick_params(
-    axis='y',          # changes apply to the x-axis
-    which='both',      # both major and minor ticks are affected
-    bottom='off',      # ticks along the bottom edge are off
-    top='off'         # ticks along the top edge are off
-    )
+    plt.scatter(x, z, s=0.01, marker='x', c='k', zorder=3)
+    axes.set_xlabel('$f_x$ (N)')
+    # if opt.surface_id != 'plywood':
+    axes.set_ylabel('$m$ (N $\cdot$ m)')
+    # plt.tick_params(
+    # axis='x',          # changes apply to the x-axis
+    # which='both',      # both major and minor ticks are affected
+    # bottom='off',      # ticks along the bottom edge are off
+    # top='off'         # ticks along the top edge are off
+    # )
+    # plt.tick_params(
+    # axis='y',          # changes apply to the x-axis
+    # which='both',      # both major and minor ticks are affected
+    # bottom='off',      # ticks along the bottom edge are off
+    # top='off'         # ticks along the top edge are off
+    # )
     
-    plt.subplots_adjust(left=None, bottom=0.13, right=None, top=None,
+    plt.locator_params(axis='both',nbins=4)
+    plt.subplots_adjust(left=0.23, bottom=0.24, right=None, top=None,
                 wspace=None, hspace=None)
     
-    
-    plt.savefig(figfname_png_2d)
+    # if opt.surface_id == 'plywood':
+        # #axes.get_yaxis().set_visible(False)
+        # for xlabel_i in axes.get_yticklabels():
+            # xlabel_i.set_fontsize(0.0)
+            # xlabel_i.set_visible(False)
+            
+    plt.axis([-5, 5, -0.2, 0.2])
+    plt.savefig(figfname_png_2d, dpi = 300)
     plt.savefig(figfname_pdf_2d)
-    plt.show()
+    #plt.show()
     
 
 if __name__=='__main__':
