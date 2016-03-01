@@ -30,19 +30,25 @@ def main(argv):
     plotmotion = opt.plotmotion
     plotfmap = opt.plotfmap
     
-    for bag_filepath in filelist:
+    nthread = 7
+    for i, bag_filepath in enumerate(filelist):
         if not os.path.exists(bag_filepath.replace('bag','h5')):
             proc = subprocess.Popen('rosrun pnpush_planning parse_bagfile_to_rawjson.py %s --nojson' % (bag_filepath) , shell=True)
-            proc.wait()
-            
+            if i % nthread == nthread-1:
+                proc.wait()
+    
+    for i, bag_filepath in enumerate(filelist):            
         if plotmotion and not os.path.exists(bag_filepath.replace('bag','png')):
             proc = subprocess.Popen('rosrun pnpush_planning plot_raw_h5.py %s snapshots' % (bag_filepath.replace('.bag', '.h5')) , shell=True)
-            proc.wait()
+            if i % nthread == nthread-1:
+                proc.wait()
 
+    for i, bag_filepath in enumerate(filelist):  
         if plotfmap and not os.path.exists(bag_filepath.replace('.bag','_fmap.png')):
             proc = subprocess.Popen('rosrun pnpush_planning plot_friction_map.py %s --avgcolorbar %f %f' % 
                        (bag_filepath.replace('.bag', '.h5'), opt.avgcolorbar[0], opt.avgcolorbar[1]) , shell=True)
-            proc.wait()
+            if i % nthread == nthread-1:
+                proc.wait()
 
 if __name__=='__main__':
     main(sys.argv)
