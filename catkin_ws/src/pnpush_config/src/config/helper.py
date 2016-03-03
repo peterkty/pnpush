@@ -32,6 +32,7 @@ def mat2poselist(mat):
     return pos.tolist() + quat.tolist()
 
 def getfield_from_filename(figname, field):
+    figname = os.path.basename(figname)
     pairs = figname.split('_')
     for p in pairs:
         tmp = p.split('=')

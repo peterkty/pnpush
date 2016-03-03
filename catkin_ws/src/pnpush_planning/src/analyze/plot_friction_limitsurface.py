@@ -60,7 +60,7 @@ def main(argv):
     thres = 0.001
     degs_default = xrange(0, 360, 5)
     rep = 0
-    radii = [0, 0.0125,0.025, 0.05]
+    radii = [0, 0.0125, 0.025, 0.05]
     rotdegs_default = np.linspace(-80, 80, 21)
       
     #hack
@@ -219,7 +219,10 @@ def main(argv):
             # xlabel_i.set_fontsize(0.0)
             # xlabel_i.set_visible(False)
             
-    plt.axis([-5, 5, -0.2, 0.2])
+    if opt.surface_id == 'pu':
+        plt.axis([-20, 20, -1.5, 1.5])
+    else:
+        plt.axis([-5, 5, -0.2, 0.2])
     plt.savefig(figfname_png_2d, dpi = 300)
     plt.savefig(figfname_pdf_2d)
     #plt.show()
