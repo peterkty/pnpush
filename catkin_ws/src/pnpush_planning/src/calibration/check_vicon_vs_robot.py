@@ -56,7 +56,7 @@ zs = []
 xt = []
 yt = []
 zt = []
-setSpeed(300, 60)
+setSpeed(100, 60)
 setAcc(acc=globalacc, deacc=globalacc)
 
 for x in np.linspace(limits[0],limits[1], nseg[0]):
