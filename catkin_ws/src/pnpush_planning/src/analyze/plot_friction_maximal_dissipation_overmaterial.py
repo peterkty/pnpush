@@ -55,7 +55,7 @@ def main(argv):
     rangex = xrange(0, 360, opt.res)
     raidus = 0.001
     
-    from latexify import latexify; latexify(scale = 2)
+    from latexify import latexify; latexify(scale = 2, fig_height=1.5)
     axes = plt.gca()
     axes.grid(True, linewidth = 0.25, color='grey')
     axes.set_axisbelow(True)
@@ -106,12 +106,12 @@ def main(argv):
 
     plt.tight_layout()
     axes.set_xlabel('sliding direction in angles (deg)')
-    axes.set_ylabel('$\Delta P_i$ (m*N/s)')
+    axes.set_ylabel('$\Delta P$ (m*N/s)')
         
     legend = plt.legend(loc='lower right', ncol = 4)
     
     legend.get_frame().set_linewidth(0.25)
-    plt.subplots_adjust(left=0.12, bottom=0.13, right=None, top=None,
+    plt.subplots_adjust(left=0.12, bottom=0.19, right=None, top=None,
                 wspace=None, hspace=None)
     plt.savefig(figfname_png)
     plt.savefig(figfname_pdf)

@@ -32,8 +32,10 @@ def plot(data, shape_id, figfname):
     fig.set_size_inches(7,7)
     
     v = int(getfield_from_filename(os.path.basename(figfname), 'v'))
-    a = int(getfield_from_filename(os.path.basename(figfname), 'a'))
-    
+    try:
+        a = int(getfield_from_filename(os.path.basename(figfname), 'a'))
+    except:
+        a = 0
     
     if a!=0:
         sub = int((2500.0**2) * 2 /(a**2))
@@ -93,7 +95,9 @@ def plot(data, shape_id, figfname):
         ax.add_patch(obj)
     
     # add the probes as circle
-    r = (range(0, len(tip_pose), sub)) + [len(tip_pose)-1]
+    r = []
+    if len(tip_pose) > 0:
+        r = (range(0, len(tip_pose), sub)) + [len(tip_pose)-1]
     for i in r:
         tip_pose_0 = np.dot(invT0, tip_pose[i][1:3].tolist()+[0,1])
         if i == 0:
@@ -181,6 +185,8 @@ def main(argv):
     
     figname = h5_filepath.replace('.h5', '.png')
     shape_id = getfield_from_filename(figname, 'shape')
+    if shape_id == 'butt': 
+        shape_id = 'butter'
     if choice == 'snapshots':
         plot(data, shape_id, figname)
     elif choice == 'forceprofile':

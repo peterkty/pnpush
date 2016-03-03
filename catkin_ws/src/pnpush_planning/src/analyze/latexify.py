@@ -29,11 +29,13 @@ def latexify(fig_width=None, fig_height=None, columns=1, fontsize=7, scale = 1):
         golden_mean = (sqrt(5)-1.0)/2.0    # Aesthetic ratio
         fig_height = fig_width*golden_mean # height in inches
 
-    MAX_HEIGHT_INCHES = 8.0
-    if fig_height > MAX_HEIGHT_INCHES:
-        print("WARNING: fig_height too large:" + fig_height + 
-              "so will reduce to" + MAX_HEIGHT_INCHES + "inches.")
-        fig_height = MAX_HEIGHT_INCHES
+    fig_height *= scale
+    
+    #MAX_HEIGHT_INCHES = 8.0
+    # if fig_height > MAX_HEIGHT_INCHES:
+        # print("WARNING: fig_height too large:" + fig_height + 
+              # "so will reduce to" + MAX_HEIGHT_INCHES + "inches.")
+        # fig_height = MAX_HEIGHT_INCHES
         
     params = {'backend': 'ps',
               'text.latex.preamble': ['\usepackage{gensymb}'],

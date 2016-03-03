@@ -49,6 +49,8 @@ def main(argv):
                       help='To output h5 or not. ', default=True)
     parser.add_option('', '--noh5', action="store_true", dest='h5', 
                       help='To output h5 or not. ', default=True)
+    parser.add_option('', '--norri', action="store_false", dest='rri', 
+                      help='No RRI ', default=True)
   
     (opt, args) = parser.parse_args()
     if len(args) < 1:  # no bagfile name
@@ -98,7 +100,7 @@ def main(argv):
             object_pose_array.append([msg.header.stamp.to_sec()] + object_to_world[0:2] + [yaw]) # x,y,yaw
     
     
-    if useRRI:
+    if opt.rri:
         for topic, msg, t in bag.read_messages(topics=['/robot2_RRICartState']):
             rpy = tfm.euler_from_matrix(
             np.dot(tfm.inverse_matrix(tfm.euler_matrix(-np.pi,0,-np.pi)), 
@@ -107,7 +109,15 @@ def main(argv):
             
             tip_array.append([msg.header.stamp.to_sec(), 
                 msg.position[0]/1000,msg.position[1]/1000, rpy[2]])  # x,y,theta_yaw
-
+    else:
+                
+        for topic, msg, t in bag.read_messages(topics=['/robot2_CartesianLog']):
+            rpy = tfm.euler_from_matrix(
+            np.dot(tfm.inverse_matrix(tfm.euler_matrix(-np.pi,0,-np.pi)), 
+            tfm.quaternion_matrix([msg.qx,msg.qy,msg.qz,msg.q0])))
+            
+            tip_array.append([msg.timeStamp, 
+                msg.x/1000,msg.y/1000,rpy[2]])
         
     for topic, msg, t in bag.read_messages(topics=['/netft_data']):
         ft = ftmsg2listandflip(msg)

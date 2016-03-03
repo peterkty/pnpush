@@ -20,6 +20,8 @@ def main(argv):
                       help='Do the friction map plotting. ', default=False)
     parser.add_option('', '--avgcolorbar', action="store", type='float', dest='avgcolorbar', 
                       help='Color bar', nargs=2, default=(0,1))
+    parser.add_option('', '--norri', action="store_false", dest='rri', 
+                      help='No RRI ', default=True)
   
     (opt, args) = parser.parse_args()
                    
@@ -31,9 +33,14 @@ def main(argv):
     plotfmap = opt.plotfmap
     
     nthread = 7
+    
+    if opt.rri:
+        rri = ''
+    else:
+        rri = '--norri' 
     for i, bag_filepath in enumerate(filelist):
         if not os.path.exists(bag_filepath.replace('bag','h5')):
-            proc = subprocess.Popen('rosrun pnpush_planning parse_bagfile_to_rawjson.py %s --nojson' % (bag_filepath) , shell=True)
+            proc = subprocess.Popen('rosrun pnpush_planning parse_bagfile_to_rawjson.py %s --nojson %s' % (bag_filepath, rri) , shell=True)
             if i % nthread == nthread-1:
                 proc.wait()
     

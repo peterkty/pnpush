@@ -153,6 +153,11 @@ def main(argv):
         n, bins, patches= ax.hist(np.array(all_valss[i])/opt.N, bins, normed=1, histtype='stepfilled', 
                  facecolor='none', edgecolor=colors[i], label=s, alpha=0)
         
+        #import pdb; pdb.set_trace()
+        print 'mean:', np.mean(all_valss[i])/opt.N
+        print 'std:', np.std(all_valss[i])/opt.N
+        print 'std (%):', np.std(all_valss[i])/ np.mean(all_valss[i]) * 100
+        
         bincenters = 0.5*(bins[1:]+bins[:-1])
         # add a 'best fit' line for the normal PDF
         #y = mlab.normpdf( bincenters, mu, sigma)
@@ -165,7 +170,7 @@ def main(argv):
         
     #plt.xticks(np.linspace(0, 0.6, 3))
     #plt.yticks(np.linspace(0, 25, 3))
-    plt.ylabel('Count')
+    plt.ylabel('Probability')
     plt.xlabel('Coefficient of friction')
     legend = ax.legend(legend_handles, ss)
     legend.get_frame().set_linewidth(0.25)
