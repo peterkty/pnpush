@@ -21,6 +21,7 @@ roslib.load_manifest("netft_rdt_driver")
 from netft_rdt_driver.srv import Zero
 import sensor_msgs.msg
 import geometry_msgs.msg
+from std_msgs.msg import String
 import os
 import scipy.io as sio
 from visualization_msgs.msg import Marker
@@ -42,13 +43,13 @@ from config.helper import norm, pause
 
 
 # set the parameters
-globalvel = 600           # speed for moving around
+globalvel = 800           # speed for moving around
 globalmaxacc = 100        # big number means no limit, in m/s^2
-globalacc = 1.3             # big number means no limit, in m/s^2
+globalacc = 4             # big number means no limit, in m/s^2
 global_slow_vel = 30
 ori = [0, 0, 1, 0]
 center_world = [0.375, 0, 0]
-dist_before_contact = 0.03 
+dist_before_contact = 0.02 
 skip_when_exists = True
 listener = None
 hasRobot = True
@@ -116,9 +117,9 @@ def recover(slot_pos_obj, reset):
     
         # move up
         pos_recover_probe_target_world = _center_world
-        pos_recover_probe_target_world[2] = zup  # 
+        pos_recover_probe_target_world[2] = zup + 0.06  # 
         setCart(pos_recover_probe_target_world, ori)
-    setCart([0.2, 0, z + 0.05], ori)  # move back to let vicon see the marker
+    #setCart([center_world[0], center_world[1], z + 0.05], ori)  # move back to let vicon see the marker
     
 def polyapprox(shape, s):
     ss = shape[0]
@@ -169,6 +170,7 @@ def polyapprox_check_collision(shape, pos_start_probe_object, probe_radius):
 
 def run_it(accelerations, speeds, shape, nside, side_params, angles, nrep, shape_type, probe_radius, dir_save_bagfile, dist_after_contact, opt):
     # hack to restart the script to prevent ros network issues.
+    global pub
     limit = 100
     cnt = 0
     topics = ['-a']
@@ -248,15 +250,16 @@ def run_it(accelerations, speeds, shape, nside, side_params, angles, nrep, shape
                         start_pos[2] = z
                         setCart(start_pos,ori)
                         
-                        rosbag_proc = helper.start_ros_bag(bagfilename, topics, dir_save_bagfile) # this should move after midpos
-                        rospy.sleep(0.5) # this should move after midpos
                         
                         
                         setSpeed(tcp=global_slow_vel, ori=1000) # some slow speed
                         mid_pos = copy.deepcopy(pos_contact_probe_world)
                         mid_pos[2] = z
+                        pub.publish('move_to_mid_pos')
                         setCart(mid_pos,ori)
                         
+                        rosbag_proc = helper.start_ros_bag(bagfilename, topics, dir_save_bagfile) 
+                        rospy.sleep(0.5) 
                         
                         end_pos = copy.deepcopy(pos_end_probe_world)
                         end_pos[2] = z
@@ -267,7 +270,9 @@ def run_it(accelerations, speeds, shape, nside, side_params, angles, nrep, shape
                             setAcc(acc=acc, deacc=globalmaxacc)
                             setSpeed(tcp=1000, ori=1000) # some high speed
                             
+                        pub.publish('start_pushing')
                         setCart(end_pos,ori)
+                        pub.publish('end_pushing')
                         # end bag recording
                         helper.terminate_ros_node("/record")
                         setSpeed(tcp=globalvel, ori=1000)
@@ -292,7 +297,8 @@ def run_it(accelerations, speeds, shape, nside, side_params, angles, nrep, shape
 import optparse
 def main(argv):
     # prepare the proxy, listener
-    global globalvel, z, zup, z_ofset, listener, obj_frame_id, obj_slot
+    global globalvel, z, zup, z_ofset, listener, obj_frame_id, obj_slot, pub
+    pub = rospy.Publisher('/robot_status', String, queue_size=10)
     
     rospy.init_node('collect_motion_data')
     listener = tf.TransformListener()

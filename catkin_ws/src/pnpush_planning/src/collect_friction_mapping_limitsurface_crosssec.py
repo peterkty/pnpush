@@ -17,25 +17,44 @@ roslib.load_manifest("netft_rdt_driver")
 from netft_rdt_driver.srv import Zero
 import os
 import tf.transformations as tfm
+from ik.roshelper import ROS_Wait_For_Msg
 
 
-setCartRos = rospy.ServiceProxy('/robot2_SetCartesian', robot_SetCartesian)
-setZero = rospy.ServiceProxy('/zero', Zero)
-setAcc = rospy.ServiceProxy('/robot2_SetAcc', robot_SetAcc)
-setZone = rospy.ServiceProxy('/robot2_SetZone', robot_SetZone)
-setSpeed = rospy.ServiceProxy('/robot2_SetSpeed', robot_SetSpeed)
+hasRobot = True
 
+if hasRobot:
+    setCartRos = rospy.ServiceProxy('/robot2_SetCartesian', robot_SetCartesian)
+    setZeroRos = rospy.ServiceProxy('/zero', Zero)
+    setAccRos = rospy.ServiceProxy('/robot2_SetAcc', robot_SetAcc)
+    setZoneRos = rospy.ServiceProxy('/robot2_SetZone', robot_SetZone)
+    setSpeedRos = rospy.ServiceProxy('/robot2_SetSpeed', robot_SetSpeed)
+    
+def setZero():
+    if hasRobot:
+        setZeroRos()
+    
+def setAcc(acc, deacc):
+    if hasRobot:
+        setAccRos(acc, deacc)
+    
+def setZone(zone):
+    if hasRobot:
+        setZoneRos(zone)
+        
+def setSpeed(tcp,ori):
+    if hasRobot:
+        setSpeedRos(tcp,ori)
 
 def wait_for_ft_calib():
-    from ik.roshelper import ROS_Wait_For_Msg
-    ROS_Wait_For_Msg('/netft_data', geometry_msgs.msg.WrenchStamped).getmsg()
+    if hasRobot:
+        ROS_Wait_For_Msg('/netft_data', geometry_msgs.msg.WrenchStamped).getmsg()
+
     
 def setCart(pos, ori):
-    
     param = (np.array(pos) * 1000).tolist() + list(ori)
     print 'setCart', param
-    #pause()
-    setCartRos(*param)
+    if hasRobot:
+        setCartRos(*param)
     
 def main(argv):
     rospy.init_node('collect_friction_map_data')
@@ -76,10 +95,20 @@ def main(argv):
     acc = 0
     vel = 20
     #degs_default = reversed([0, 180]) #+ list(xrange(0, 360, 5))
-    degs_default = [180, 0]
+    degs_default = [0,180]
     rep = 0
     radii = [0.05, 0.025 , 0.0125, 0]
-    rotdegs_default = np.linspace(-80, 80, 21)
+    
+    def mix(a,b):
+        c = np.append(a,b)
+        for i in xrange(len(a)*2):
+            if i%2 == 0:
+                c[i] = a[i/2]
+            else:
+                c[i] = b[i/2]
+        return c
+    
+    rotdegs_default =  mix(np.linspace(44, 88, 12), np.linspace(-44, -88, 12))
      
     dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/friction_scan_limitsurface/%s/%s/' % (opt.surface_id,shape_id)
     helper.make_sure_path_exists(dir_save_bagfile)
@@ -93,23 +122,18 @@ def main(argv):
     for radius in radii:
         if radius == 0:
             degs = [0]
+            rotdegs = [80, -80]
+        elif radii in [0.05]:
+            degs = degs_default
+            rotdegs = rotdegs_default
         else:
             degs = degs_default
-        for deg in degs:  # translation velocity direction
-            th = np.deg2rad(deg)
-            # import pdb; pdb.set_trace()
-            if radius == 0:
-                rotdegs = [80, -80]
-                orispeed = 10 # to prevent rotating very quick
-            elif deg in [0, 90, 180, 270]:
-                rotdegs = np.linspace(-88, 88, 45)
-                orispeed = 10
-            else:
-                rotdegs = rotdegs_default
-                orispeed = 10
-                
-            for rotdeg in rotdegs:  # rotation velocity direction
-                rotth = np.deg2rad(rotdeg)
+            rotdegs = mix(np.linspace(0, 88, 23), np.linspace(0, -88, 23))
+            
+        for rotdeg in rotdegs:  # rotation velocity direction
+            rotth = np.deg2rad(rotdeg)
+            for deg in degs:  # translation velocity direction
+                th = np.deg2rad(deg)
                 start_ori = ik.helper.qwxyz_from_qxyzw(tfm.quaternion_from_matrix((np.dot(tfm.euler_matrix(0,np.pi,0), tfm.euler_matrix(0,0,rotth)))))
                 end_ori = ik.helper.qwxyz_from_qxyzw(tfm.quaternion_from_matrix((np.dot(tfm.euler_matrix(0,np.pi,0), tfm.euler_matrix(0,0,-rotth)))))
                 start_pos = [np.cos(th)* radius + center[0], np.sin(th)* radius + center[1]]
@@ -131,10 +155,12 @@ def main(argv):
                 setCart([start_pos[0], start_pos[1], z], start_ori)
                 setSpeed(tcp=vel, ori=orispeed)
 
-                rosbag_proc = helper.start_ros_bag(bagfilename, topics, dir_save_bagfile)
+                if hasRobot:
+                    rosbag_proc = helper.start_ros_bag(bagfilename, topics, dir_save_bagfile)
                 setCart([end_pos[0], end_pos[1], z], end_ori)
 
-                helper.terminate_ros_node("/record")
+                if hasRobot:
+                    helper.terminate_ros_node("/record")
                 
                 cnt += 1
                 if cnt > cntlimit:
