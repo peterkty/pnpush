@@ -15,6 +15,10 @@ class ProbeDB:
         'probe4' : {
             "length" : 0.15653,
             "radius" : 0.00475
+        },
+        'probe5' : {
+            "length" : 0.15934,
+            "radius" : 0.00475
         }
     }
     

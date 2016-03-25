@@ -48,7 +48,7 @@ globalmaxacc = 100        # big number means no limit, in m/s^2
 globalacc = 4             # big number means no limit, in m/s^2
 global_slow_vel = 30
 ori = [0, 0, 1, 0]
-center_world = [0.375, 0, 0]
+center_world = [0.350, -0.03, 0]
 dist_before_contact = 0.02 
 skip_when_exists = True
 listener = None
@@ -168,7 +168,7 @@ def polyapprox_check_collision(shape, pos_start_probe_object, probe_radius):
     else:
         return False
 
-def run_it(accelerations, speeds, shape, nside, side_params, angles, nrep, shape_type, probe_radius, dir_save_bagfile, dist_after_contact, opt):
+def run_it(accelerations, speeds, shape, nside, side_params, angles, nrep, shape_type, probe_radius, dir_save_bagfile, dist_after_contact, allowed_distance, opt):
     # hack to restart the script to prevent ros network issues.
     global pub
     limit = 100
@@ -284,8 +284,6 @@ def run_it(accelerations, speeds, shape, nside, side_params, angles, nrep, shape
                         setCart(end_pos,ori)
                         
                         distance_obj_center = np.linalg.norm(np.array(pos_center_obj_world)-np.array(center_world))
-                        #allowed_distance = 0.06   #could change depending on the object considered
-                        allowed_distance = 0.0   #could change depending on the object considered
                         
                         # recover
                         recover(obj_slot, distance_obj_center > allowed_distance)
@@ -327,7 +325,7 @@ def main(argv):
                       default=False)
                       
     parser.add_option('', '--probe', action="store", dest='probe_id', 
-                      help='The probe id e.g. probe1-4', default='probe4')
+                      help='The probe id e.g. probe1-5', default='probe5')
                       
     (opt, args) = parser.parse_args()
     
@@ -361,6 +359,7 @@ def main(argv):
     real_exp = opt.real_exp
     rep_label = ''
     dist_after_contact = 0.05
+    allowed_distance = 0.06
     if real_exp:
         if opt.nrep == 1:
             accelerations = [0.1, 0.2, 0.5, 0.75, 1, 1.5, 2, 2.5]
@@ -377,16 +376,16 @@ def main(argv):
             angles = np.linspace(-pi/180.0*80.0, pi/180*80, 9)
             nside = len(shape)
             
-            
         else:
             # set the nominal parameters
             side_params = [0.7]
             angles = [0]
-            speeds = [20]
-            accelerations = []
+            speeds = []
+            accelerations = [1]
             nside = 1
             
             dist_after_contact = 0.15
+            dist_after_contact = 0.05  # hack for video
             #shape = shape[0:1]  # only do it on one side
             
             # what dimension we want to explore
@@ -398,6 +397,7 @@ def main(argv):
                 speeds = [10, 20, 50, 75, 100, 150, 200, 300, 400, 500]
             elif opt.reptype == 'position':
                 side_params = np.linspace(0.5, 1, 6)
+            allowed_distance = 0
         nspeeds = len(speeds)
         nacc = len(accelerations)
         
@@ -424,7 +424,7 @@ def main(argv):
     helper.make_sure_path_exists(dir_save_bagfile)
     
     run_it(accelerations, speeds, shape, nside, side_params, angles, opt.nrep, 
-          shape_type, probe_radius, dir_save_bagfile, dist_after_contact, opt)
+          shape_type, probe_radius, dir_save_bagfile, dist_after_contact, allowed_distance, opt)
 
 
 if __name__=='__main__':
