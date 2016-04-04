@@ -168,7 +168,7 @@ def polyapprox_check_collision(shape, pos_start_probe_object, probe_radius):
     else:
         return False
 
-def run_it(accelerations, speeds, shape, nside, side_params, angles, nrep, shape_type, probe_radius, dir_save_bagfile, dist_after_contact, opt):
+def run_it(accelerations, speeds, shape, nside, side_params, angles, nrep, shape_type, probe_radius, dir_save_bagfile, dist_after_contact, allowed_distance, opt):
     # hack to restart the script to prevent ros network issues.
     global pub
     limit = 100
@@ -284,8 +284,6 @@ def run_it(accelerations, speeds, shape, nside, side_params, angles, nrep, shape
                         setCart(end_pos,ori)
                         
                         distance_obj_center = np.linalg.norm(np.array(pos_center_obj_world)-np.array(center_world))
-                        #allowed_distance = 0.06   #could change depending on the object considered
-                        allowed_distance = 0.0   #could change depending on the object considered
                         
                         # recover
                         recover(obj_slot, distance_obj_center > allowed_distance)
@@ -327,7 +325,7 @@ def main(argv):
                       default=False)
                       
     parser.add_option('', '--probe', action="store", dest='probe_id', 
-                      help='The probe id e.g. probe1-4', default='probe4')
+                      help='The probe id e.g. probe1-5', default='probe5')
                       
     (opt, args) = parser.parse_args()
     
@@ -361,6 +359,7 @@ def main(argv):
     real_exp = opt.real_exp
     rep_label = ''
     dist_after_contact = 0.01  #ensure 5mm movement which corresponds 0.25s
+    allowed_distance = 0.06
     if real_exp:
         if opt.nrep == 1:
             accelerations = []
@@ -376,7 +375,9 @@ def main(argv):
             
             angles = np.linspace(-1.5, 1.5, 31)
             nside = len(shape)
-            
+            #To try
+            angles = np.linspace(0, 0, 1)
+            side_params = np.linspace(0.5, 0.5, 1)
             
         else:
             # set the nominal parameters
@@ -425,7 +426,7 @@ def main(argv):
     nrep = 100; # 20 iterations would m
     #using op.nrep = 1 and a new variable nrep
     run_it(accelerations, speeds, shape, nside, side_params, angles, nrep,  
-          shape_type, probe_radius, dir_save_bagfile, dist_after_contact, opt)
+          shape_type, probe_radius, dir_save_bagfile, dist_after_contact, allowed_distance, opt)
 
 
 if __name__=='__main__':
