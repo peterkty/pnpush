@@ -360,11 +360,11 @@ def main(argv):
     # space for the experiment
     real_exp = opt.real_exp
     rep_label = ''
-    dist_after_contact = 0.05
+    dist_after_contact = 0.01  #ensure 5mm movement which corresponds 0.25s
     if real_exp:
         if opt.nrep == 1:
-            accelerations = [0.1, 0.2, 0.5, 0.75, 1, 1.5, 2, 2.5]
-            speeds = [10, 20, 50, 75, 100, 150, 200, 300, 400, 500]
+            accelerations = []
+            speeds = [20]
             
             if shape_type == 'poly':
                 if shape == 'hex':
@@ -374,7 +374,7 @@ def main(argv):
             else:
                 side_params = np.linspace(0,1,40,endpoint=False)
             
-            angles = np.linspace(-pi/180.0*80.0, pi/180*80, 9)
+            angles = np.linspace(-1.5, 1.5, 31)
             nside = len(shape)
             
             
@@ -414,7 +414,7 @@ def main(argv):
 
     # parameters about rosbag
     if opt.nrep == 1:
-        dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/straight_push/%s/%s/' % (surface_id,shape_id)
+        dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/validation/%s/%s/' % (surface_id,shape_id)
     else:
         dir_save_bagfile = os.environ['PNPUSHDATA_BASE'] + '/straight_push_rep/%s/%s/%s/' % (surface_id,shape_id,opt.reptype)
     
@@ -422,8 +422,9 @@ def main(argv):
     setSpeed(tcp=globalvel, ori=1000)
     setZone(0)
     helper.make_sure_path_exists(dir_save_bagfile)
-    
-    run_it(accelerations, speeds, shape, nside, side_params, angles, opt.nrep, 
+    nrep = 100; # 20 iterations would m
+    #using op.nrep = 1 and a new variable nrep
+    run_it(accelerations, speeds, shape, nside, side_params, angles, nrep,  
           shape_type, probe_radius, dir_save_bagfile, dist_after_contact, opt)
 
 
