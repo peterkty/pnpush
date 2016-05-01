@@ -100,12 +100,15 @@ def recover(slot_pos_obj, reset):
         pos_recover_probe_world[2] = zup
         setCart(pos_recover_probe_world, ori)
         
-        # speed down
-        setAcc(acc=globalacc, deacc=globalacc)
-        setSpeed(tcp=global_slow_vel, ori=1000)
+        # move down a bit in fast speed
+        pos_recover_probe_world = coordinateFrameTransform(slot_pos_obj, obj_frame_id, global_frame_id, listener)
+        pos_recover_probe_world[2] = z_ofset + 0.02
+        setCart(pos_recover_probe_world, ori)
         
         # move down to the slot    
-        pos_recover_probe_world = coordinateFrameTransform(slot_pos_obj, obj_frame_id, global_frame_id, listener)
+        # speed down
+        setAcc(acc=globalhighacc, deacc=globalacc)
+        setSpeed(tcp=60, ori=1000)
         pos_recover_probe_world[2] = z_ofset
         setCart(pos_recover_probe_world, ori)
         #pause()
