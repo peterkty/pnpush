@@ -44,12 +44,14 @@ from config.helper import norm, pause
 
 # set the parameters
 globalvel = 800           # speed for moving around
+global_highvel = 6000     # speed for moving up
 globalmaxacc = 100        # big number means no limit, in m/s^2
 globalacc = 4             # big number means no limit, in m/s^2
+globalhighacc = 28             # big number means no limit, in m/s^2
 global_slow_vel = 30
 ori = [0, 0, 1, 0]
 center_world = [0.350, -0.03, 0]
-dist_before_contact = 0.02 
+dist_before_contact = 0.04
 skip_when_exists = True
 listener = None
 hasRobot = True
@@ -99,6 +101,7 @@ def recover(slot_pos_obj, reset):
         setCart(pos_recover_probe_world, ori)
         
         # speed down
+        setAcc(acc=globalacc, deacc=globalacc)
         setSpeed(tcp=global_slow_vel, ori=1000)
         
         # move down to the slot    
@@ -113,12 +116,14 @@ def recover(slot_pos_obj, reset):
         setCart(pos_recover_probe_target_world, ori)
         
         # speed up
-        setSpeed(tcp=globalvel, ori=1000)
+        setAcc(acc=globalhighacc, deacc=globalhighacc)
+        setSpeed(tcp=global_highvel, ori=1000)
     
         # move up
         pos_recover_probe_target_world = _center_world
         pos_recover_probe_target_world[2] = zup + 0.06  # 
         setCart(pos_recover_probe_target_world, ori)
+        
     #setCart([center_world[0], center_world[1], z + 0.05], ori)  # move back to let vicon see the marker
     
 def polyapprox(shape, s):
@@ -242,10 +247,14 @@ def run_it(accelerations, speeds, shape, nside, side_params, angles, nrep, shape
                         # start bag recording
                         # move to startPos
                         
+                        setAcc(acc=globalhighacc, deacc=globalhighacc)
+                        setSpeed(tcp=global_highvel, ori=global_highvel)
                         start_pos = copy.deepcopy(pos_start_probe_world)
                         start_pos[2] = zup
                         setCart(start_pos,ori)
             
+                        setAcc(acc=globalacc, deacc=globalacc)
+                        setSpeed(tcp=globalvel, ori=1000)
                         start_pos = copy.deepcopy(pos_start_probe_world)
                         start_pos[2] = z
                         setCart(start_pos,ori)
@@ -275,8 +284,8 @@ def run_it(accelerations, speeds, shape, nside, side_params, angles, nrep, shape
                         pub.publish('end_pushing')
                         # end bag recording
                         helper.terminate_ros_node("/record")
-                        setSpeed(tcp=globalvel, ori=1000)
-                        setAcc(acc=globalacc, deacc=globalacc)
+                        setSpeed(tcp=global_highvel, ori=1000)
+                        setAcc(acc=globalhighacc, deacc=globalhighacc)
                         
                         # move up vertically
                         end_pos = copy.deepcopy(pos_end_probe_world)
@@ -342,6 +351,7 @@ def main(argv):
     z = probe_length + ft_length + surface_thick + 0.007   # the height above the table
     z_recover = 0.012 + z  # the height for recovery 
     zup = z + 0.04            # the prepare and end height
+    zup = z + 0.08            # the prepare and end height
     probe_radius = probe_db.db[opt.probe_id]['radius']
     
 

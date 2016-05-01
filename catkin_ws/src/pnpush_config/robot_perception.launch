@@ -10,11 +10,6 @@
     
   <node if="$(arg irb_120)" pkg="tf" type="static_transform_publisher" name="baselink_broadcaster" args="0 0 0.60 0 1.57079632679 0 map base_link 100" />
   
-  <node pkg="tf" type="static_transform_publisher" name="vicon1_broadcaster" args="0.35 0.5 0.4 0 0 1.57 map vicon1 100" />
-  <node pkg="tf" type="static_transform_publisher" name="vicon2_broadcaster" args="0.65 0.5 0.24 0 0 1.57 map vicon2 100" />
-  <node pkg="tf" type="static_transform_publisher" name="vicon3_broadcaster" args="1 -0.2 0.4 0 -1.57 0 map vicon3 100" />
-  <node pkg="tf" type="static_transform_publisher" name="vicon4_broadcaster" args="1 0.2 0.24 0 -1.57 0 map vicon4 100" />
-  <node pkg="tf" type="static_transform_publisher" name="vicon5_broadcaster" args="0 -0.5 0.24 0 0 -1.57 map vicon5 100" />
 
   <node unless="$(arg have_robot)" name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" >
     <rosparam unless="$(arg have_robot)" command="load" file="$(find pnpush_config)/source_list_param.yaml" />
@@ -23,9 +18,9 @@
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" />
 
   <node pkg="tf" type="static_transform_publisher" name="viconworldlink_broadcaster" 
-  args="3.74151922e-01 -2.19541314e-01 1.64848540e-02 4.90153986e-03 2.44586714e-03 2.45992851e-03 9.99981971e-01 /map /viconworld 100" />
+  args="3.03101925e-01 -1.71822875e-01 4.25593177e-03 4.31342972e-03 1.86167268e-03 -4.16547749e-03 9.99980288e-01 /map /viconworld 100" />
 
-  <node pkg="tf" type="static_transform_publisher" name="vicontip_broadcaster" args="0 0 0.205925 0 0 0 /link_6 /vicon_tip 100" /> <!-- for transferring calib tip to link6-->
+  <node pkg="tf" type="static_transform_publisher" name="vicontip_broadcaster" args="0 0 0.23487 0 0 0 /link_6 /vicon_tip 100" /> <!-- for transferring calib tip to link6-->
 
 
 </launch>

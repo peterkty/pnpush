@@ -284,7 +284,8 @@ def run_it(accelerations, speeds, shape, nside, side_params, angles, nrep, shape
                         setCart(end_pos,ori)
                         
                         distance_obj_center = np.linalg.norm(np.array(pos_center_obj_world)-np.array(center_world))
-                        
+                        if abs(t) > 1.3:
+                            allowed_distance = 0.00
                         # recover
                         recover(obj_slot, distance_obj_center > allowed_distance)
                         #pause()
@@ -359,7 +360,7 @@ def main(argv):
     real_exp = opt.real_exp
     rep_label = ''
     dist_after_contact = 0.01  #ensure 5mm movement which corresponds 0.25s
-    allowed_distance = 0.06
+    allowed_distance =   0.06  #we want it to change at every time... #0.06
     if real_exp:
         if opt.nrep == 1:
             accelerations = []
@@ -376,8 +377,8 @@ def main(argv):
             angles = np.linspace(-1.5, 1.5, 31)
             nside = len(shape)
             #To try
-            angles = np.linspace(0, 0, 1)
-            side_params = np.linspace(0.5, 0.5, 1)
+            nside = 1
+            #angles = np.linspace(0, 0, 1)
             
         else:
             # set the nominal parameters
