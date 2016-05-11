@@ -125,10 +125,10 @@ def main(argv):
     if os.path.exists(cachefile):
         f = shelve.open(cachefile)
         vals = f['vals'];
-        trajs = f['trajs'];
-        fts = f['fts']
+        #trajs = f['trajs'];
+        #fts = f['fts']
         opt = f['opt']
-        trajs_tippose = f['trajs_tippose']
+        #trajs_tippose = f['trajs_tippose']
         meantraj = f['meantraj']
         meantraj_tippose = f['meantraj_tippose']
     else:
@@ -231,88 +231,86 @@ def main(argv):
         shape_polygon_3d = np.hstack((np.array(shape[0]), np.zeros((len(shape[0]), 1)), np.ones((len(shape[0]), 1))))
         
     
-    
+    part1 = False
+    if part1:
+        f1, ((ax1, ax2)) = plt.subplots(1, 2, sharex=True, sharey=True)
+        #fig = plt.figure()
+        plt.sca(ax1)
+        ax = ax1
+        (tm, x,y,th) = zip(*meantraj)
+        line = plt.plot(x, y, '-k')
+        plt.setp(line, linewidth=2)
         
-    # f1, ((ax1, ax2)) = plt.subplots(1, 2, sharex=True, sharey=True)
-    # #fig = plt.figure()
-    # plt.sca(ax1)
-    # ax = ax1
-    # (tm, x,y,th) = zip(*meantraj)
-    # line = plt.plot(x, y, '-k')
-    # plt.setp(line, linewidth=2)
-    # 
-    # 
-    # 
-
-    # ec, fc = 'black','orangered'
-    # for ii in np.linspace(0, len(meantraj)-1, 30):
-        # i = int(ii)
-        # 
-        # if i == 0:
-            # alpha , fill = (0.3, True)
-        # elif i == len(meantraj)-1:
-            # alpha , fill = (0.6, True)
-        # else:
-            # alpha , fill = (0.6, False)
-            # 
-        # T = matrix_from_xyzrpy([x[i], y[i], 0], [0, 0, th[i]])
-        # shape_polygon_3d_world = np.dot(T, shape_polygon_3d.T)
-        # obj = mpatches.Polygon(shape_polygon_3d_world.T[:,0:2], closed=True, fc=fc, ec=ec, alpha=alpha, fill=fill, linewidth=1, linestyle='solid')
-        # 
-        # ax.add_patch(obj)
-    # #####
-    # 
-    ##add the probes as circle
-    # probe_radius = 0.00475
-    # for ind, ii in enumerate(np.linspace(0, len(meantraj_tippose)-1, 30)):
-        # i = int(ii)
-        # if opt.surface_id == 'abs' and ind < 4:   # hack
-            # continue
-        # if i == 0:
-            # alpha , fill = (0.8, False)
-        # elif i == len(meantraj_tippose)-1:
-            # alpha , fill = (0.8, False)
-        # else:
-            # alpha , fill = (0.8, False)
-        # circle = mpatches.Circle(meantraj_tippose[i][1:3], probe_radius, color='black', alpha=alpha, fill=fill, linewidth=1, linestyle='solid')
-            # 
-        # ax.add_patch(circle)
-    # 
-    # 
-    # plt.axis('equal') 
-    # plt.axis('off')
-    # 
-    ##2. plot all traj
-    # ax = ax2
-    # plt.sca(ax)
-    # 
-    # for traj in trajs:
-        # (tm, x,y,th) = zip(*traj)
-        # plt.plot(x, y, 'g', alpha=0.5)
-        # 
-      ##plot begin and final mean block
-    # (tm,x,y,th) = zip(*meantraj)
-    # for i in [0, -1]:
-        # alpha , fill = (0.6, False)
-        # T = matrix_from_xyzrpy([x[i], y[i], 0], [0, 0, th[i]])
-        # shape_polygon_3d_world = np.dot(T, shape_polygon_3d.T)
-        # obj = mpatches.Polygon(shape_polygon_3d_world.T[:,0:2], closed=True, fc=fc, ec=ec, alpha=alpha, fill=fill, linewidth=1, linestyle='solid',  zorder=2)
-        # ax.add_patch(obj)
-    # 
-    # line = plt.plot(x, y, '-k')
-    # plt.setp(line, linewidth=2)
-    # 
-    # plot_cov_ellipse(valscov[0:2][:,0:2], valsmean[0:2], color='orangered', fill=True, alpha=0.9,  zorder=3)
-    # #import pdb; pdb.set_trace()
-    # #plot_cov_ellipse(valscov[0:2][:,0:2], meantraj[-1][1:3], color='orangered', fill=True, alpha=0.9,  zorder=3)
-    # plt.axis('equal') 
-    # plt.axis('off')
-    # 
-    # plt.savefig(figfname_png, dpi=200)
-    # plt.savefig(figfname_pdf)
-    # plt.show()
+        
+        ec, fc = 'black','orangered'
+        for ii in np.linspace(0, len(meantraj)-1, 30):
+            i = int(ii)
+            
+            if i == 0:
+                alpha , fill = (0.3, True)
+            elif i == len(meantraj)-1:
+                alpha , fill = (0.6, True)
+            else:
+                alpha , fill = (0.6, False)
+                
+            T = matrix_from_xyzrpy([x[i], y[i], 0], [0, 0, th[i]])
+            shape_polygon_3d_world = np.dot(T, shape_polygon_3d.T)
+            obj = mpatches.Polygon(shape_polygon_3d_world.T[:,0:2], closed=True, fc=fc, ec=ec, alpha=alpha, fill=fill, linewidth=1, linestyle='solid')
+            
+            ax.add_patch(obj)
+        #####
+        
+        ###add the probes as circle
+        probe_radius = 0.00475
+        for ind, ii in enumerate(np.linspace(0, len(meantraj_tippose)-1, 30)):
+            i = int(ii)
+            if opt.surface_id == 'abs' and ind < 4:   # hack
+                continue
+            if i == 0:
+                alpha , fill = (0.8, False)
+            elif i == len(meantraj_tippose)-1:
+                alpha , fill = (0.8, False)
+            else:
+                alpha , fill = (0.8, False)
+            circle = mpatches.Circle(meantraj_tippose[i][1:3], probe_radius, color='black', alpha=alpha, fill=fill, linewidth=1, linestyle='solid')
+                
+            ax.add_patch(circle)
+        
+        
+        plt.axis('equal') 
+        plt.axis('off')
+        
+        # ##2. plot all traj
+        ax = ax2
+        plt.sca(ax)
+        
+        for traj in trajs:
+            (tm, x,y,th) = zip(*traj)
+            plt.plot(x, y, 'g', alpha=0.5)
+            
+          # ##plot begin and final mean block
+        (tm,x,y,th) = zip(*meantraj)
+        for i in [0, -1]:
+            alpha , fill = (0.6, False)
+            T = matrix_from_xyzrpy([x[i], y[i], 0], [0, 0, th[i]])
+            shape_polygon_3d_world = np.dot(T, shape_polygon_3d.T)
+            obj = mpatches.Polygon(shape_polygon_3d_world.T[:,0:2], closed=True, fc=fc, ec=ec, alpha=alpha, fill=fill, linewidth=1, linestyle='solid',  zorder=2)
+            ax.add_patch(obj)
+        
+        line = plt.plot(x, y, '-k')
+        plt.setp(line, linewidth=2)
+        
+        plot_cov_ellipse(valscov[0:2][:,0:2], valsmean[0:2], color='orangered', fill=True, alpha=0.9,  zorder=3)
+        #import pdb; pdb.set_trace()
+        #plot_cov_ellipse(valscov[0:2][:,0:2], meantraj[-1][1:3], color='orangered', fill=True, alpha=0.9,  zorder=3)
+        plt.axis('equal') 
+        plt.axis('off')
+        
+        plt.savefig(figfname_png, dpi=200)
+        plt.savefig(figfname_pdf)
     
-    # 3. plot final poses
+    
+    ## 3. plot final poses
     f2, ((ax3, ax4)) = plt.subplots(1, 2, sharex=False, sharey=False)
     
     ax = ax3
@@ -320,7 +318,7 @@ def main(argv):
     (xd,yd,thd)=zip(*(vals))
     ax.scatter(xd,yd, s=0.2, color='k', alpha=1)
     
-    #   plot begin and final mean block
+    ###   plot begin and final mean block
     ec, fc = 'black','orangered'
     (tm,x,y,th) = zip(*meantraj)
     for i in [0,-1]:
@@ -330,15 +328,16 @@ def main(argv):
         #obj = mpatches.Polygon(shape_polygon_3d_world.T[:,0:2], closed=True, fc=fc, ec=ec, alpha=alpha, fill=fill, linewidth=1, linestyle='solid')
         #ax.add_patch(obj)
     
-    # plot 2 sigma bound
+    ### plot 2 sigma bound
     
     plot_cov_ellipse(valscov[0:2][:,0:2], valsmean[0:2], color='orangered', fill=True, alpha=0.9,  zorder=0)
-    #plot_cov_ellipse(valscov[0:2][:,0:2], valsmean[0:2], 3, color='orangered', fill=True, alpha=0.5,  zorder=0)
-    #ax.add_patch(obj)
+    ##plot_cov_ellipse(valscov[0:2][:,0:2], valsmean[0:2], 3, color='orangered', fill=True, alpha=0.5,  zorder=0)
+    ##ax.add_patch(obj)
         
+    ax.set_ylim([0,1000])
     plt.axis('equal') 
     plt.axis('off')
-    #ax2.set_title('Scatter plot: $\Delta x$ versus $\Delta y$')
+    ##ax2.set_title('Scatter plot: $\Delta x$ versus $\Delta y$')
         
     plt.tight_layout(pad=0, w_pad=0, h_pad=0)
     plt.subplots_adjust(left=0.08, bottom=0.06, right=0.97, top=1.0,
@@ -347,9 +346,9 @@ def main(argv):
     
     ax = ax4
     plt.sca(ax)
-    #   plot begin and final mean block
+    ##   plot begin and final mean block
     (tm,x,y,th) = zip(*meantraj)
-    for i in [0, -1]:
+    for i in [0,1]:
         alpha , fill = (0.6, False)
         T = matrix_from_xyzrpy([x[i], y[i], 0], [0, 0, th[i]])
         shape_polygon_3d_world = np.dot(T, shape_polygon_3d.T)
@@ -359,7 +358,7 @@ def main(argv):
     line = plt.plot(x, y, '-k')
     plt.setp(line, linewidth=2)
     
-    # plot simulated data
+    ## plot simulated data
     (x_sim,y_sim,th_sim) = zip(*get_sim_data())
     line_sim = plt.plot(x_sim, y_sim, '--k')
     plt.setp(line_sim, linewidth=2)
@@ -370,10 +369,13 @@ def main(argv):
     ax.add_patch(obj)
     ####
     
+    #ax.set_ylim([-0.3,0.05])
     plt.axis('equal') 
     plt.axis('off')
     plt.tight_layout(pad=0, w_pad=0, h_pad=0)
     
+    # ax.set_xlim([-0.2,0.2])
+    # ax.set_ylim([-0.3,0.05])
     plt.savefig(figfname_2_png, dpi=200)
     plt.savefig(figfname_2_pdf)
     plt.show()
