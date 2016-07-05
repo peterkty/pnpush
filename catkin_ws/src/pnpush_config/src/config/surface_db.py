@@ -7,7 +7,7 @@ class SurfaceDB:
             "width" : 0.6096
         },
         'abs' : {
-            "thickness" : 0.01448,
+            "thickness" : 0.00988,
             "color" : (0,0,0, 1),
             "width" : 0.6096
         },
